@@ -6,8 +6,7 @@ loadAll <- function (pkg, document=FALSE) {
   install(pkg)
   do.call(library, list(pkg))
 }
-loadAll("reutils", document=FALSE)
-document("reutils")
+loadAll("reutils", document=TRUE)
 remove.packages("reutils")
 getClassDef("eutil")
 help("einfo")

@@ -12,7 +12,7 @@
 ##'
 ##' @return A vector or a list
 ##'
-##' @rdname getContent-methods
+##' @rdname .get-methods
 ##' @docType methods
 ##' @keywords internal
 ##' @examples
@@ -21,21 +21,21 @@ setGeneric(".get", function (object, what = "default") {
   standardGeneric(".get")
   })
 
-##' @rdname getContent-methods
-##' @aliases getContent,einfo-method,eutil-method
+##' @rdname .get-methods
+##' @aliases .get,einfo-method,eutil-method
 setMethod(".get", signature("einfo"), function (object, what) {
   .get.einfo(object, what)
   })
 
-##' @rdname getContent-methods
-##' @aliases getContent,esearch-method,eutil-method
-setMethod("getContent", signature("esearch"), function (object, what) {
+##' @rdname .get-methods
+##' @aliases .get,esearch-method,eutil-method
+setMethod(".get", signature("esearch"), function (object, what) {
   .get.esearch(object, what)
   })
 
-##' @rdname getContent-methods
-##' @aliases getContent,esummary-method,eutil-method
-setMethod("getContent", signature("esummary"), function (object, what) {
+##' @rdname .get-methods
+##' @aliases .get,esummary-method,eutil-method
+setMethod(".get", signature("esummary"), function (object, what) {
   .get.esummary(object, what)
   })
 
