@@ -43,7 +43,8 @@ esummary <- function (id,
   o <- .query("esummary", db=db, id=id, 
               version=if (identical(version, "2.0")) "2.0" else NULL)
   
-  new("esummary", database = db, url = slot(o, "url"), xml = slot(o, "xml"),
+  new("esummary", database = db, error=checkErrors(o),
+      url = slot(o, "url"), xml = slot(o, "xml"),
       documentSummary = 
         if (identical(version, "2.0")) 
           NULL 

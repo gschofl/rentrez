@@ -60,5 +60,6 @@ $Id: eSearch_020511.dtd 85163 2006-06-28 17:35:21Z olegh $
                                 ) | ERROR),
 				ErrorList?,
 				WarningList?
-				)>
+				)
+				>
 

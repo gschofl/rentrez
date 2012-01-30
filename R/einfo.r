@@ -29,11 +29,6 @@ einfo <- function (db=NULL) {
     }
     o <- .query(eutil = 'einfo', db = db)
 
-    # check xml response for ERRORS
-    err <- sapply(getNodeSet(o@xml, '//ERROR'), xmlValue)
-    if (length(err) > 0) 
-      warning('Error occurred:\n\t', err)
-
     # extract FieldList elements
     fnm <- sapply(getNodeSet(o@xml, '//FieldList/Field[1]/child::node( )'), xmlName)
     if (length(fnm) > 0)
@@ -52,14 +47,15 @@ einfo <- function (db=NULL) {
     else
       link_info <- data.frame()
 
-    new("einfoDb", url = o@url, xml = o@xml,
-        dbName = xmlValue(xmlRoot(o@xml)[[1]][['DbName']]),
-        menuName = xmlValue(xmlRoot(o@xml)[[1]][['MenuName']]),
-        description = xmlValue(xmlRoot(o@xml)[[1]][['Description']]),
-        records = as.numeric(xmlValue(xmlRoot(o@xml)[[1]][['Count']])),
-        lastUpdate = as.POSIXlt(xmlValue(xmlRoot(o@xml)[[1]][['LastUpdate']])),
-        fields = field_info,
-        links = link_info)
+    new("einfoDb", url=slot(o, "url"), xml=slot(o, "xml"),
+        error=checkErrors(o),
+        dbName=xmlValue(xmlRoot(o@xml)[[1]][['DbName']]),
+        menuName=xmlValue(xmlRoot(o@xml)[[1]][['MenuName']]),
+        description=xmlValue(xmlRoot(o@xml)[[1]][['Description']]),
+        records=as.numeric(xmlValue(xmlRoot(o@xml)[[1]][['Count']])),
+        lastUpdate=as.POSIXlt(xmlValue(xmlRoot(o@xml)[[1]][['LastUpdate']])),
+        fields=field_info,
+        links=link_info)
   }
 }
 

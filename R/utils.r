@@ -43,3 +43,33 @@
   return(value)
 }
 
+checkErrors <- function (obj) {
+  error <- NULL
+  err_msgs <- NULL
+  wrn_msgs <- NULL
+  
+  err_node <- getNodeSet(slot(obj, "xml"), '//ERROR')
+  if (length(err_node) > 0)
+    error <- lapply(err_node, xmlValue)
+  
+  err_list_node <- getNodeSet(slot(obj, "xml"), '//ErrorList')
+  if (length(err_list_node) > 0)
+    err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
+  
+  wrn_list_node <- getNodeSet(slot(obj, "xml"), '//WarningList')
+  if (length(wrn_list_node) > 0)
+    wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
+  
+  if (!is.null(error))
+    message('Error:\n\t', unlist(error))
+  
+  if (!is.null(err_msgs))
+    message('Error(s):\n\t', 
+            paste(paste(names(err_msgs), err_msgs, sep="\t"), collapse="\n\t"))
+  
+  if (!is.null(wrn_msgs))
+    message('Warning(s):\n\t', 
+            paste(paste(names(wrn_msgs), wrn_msgs, sep="\t"), collapse="\n\t"))
+  
+  return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
+}

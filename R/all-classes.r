@@ -15,8 +15,10 @@ setClassUnion("POSOrNULL", c("POSIXlt","NULL"))
 ## Class "eutil"
 setClass("eutil",
          representation(url = "character",
+                        error= "listOrNULL",
                         xml = "XMLOrNULL"),
          prototype(url = character(),
+                   error = NULL,
                    xml = NULL))
 
 ## Virtual class "einfo"

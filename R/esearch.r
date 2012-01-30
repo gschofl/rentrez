@@ -37,30 +37,14 @@ esearch <- function (term, db="pubmed",
   o <- .query(eutil="esearch", db=db, term=term, retstart=retstart,
               retmax=retmax, field=field, datetype=datetype,
               reldate=reldate, mindate=mindate, maxdate=maxdate)
-
-  # check xml response for errors and warnings
-  errNode <- getNodeSet(o@xml, '//ErrorList')
-  if (length(errNode) > 0)
-    errMsgs <- sapply(xmlChildren(errNode[[1]]), xmlValue)
-
-  wrnNode <- getNodeSet(o@xml, '//WarningList')
-  if (length(wrnNode) > 0)
-  wrnMsgs <- sapply(xmlChildren(wrnNode[[1]]), xmlValue)
-
-  if (exists("errMsgs"))
-    warning('Error(s) occured:\n\t', 
-            paste(paste(names(errMsgs), errMsgs, sep="\t"), collapse="\n\t"))
-
-  if (exists("wrnMsgs"))
-    warning('Warning(s) occured:\n\t', 
-            paste(paste(names(wrnMsgs), wrnMsgs, sep="\t"), collapse="\n\t"))
-
-  new("esearch", url = o@url, xml = o@xml, database = db,
-       count = as.numeric(xmlValue(xmlRoot(o@xml)[["Count"]])),
-       retMax = as.numeric(xmlValue(xmlRoot(o@xml)[["RetMax"]])),
-       retStart = as.numeric(xmlValue(xmlRoot(o@xml)[["RetStart"]])),
-       queryTranslation = xmlValue(xmlRoot(o@xml)[["QueryTranslation"]]),
-       idList = as.character(sapply(getNodeSet(o@xml, '//Id'), xmlValue)))
+    
+  new("esearch", url=slot(o, "url"), xml=slot(o, "xml"),
+      error=checkErrors(o), database=db,
+      count = as.numeric(xmlValue(xmlRoot(o@xml)[["Count"]])),
+      retMax = as.numeric(xmlValue(xmlRoot(o@xml)[["RetMax"]])),
+      retStart = as.numeric(xmlValue(xmlRoot(o@xml)[["RetStart"]])),
+      queryTranslation = xmlValue(xmlRoot(o@xml)[["QueryTranslation"]]),
+      idList = as.character(sapply(getNodeSet(o@xml, '//Id'), xmlValue)))
 }
 
 

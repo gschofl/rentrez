@@ -6,17 +6,41 @@ loadAll <- function (pkg, document=FALSE) {
   install(pkg)
   do.call(library, list(pkg))
 }
-loadAll("reutils", document=TRUE)
+loadAll("reutils", document=FALSE)
 remove.packages("reutils")
 getClassDef("eutil")
 help("einfo")
 
 # test esummary ######################################################## {{{
-uids <- esearch('\"Penaeus monodon\"[organism]', db = "nucleotide")
-s <- esummary(uids[1:10])
+# Construct url, fetch response, construct eutil object
+.local.query <- function (eutil, ...) {
+  stopifnot(require(XML))
+  stopifnot(require(RCurl))
+  eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
+  query_string <- reutils:::.query_string(...)
+  url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
+  xml = xmlTreeParse(getURL(url), useInternalNodes = TRUE)
+  xml
+}
+
+(o <- .local.query(eutil="esearch", db="nucleotide", 
+                  term='\"Penaeus monodon[organism]', retstart=4,
+                  retmax=6, field=NULL, datetype=NULL,
+                  reldate=NULL, mindate=NULL, maxdate=NULL))
+
+
+dtd <- toString.XMLNode(xmlRoot(o, skip=FALSE))
+DTD <- parseDTD(regmatches(dtd, regexpr("http://.*\\.dtd", dtd)))
+
+uids <- esearch('\"Penaeus monodon\"[organism]', db="nucleotide", retmax=2)
+uids
+uids@xml
+uids@error
+
+s <- esummary(uids[1])
+s <- esummary("1234", db="pubmed")
 docsums <- s$documentSummary
 as.data.frame(do.call(rbind, docsums))
-
 
 pm <- getUIDs(term='Chip-Seq[TITLE]', db="pubmed")
 res100 <- esummary(pm[1:100])
@@ -34,7 +58,6 @@ a = einfo()
 a
 a[1:10]
 a = einfo("genome")
-a
 a$fields$Name
 listFields("genome")
 listLinks("genome")
