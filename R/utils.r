@@ -1,13 +1,16 @@
 # Construct url, fetch response, construct eutil object
 .query <- function (eutil, ...) {
-  stopifnot(require(XML))
-  stopifnot(require(RCurl))
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   query_string <- .query_string(...)
   url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
-  new("eutil",
-      url = curlUnescape(url),
-      xml = xmlTreeParse(getURL(url), useInternalNodes = TRUE))
+  if (identical(eutil, "efetch"))
+    new("eutil",
+        url=curlUnescape(url),
+        data=getURL(url))
+  else
+    new("eutil",
+        url=curlUnescape(url),
+        data=xmlTreeParse(getURL(url), useInternalNodes=TRUE))
 }
 
 .query_string <- function (...) {
@@ -48,15 +51,15 @@ checkErrors <- function (obj) {
   err_msgs <- NULL
   wrn_msgs <- NULL
   
-  err_node <- getNodeSet(slot(obj, "xml"), '//ERROR')
+  err_node <- getNodeSet(slot(obj, "data"), '//ERROR')
   if (length(err_node) > 0)
     error <- lapply(err_node, xmlValue)
   
-  err_list_node <- getNodeSet(slot(obj, "xml"), '//ErrorList')
+  err_list_node <- getNodeSet(slot(obj, "data"), '//ErrorList')
   if (length(err_list_node) > 0)
     err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
   
-  wrn_list_node <- getNodeSet(slot(obj, "xml"), '//WarningList')
+  wrn_list_node <- getNodeSet(slot(obj, "data"), '//WarningList')
   if (length(wrn_list_node) > 0)
     wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
   
@@ -73,3 +76,23 @@ checkErrors <- function (obj) {
   
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
+
+
+.docsum.sequence <- function (esummary) {
+  ds <- esummary@documentSummary
+  nr <- length(ds)
+  fr <- data.frame(stringsAsFactors=FALSE,
+                   Caption=character(nr), Title=character(nr),
+                   Extra=character(nr), GI=character(nr),
+                   CreateDate=character(nr), UpdateDate=character(nr),
+                   Flags=numeric(nr), TaxId=numeric(nr),
+                   Length=numeric(nr), Status=character(nr),
+                   ReplacedBy=character(nr), Comment=character(nr))
+  for (i in seq.int(nr))
+    fr[i,] <- ds[[i]]
+  format(fr, justify="left")
+}
+
+
+
+
