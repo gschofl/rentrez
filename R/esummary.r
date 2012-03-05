@@ -138,7 +138,7 @@ setMethod("show",
           signature("esummary"),
           function(object) {
             cat(paste("Esummary query using the \'", object@database,
-                      "\' database.\n$ documentSummary : ", sep=""))
+                      "\' database.\n$ documentSummary :\n", sep=""))
             if (is.null(slot(object, "documentSummary")))
               print(object@data)
             else if (grepl("protein|nuccore|nucleotide", object@database))

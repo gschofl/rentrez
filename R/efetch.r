@@ -1,7 +1,11 @@
 ### Efetch #################################################################
 
 ## class "efetch"
-setClass("efetch", contains = "eutil")
+setClass("efetch", 
+         representation(database = "charOrNULL",
+                        type = "charOrNULL",
+                        mode = "charOrNULL"),
+         contains = "eutil")
 
 ##' Retrieves data from NCBI's databases
 ##'
@@ -90,8 +94,23 @@ efetch <- function (id,
                 seq_stop=seq_stop, complexity=complexity)
   }
 
-  new("efetch", url=o@url, data=o@data)
+  new("efetch", url=o@url, data=o@data, database=db,
+      mode=retmode, type=rettype)
 }
+
+##' @rdname show-methods
+##' @aliases show,esearch-method
+setMethod("show",
+          signature(object="efetch"),
+          function (object) {
+            cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
+                        sQuote(object@database), sQuote(object@url)))
+            cat(object@data)
+            return(invisible(NULL))
+          })
+
+print.esearch <- show
+
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
 #       vim:fdm=marker:fmr={{{,}}}:fdl=0
