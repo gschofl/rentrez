@@ -1,3 +1,12 @@
+### Esummary ###############################################################
+
+## class "esummary"
+setClass("esummary",
+         representation(database = "charOrNULL",
+                        documentSummary = "listOrNULL"),
+         prototype(database = NULL, documentSummary = NULL),
+         contains = "eutil")
+
 ##' Retrieve document summaries (DocSums)
 ##'
 ##' \code{esummary} retrieves document summaries for a list of primary 
@@ -21,46 +30,129 @@
 ##' @examples
 ##'   ##
 esummary <- function (id, 
-                      db = attr(id, "database"),
-                      ## not implemented yet
-                      ## query_key = NULL,
-                      ## WebEnv = NULL,
+                      db=attr(id, "database"),
+                      query_key=NULL,
+                      WebEnv=NULL,
                       ## retstart = 1,
                       ## retmax = 100,
                       version = "default" ) {
-  if (missing(id)) stop("No UID(s) provided")
+  if (missing(id) && is.null(query_key) && is.null(WebEnv))
+    stop("No UID(s) provided")
   if (is.null(db)) stop("No database name provided")
-  if (is(id, "esearch")) id <- slot(id, "idList")
-  if (length(id) > 1) {
-    if (length(id) > 200) {
-      warning("The UID list is too large. Only the first 200
-              UIDs will be used")
-      id <- id[1:200]
+  
+  hasRes <- FALSE
+  ## use WebEnv and QueryKey if available
+  if (!is.null(query_key) && !is.null(WebEnv)) {
+    o <- .query("esummary", db=db, query_key=query_key, WebEnv=WebEnv,
+                version=if (identical(version, "2.0")) "2.0" else NULL)
+    hasRes <- TRUE
+  }
+  else if (is(id, "esearch")) {
+    if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
+      o <- .query("esummary", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
+                  version=if (identical(version, "2.0")) "2.0" else NULL)
+      hasRes <- TRUE
     }
-    id <- paste(id, collapse = ",")
+    else {
+      id <- slot(id, "idList")
+    }
+  }
+  
+  if (!hasRes) {
+    if (length(id) > 1) {
+      if (length(id) > 200) {
+        warning("The UID list is too large. Only the first 200 UIDs will be used")
+        id <- id[1:200]
+      }
+      id <- paste(id, collapse = ",")
+    }
+    
+    o <- .query("esummary", db=db, id=id, 
+                version=if (identical(version, "2.0")) "2.0" else NULL)
   }
 
-  o <- .query("esummary", db=db, id=id, 
-              version=if (identical(version, "2.0")) "2.0" else NULL)
-  
-  new("esummary", database = db, error=checkErrors(o),
-      url = slot(o, "url"), xml = slot(o, "xml"),
+  new("esummary", database=db, error=checkErrors(o),
+      url=o@url, data=o@data,
       documentSummary = 
         if (identical(version, "2.0")) 
           NULL 
         else {
-          docSums <- lapply(getNodeSet(slot(o, "xml"), '//DocSum'), .parseDocSumItems)
-          names(docSums) <- lapply(getNodeSet(slot(o, "xml"), '//DocSum/Id'), xmlValue)
+          docSums <- lapply(getNodeSet(o@data, '//DocSum'), .parseDocSumItems)
+          names(docSums) <- lapply(getNodeSet(o@data, '//DocSum/Id'), xmlValue)
           docSums }
       )
 }
 
 
-#### Accessor method for esummary
-.get.esummary <- function(obj, what) {
+### accessor methods #######################################################
+
+.get.esummary <- function(x, what) {
   switch(what,
-         all=obj,
-         default=list(database = slot(obj, "database"),
-                      documentSummary = slot(obj, "documentSummary")),
-         slot(obj, what))
+         all=x,
+         default=list(database=slot(x, "database"),
+                      documentSummary=slot(x, "documentSummary")),
+         slot(x, what))
 }
+
+##' @rdname .get-methods
+##' @aliases .get,esummary-method,eutil-method
+setMethod(".get",
+          signature(x="esummary"),
+          function (x, what) {
+            .get.esummary(x, what)
+          })
+
+
+### extract methods ########################################################
+
+##' @rdname extract-methods
+##' @aliases $,esummary-method
+setMethod("$",
+          signature(x="esummary"),
+          function (x, name) {
+            if (!is.null(x@documentSummary) && !identical(name, "documentSummary"))
+              return(slot(x, "documentSummary")[[name, exact=FALSE]])
+            else
+              return(slot(x, name))
+          })
+
+##' Extract elements of \code{esummary} objects
+##'
+##' @rdname extract-methods
+##' @aliases [,esummary-method
+setMethod("[",
+          signature(x="esummary", i="ANY", j="missing"),
+          function (x, i) {
+            if (is(i, "esearch")) {
+              return(slot(x, "documentSummary")[slot(i, "idList")])
+            }
+              return(slot(x, "documentSummary")[i])
+          })
+
+
+### show methods ###########################################################
+
+##' @rdname show-methods
+##' @aliases show,esummary-method
+setMethod("show",
+          signature("esummary"),
+          function(object) {
+            cat(paste("Esummary query using the \'", object@database,
+                      "\' database.\n$ documentSummary : ", sep=""))
+            if (is.null(slot(object, "documentSummary")))
+              print(object@data)
+            else if (grepl("protein|nuccore|nucleotide", object@database))
+              print(.docsum.sequence(object))
+            else
+              print(str(object@documentSummary))
+            return(invisible(NULL))
+          })
+
+print.esearch <- show
+
+
+
+
+
+
+

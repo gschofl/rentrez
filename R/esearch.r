@@ -1,7 +1,50 @@
+### Esearch ################################################################
+
+##' reutils formal class (S4) holding ESearch query results
+##'
+##' \describe{
+##'       \item{database}{character vector containing the name of the database}
+##'       \item{count}{an integer giving the total number of hits for a database query}
+##'       \item{retMax}{an integer giving the number of hits retrieved}
+##'       \item{retStart}{an integer giving the index of the first hit retrieved}
+##'       \item{queryKey}{not implemented}
+##'       \item{webEnv}{not implemented}
+##'       \item{queryTranslation}{character vector containing the search term as translated by the Entrez search system}
+##'       \item{idList}{character vector containing the UIDs returned}
+##'       \item{url}{character vector containig the URL submitted to Entrez}
+##'       \item{xml}{XMLInternalDocument holding the unparsed search output}
+##' }
+##'
+##' @seealso \code{\link{eutil}}
+##' 
+##' @name esearch-class
+##' @rdname esearch-class
+##' @exportClass esearch
+##' 
+##' @examples
+##' getSlots("esearch")
+setClass("esearch",
+         representation(database = "charOrNULL",
+                        count = "numOrNULL",
+                        retMax = "numOrNULL",
+                        retStart = "numOrNULL",
+                        queryKey = "numOrNULL",
+                        webEnv = "charOrNULL",
+                        queryTranslation = "charOrNULL",
+                        idList = "charOrNULL"),
+         prototype(database = NULL, count = NULL, retMax = NULL,
+                   retStart = NULL, queryKey = NULL,
+                   webEnv = NULL, queryTranslation = NULL,
+                   idList = NULL),
+         contains = "eutil")
+
+
 ##' Search and retrieve primary UIDs matching a text query.
 ##'
-##' @param term A valid Entrez text query
-##' @param db Database to search (default: pubmed)
+##' @param term A valid Entrez search query.
+##' @param db Database to search (default: nucleotide)
+##' @param usehistory If \code{TRUE} search results are retained
+##' for future use in the user's environment.
 ##' @param retstart Index of the first UID in the retrieved set to be
 ##'   shown in the XML output (default: 0)
 ##' @param retmax Total number of UIDs to be retrieved (default: 100)
@@ -19,9 +62,8 @@
 ##' @examples 
 ##'   # Search in Nucleotide for all tRNAs
 ##'   esearch(term = "biomol trna[prop]", db = "nucleotide")
-esearch <- function (term, db="pubmed",
-                     ## not yet implemented
-                     ## usehistory = FALSE,
+esearch <- function (term, db="nucleotide",
+                     usehistory=FALSE,
                      ## WebEnv=NULL,
                      ## query_key=NULL,
                      retstart=0,
@@ -34,33 +76,29 @@ esearch <- function (term, db="pubmed",
   if (missing(term))
     stop("No query provided")
 
-  o <- .query(eutil="esearch", db=db, term=term, retstart=retstart,
+  if (length(term) > 1L)
+    term <- paste(term, collapse=" OR ")
+  
+  if (usehistory) "y" else NULL
+  
+  o <- .query(eutil="esearch", db=db, term=term,
+              usehistory=if (usehistory) "y" else NULL, retstart=retstart,
               retmax=retmax, field=field, datetype=datetype,
               reldate=reldate, mindate=mindate, maxdate=maxdate)
     
-  new("esearch", url=slot(o, "url"), xml=slot(o, "xml"),
+  new("esearch", url=o@url, data=o@data,
       error=checkErrors(o), database=db,
-      count = as.numeric(xmlValue(xmlRoot(o@xml)[["Count"]])),
-      retMax = as.numeric(xmlValue(xmlRoot(o@xml)[["RetMax"]])),
-      retStart = as.numeric(xmlValue(xmlRoot(o@xml)[["RetStart"]])),
-      queryTranslation = xmlValue(xmlRoot(o@xml)[["QueryTranslation"]]),
-      idList = as.character(sapply(getNodeSet(o@xml, '//Id'), xmlValue)))
+      count=as.numeric(xmlValue(xmlRoot(o@data)[["Count"]])),
+      retMax=as.numeric(xmlValue(xmlRoot(o@data)[["RetMax"]])),
+      retStart=as.numeric(xmlValue(xmlRoot(o@data)[["RetStart"]])),
+      queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
+      webEnv=xmlValue(xmlRoot(o@data)[["WebEnv"]]),
+      queryTranslation=xmlValue(xmlRoot(o@data)[["QueryTranslation"]]),
+      idList=as.character(sapply(getNodeSet(o@data, '//Id'), xmlValue)))
 }
 
 
-#### Accessor method for esearch
-.get.esearch <- function(obj, what) {
-  switch(what,
-         all=obj,
-         default=list(count = slot(obj, "count"),
-                      retMax = slot(obj, "retMax"),
-                      retStart = slot(obj, "retStart"),
-                      idList= slot(obj, "idList"),
-                      queryTranslation = slot(obj, "queryTranslation")),
-         slot(obj, what))
-}
-
-###### Convenience functions
+### convenience functions ##################################################
 
 ##' Retrieve the number of hits for a query.
 ##'
@@ -117,4 +155,68 @@ getUIDs <- function (term,
 }
 
 
+### accessor methods #######################################################
+
+.get.esearch <- function(x, what) {
+  switch(what,
+         all=x,
+         default=list(count = slot(x, "count"),
+                      retMax = slot(x, "retMax"),
+                      retStart = slot(x, "retStart"),
+                      idList = slot(x, "idList"),
+                      queryTranslation = slot(x, "queryTranslation")),
+         slot(x, what))
+}
+
+##' @rdname .get-methods
+##' @aliases .get,esearch-method,eutil-method
+setMethod(".get",
+          signature(x="esearch"),
+          function (x, what) {
+            .get.esearch(x, what)
+          })
+
+### extract methods ########################################################
+
+##' Extract elements of \code{esearch-class} uid lists
+##'
+##' @rdname extract-methods
+##' @aliases [,esearch-method
+  setMethod("[",
+            signature(x = "esearch", i = "numeric"),
+            function (x, i, j, ..., drop = FALSE) {
+              new("esearch",
+                  database=x@database,
+                  queryKey=NA,
+                  webEnv=NA,
+                  idList=x@idList[i])
+            })
+
+  
+### show methods ###########################################################
+  
+##' @rdname show-methods
+##' @aliases show,esearch-method
+setMethod("show",
+          signature(object="esearch"),
+          function (object) {
+            if (is.null(slot(object, "count"))) {
+              cat(paste("Database: '", slot(object, "database"), "'\n", sep = ""))
+              print(slot(object, "idList"))
+              return(invisible(NULL))
+            }
+            else {
+              cat(paste("ESearch query using the \'", slot(object, "database"),
+                        "\' database.\nQuery term: ", slot(object, "queryTranslation"),
+                        "\nNumber of hits: ", slot(object, "count"),
+                        "\n", sep = ""))
+              print(slot(object, "idList"))
+              return(invisible(NULL))
+            }
+          })
+
+print.esearch <- show
+  
+  
+  
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:

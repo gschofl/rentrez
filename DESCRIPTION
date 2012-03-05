@@ -7,6 +7,9 @@ Description: A set of classes and functions to make and manage
 Author: Gerhard Schöfl <gschofl@yahoo.de>
 Maintainer: Gerhard Schöfl <gschofl@yahoo.de>
 License: AGPL-3
+Depends:
+    XML,
+    RCurl
 Imports:
     XML,
     RCurl
@@ -18,3 +21,4 @@ Collate:
     'esummary.r'
     'package.r'
     'utils.r'
+    'efetch.r'
