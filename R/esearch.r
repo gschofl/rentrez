@@ -187,8 +187,8 @@ setMethod(".get",
             function (x, i, j, ..., drop = FALSE) {
               new("esearch",
                   database=x@database,
-                  queryKey=NA_integer_,
-                  webEnv=NA_character_,
+                  queryKey=NA,
+                  webEnv=NA,
                   idList=x@idList[i])
             })
 
