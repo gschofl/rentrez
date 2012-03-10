@@ -68,7 +68,7 @@ efetch <- function (id,
   }
   else if (is(id, "esearch")) {
     if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
-      o <- .query("efetch", db=db, query_key=query_key, WebEnv=WebEnv,
+      o <- .query("efetch", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
                   retmode=retmode, rettype=rettype, retstart=retstart,
                   retmax=retmax, strand=strand, seq_start=seq_start,
                   seq_stop=seq_stop, complexity=complexity)

@@ -200,17 +200,26 @@ setMethod(".get",
 setMethod("show",
           signature(object="esearch"),
           function (object) {
-            if (is.null(slot(object, "count"))) {
-              cat(paste("Database: '", slot(object, "database"), "'\n", sep = ""))
-              print(slot(object, "idList"))
+            if (is.null(object@count)) {
+              cat(sprintf("ESearch query using the %s database.\n",
+                          sQuote(object@database)))
+              if (length(ids <- object@idList) > 0L) {
+                print(ids)
+              }
+              else {
+                cat("No hits")
+              }
               return(invisible(NULL))
             }
             else {
-              cat(paste("ESearch query using the \'", slot(object, "database"),
-                        "\' database.\nQuery term: ", slot(object, "queryTranslation"),
-                        "\nNumber of hits: ", slot(object, "count"),
-                        "\n", sep = ""))
-              print(slot(object, "idList"))
+              cat(sprintf("ESearch query using the %s database.\nQuery term: %s\nNumber of hits: %s\n",
+                          sQuote(object@database), sQuote(object@queryTranslation), object@count))
+              if (!is.na(object@webEnv) && !is.na(object@queryKey))
+                cat(sprintf("Query Key: %s\nWebEnv: %s\n",
+                            object@queryKey, object@webEnv))
+              if (length(ids <- object@idList) > 0L) {
+                print(ids)
+              }
               return(invisible(NULL))
             }
           })

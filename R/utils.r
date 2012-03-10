@@ -81,18 +81,91 @@ checkErrors <- function (obj) {
 .docsum.sequence <- function (esummary) {
   ds <- esummary@documentSummary
   nr <- length(ds)
-  fr <- data.frame(stringsAsFactors=FALSE,
-                   Caption=character(nr), Title=character(nr),
-                   Extra=character(nr), GI=character(nr),
-                   CreateDate=character(nr), UpdateDate=character(nr),
-                   Flags=numeric(nr), TaxId=numeric(nr),
-                   Length=numeric(nr), Status=character(nr),
-                   ReplacedBy=character(nr), Comment=character(nr))
+  fr <- data.frame(stringsAsFactors=FALSE, uid=character(nr),
+                   caption=character(nr), title=character(nr),
+                   extra=character(nr), gi=character(nr),
+                   created=character(nr), updated=character(nr),
+                   flags=character(nr), tax_id=character(nr),
+                   length=numeric(nr), status=character(nr),
+                   replaced_by=character(nr), comment=character(nr))
+  
   for (i in seq.int(nr))
-    fr[i,] <- ds[[i]]
-  format(fr, justify="left")
+    fr[i,] <- c(names(ds[i]), ds[[i]])
+
+  fr$created <- as.Date(fr$created, "%Y/%m/%d")
+  fr$updated <- as.Date(fr$updated, "%Y/%m/%d")
+  fr$length <- as.numeric(fr$length)
+  fr <- fr[order(fr$title),]
+  row.names(fr) <- NULL
+  fr
 }
 
+.docsum.genome <- function (esummary) {
+  ds <- esummary@documentSummary
+  nr <- length(ds)
+  fr <- data.frame(stringsAsFactors=FALSE, uid=character(nr),
+                   name=character(nr), kingdom=character(nr),
+                   defline=character(nr), pid=character(nr),
+                   chromosomes=character(nr), plasmids=character(nr),
+                   organelles=character(nr), assembly=character(nr),
+                   accession=character(nr), assembly_id=character(nr),
+                   created=character(nr), options=character(nr))
+  
+  for (i in seq.int(nr))
+    fr[i,] <- c(names(ds[i]), ds[[i]])
+  
+  fr$created <- as.Date(strsplit(fr$created, " ")[[1L]][1L], "%Y/%m/%d")
+  fr <- fr[order(fr$name),]
+  row.names(fr) <- NULL
+  fr
+}
 
+.docsum.pubmed <- function (esummary) {
+  ds <- esummary@documentSummary
+  nr <- length(ds)
+  fr <- data.frame(stringsAsFactors=FALSE, pmid=character(nr),
+                   authors=character(nr), year=character(nr),
+                   title=character(nr), journal=character(nr),
+                   volume=character(nr), issue=character(nr),
+                   pages=character(nr), doi=character(nr),
+                   epubdate=character(nr))
 
+  for (i in seq.int(nr))
+    fr[i,] <- c(names(ds[i]), 
+                paste(ds[[i]]$AuthorList, collapse=", "),
+                substr(ds[[i]]$PubDate, 1, 4) , ds[[i]]$Title,
+                ds[[i]]$Source, ds[[i]]$Volume,
+                ds[[i]]$Issue, ds[[i]]$Pages,
+                if (!is.null(ds[[i]]$DOI)) ds[[i]]$DOI else "",
+                ds[[i]]$EPubDate)
+      
+  fr$epubdate <- as.Date(fr$epubdate, "%Y %b %d")
+  fr <- fr[order(fr$authors),]
+  row.names(fr) <- NULL
+  fr
+}
+
+.docsum.taxonomy <- function (esummary) {
+  ds <- esummary@documentSummary
+  nr <- length(ds)
+  fr <- data.frame(stringsAsFactors=FALSE, rank=character(nr),
+                   division=character(nr), scientific_name=character(nr),
+                   common_name=character(nr), txid=character(nr),
+                   nucleotide=character(nr), protein=character(nr),
+                   structure=character(nr), genome=character(nr),
+                   gene=character(nr), genus=character(nr),
+                   species=character(nr), subspecies=character(nr))
+  
+  for (i in seq.int(nr)) fr[i,] <- ds[[i]]
+  
+  fr <- data.frame(fr[5], fr[c(1,2,3,4,6,7,8,9,10,11,12,13)])
+  fr$nucleotide <- as.numeric(fr$nucleotide)
+  fr$protein <- as.numeric(fr$protein)
+  fr$structure <- as.numeric(fr$structure)
+  fr$genome <- as.numeric(fr$genome)
+  fr$gene <- as.numeric(fr$gene)
+  fr <- fr[order(fr$scientific_name),]
+  row.names(fr) <- NULL
+  fr
+}
 

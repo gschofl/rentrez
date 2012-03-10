@@ -1,8 +1,8 @@
 Package: reutils
-Version: 0.01.0
+Version: 0.02.0
 Date: 2012-01-20
 Title: Interface to NCBI's EUtilities
-Description: A set of classes and functions to make and manage
+Description: A set of classes and functions to manage
     NCBI Entrez web service queries via the EUtilities service.
 Author: Gerhard Schöfl <gschofl@yahoo.de>
 Maintainer: Gerhard Schöfl <gschofl@yahoo.de>

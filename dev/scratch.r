@@ -1,20 +1,30 @@
-loadAll <- function (pkg, document=FALSE) {
-  setwd("~/R/Devel/")
-  # remove.packages(pkg)
-  if (document) document(pkg)
-  build(pkg)
-  install(pkg)
-  do.call(library, list(pkg))
-}
-loadAll("reutils", document=F)
-remove.packages("reutils")
-setwd("~/R/Devel/")
+setwd("~/R/Devel/")
 document("reutils")
-
-getClassDef("eutil")
-help("einfo")
+library(reutils)
+remove.packages("reutils")
 
 # test esummary ######################################################## {{{
+psit <- esummary(esearch("Chlamydia psittaci[organism]", "taxonomy"))
+txids <- summary(psit)$txid[which(summary(psit)$genome > 0)]
+taxid <- txids[2]
+
+
+getFromTaxId <- function (taxid, db="gene") {
+  if (length(taxid) > 1L) {
+    taxid <- taxid[1L]
+    warning("Only the first taxid will be used")
+  }
+  ids <- esearch(term=paste0("txid", taxid, "[Organism:noexp]"),
+                 db=db, usehistory=TRUE, retmax=0) 
+  get <- efetch(ids, retmode="xml", retstart=1, retmax=3)
+  EGSet <- xmlParse(get@data)
+  EGDocs <- lapply(getNodeSet(EGSet, "//Entrezgene"), xmlDoc)
+  
+
+
+}
+
+
 # Construct url, fetch response, construct eutil object
 .local.query <- function (eutil, ...) {
   stopifnot(require(XML))
@@ -115,16 +125,10 @@ output = esummary(id_list, db)
 data <- efetch(id_list, db, rettype="fasta", retmode="text")
 cat(data@data)
 
-output@documentSummary$"194680922"
-ds <- output@documentSummary
+esummary(x <- esearch("\"Salmonella DERBY\"[Organism] and plasmid",
+                      db="nucleotide", retmax=10))
+efetch(x[1])
 
-res <- esearch(db="nuccore", retmax=10, term="opuntia[ORGN] accD")
-sum <- esummary(res)
-
-.docsum(sum)
-
-
-.docsum(output)
 
 
 

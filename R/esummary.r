@@ -141,17 +141,36 @@ setMethod("show",
                       "\' database.\n$ documentSummary :\n", sep=""))
             if (is.null(slot(object, "documentSummary")))
               print(object@data)
-            else if (grepl("protein|nuccore|nucleotide", object@database))
-              print(.docsum.sequence(object))
-            else
-              print(str(object@documentSummary))
+            else 
+              switch(object@database,
+                     protein=print(.docsum.sequence(object)),
+                     nuccore=print(.docsum.sequence(object)),
+                     nucleotide=print(.docsum.sequence(object)),
+                     genome=print(.docsum.genome(object)),
+                     pubmed=print(.docsum.pubmed(object)),
+                     taxonomy=print(.docsum.taxonomy(object)),
+                     print(str(object@documentSummary)))
             return(invisible(NULL))
           })
 
 print.esearch <- show
 
+### summary methods ########################################################
 
-
+##' @rdname summary-methods
+##' @aliases summary,esummary-method
+setMethod("summary",
+          signature(object = "esummary"),
+          function (object, ...) {
+            switch(object@database,
+                   protein=return(.docsum.sequence(object)),
+                   nuccore=return(.docsum.sequence(object)),
+                   nucleotide=return(.docsum.sequence(object)),
+                   genome=return(.docsum.genome(object)),
+                   pubmed=return(.docsum.pubmed(object)),
+                   taxonomy=return(.docsum.taxonomy(object)),
+                   return(object@documentSummary))
+          })
 
 
 
