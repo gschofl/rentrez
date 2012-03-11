@@ -1,29 +1,137 @@
 ### Esummary ###############################################################
+##' @include eutil.r
+##' @include utils.r
+NULL
 
-## class "esummary"
+##' esummary class
+##' 
+##' esummary is an S4 class that extends the \code{\link{eutil-class}}.
+##' This class provides a container for data retrived by calls to the 
+##' NCBI ESummary utility.
+##' 
+##' esummary objects have two slots in addition to the slots provided by
+##' basic \code{\link{eutil-class}} objects:
+##' \describe{
+##'   \item{database}{The name of the queried database}
+##'   \item{documentSummary}{A named list holding the parsed contents of
+##'   the XML DocSums returned from a call to the NCBI ESearch utility.}
+##' }
+##' 
+##' @seealso \code{\link{esummary}} for generating calls to the NCBI
+##' ESummary utility.
+##'
+##' @name esummary-class
+##' @rdname esummary-class
+##' @exportClass esummary
+##' @aliases $,esummary-method
+##' @aliases [,esummary-method
+##' @aliases show,esummary-method
+##' @aliases docsum,esummary-method
+##' @aliases esummary,esummary-method
 setClass("esummary",
          representation(database = "charOrNULL",
                         documentSummary = "listOrNULL"),
          prototype(database = NULL, documentSummary = NULL),
          contains = "eutil")
 
+##' @export
+setMethod("show",
+          signature("esummary"),
+          function(object) {
+            cat(paste("Esummary query using the \'", object@database,
+                      "\' database.\n$ documentSummary :\n", sep=""))
+            if (is.null(slot(object, "documentSummary")))
+              print(object@data)
+            else 
+              switch(object@database,
+                     protein=print(.docsum.sequence(object)),
+                     nuccore=print(.docsum.sequence(object)),
+                     nucleotide=print(.docsum.sequence(object)),
+                     genome=print(.docsum.genome(object)),
+                     pubmed=print(.docsum.pubmed(object)),
+                     taxonomy=print(.docsum.taxonomy(object)),
+                     print(str(object@documentSummary)))
+            return(invisible(NULL))
+          })
+
+##' @export
+setMethod("$",
+          signature(x="esummary"),
+          function (x, name) {
+            if (!is.null(x@documentSummary) && !identical(name, "documentSummary"))
+              return(slot(x, "documentSummary")[[name, exact=FALSE]])
+            else
+              return(slot(x, name))
+          })
+
+##' @export
+setMethod("[",
+          signature(x="esummary", i="ANY", j="missing"),
+          function (x, i) {
+            if (is(i, "esearch")) {
+              return(slot(x, "documentSummary")[slot(i, "idList")])
+            }
+            return(slot(x, "documentSummary")[i])
+          })
+
+##' Access a DocSum from an \code{\link{esummary-class}} object.
+##'
+##' Attempts to parse ESummary DocSums into a data frame. Returns a
+##' named list if not implemented for a specific database.
+##'
+##' @param object An \code{\link{esummary-class}} object.
+##' 
+##' @return A data frame or a list
+##'
+##' @docType methods
+##' @examples
+##'    ## examples
+setGeneric("docsum", function (object) {
+  standardGeneric("docsum")
+})
+
+##' @export
+setMethod("docsum",
+          signature(object = "esummary"),
+          function (object) {
+            switch(object@database,
+                   protein=return(.docsum.sequence(object)),
+                   nuccore=return(.docsum.sequence(object)),
+                   nucleotide=return(.docsum.sequence(object)),
+                   genome=return(.docsum.genome(object)),
+                   pubmed=return(.docsum.pubmed(object)),
+                   taxonomy=return(.docsum.taxonomy(object)),
+                   return(object@documentSummary))
+          })
+
 ##' Retrieve document summaries (DocSums)
 ##'
 ##' \code{esummary} retrieves document summaries for a list of primary 
-##' UIDs. See the online documentation for additional information
+##' UIDs or for a set of UIDs stored in the user's web environment
+##' (using the Entrez History server).
+##' See the online documentation for additional information
 ##' (\url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary})
 ##'
-##' @param id (Required). List of UIDs provided as a character vector
-##'   or an \code{esearch} object. If UIDs are provided
-##'   as a plain character vector their database of origin must be 
-##'   specified with \code{db}.
-##' @param db (Not required if UIDs are provided as an \code{esearch}
-##'   object).
-##'   Database from which to retrieve DocSums.
+##' @param id (Required unless input is from the Entrez History server.)
+##' List of UIDs provided either as a character vector or as an
+##' \code{\link{esearch-class}} object. If UIDs are provided as a plain
+##' character vector the database from which to retrieve DocSums must be
+##' specified explicitly.
+##' @param db (Required unless UIDs are provided as an 
+##' \code{\link{esearch-class}} object.)
+##' Database from which to retrieve DocSums.
+##' @param query_key An integer specifying which of the UID lists attached
+##' to a user's Web Environment will be used as input to \code{esummary}.
+##' Query keys are obtained from the output of previous \code{\link{esearch}},
+##' \code{\link{epost}} or \code{\link{elink}} calls.
+##' @param WebEnv A character string specifying the Web Environment that
+##' contains the UID list to be provided as input to \code{esummary}.
+##' The WebEnv value is obtained from the output of previous \code{\link{esearch}},
+##' \code{\link{epost}} or \code{\link{elink}} calls.
 ##' @param version If "2.0" \code{esummary} will retrieve version 2.0
-##'   ESummary XML but currently not parse them.
+##' ESummary XML output but not, currently, attempt to parse it.
 ##'
-##' @return A \code{esummary-class} object
+##' @return An \code{\link{esummary-class}} object.
 ##'
 ##' @export
 ##'
@@ -37,8 +145,9 @@ esummary <- function (id,
                       ## retmax = 100,
                       version = "default" ) {
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
-    stop("No UID(s) provided")
-  if (is.null(db)) stop("No database name provided")
+    stop("No UIDs provided")
+  if (is.null(db))
+    stop("No database name provided")
   
   hasRes <- FALSE
   ## use WebEnv and QueryKey if available
@@ -59,15 +168,7 @@ esummary <- function (id,
   }
   
   if (!hasRes) {
-    if (length(id) > 1) {
-      if (length(id) > 200) {
-        warning("The UID list is too large. Only the first 200 UIDs will be used")
-        id <- id[1:200]
-      }
-      id <- paste(id, collapse = ",")
-    }
-    
-    o <- .query("esummary", db=db, id=id, 
+    o <- .query("esummary", db=db, id=collapseUIDs(id), 
                 version=if (identical(version, "2.0")) "2.0" else NULL)
   }
 
@@ -82,96 +183,3 @@ esummary <- function (id,
           docSums }
       )
 }
-
-
-### accessor methods #######################################################
-
-.get.esummary <- function(x, what) {
-  switch(what,
-         all=x,
-         default=list(database=slot(x, "database"),
-                      documentSummary=slot(x, "documentSummary")),
-         slot(x, what))
-}
-
-##' @rdname .get-methods
-##' @aliases .get,esummary-method,eutil-method
-setMethod(".get",
-          signature(x="esummary"),
-          function (x, what) {
-            .get.esummary(x, what)
-          })
-
-
-### extract methods ########################################################
-
-##' @rdname extract-methods
-##' @aliases $,esummary-method
-setMethod("$",
-          signature(x="esummary"),
-          function (x, name) {
-            if (!is.null(x@documentSummary) && !identical(name, "documentSummary"))
-              return(slot(x, "documentSummary")[[name, exact=FALSE]])
-            else
-              return(slot(x, name))
-          })
-
-##' Extract elements of \code{esummary} objects
-##'
-##' @rdname extract-methods
-##' @aliases [,esummary-method
-setMethod("[",
-          signature(x="esummary", i="ANY", j="missing"),
-          function (x, i) {
-            if (is(i, "esearch")) {
-              return(slot(x, "documentSummary")[slot(i, "idList")])
-            }
-              return(slot(x, "documentSummary")[i])
-          })
-
-
-### show methods ###########################################################
-
-##' @rdname show-methods
-##' @aliases show,esummary-method
-setMethod("show",
-          signature("esummary"),
-          function(object) {
-            cat(paste("Esummary query using the \'", object@database,
-                      "\' database.\n$ documentSummary :\n", sep=""))
-            if (is.null(slot(object, "documentSummary")))
-              print(object@data)
-            else 
-              switch(object@database,
-                     protein=print(.docsum.sequence(object)),
-                     nuccore=print(.docsum.sequence(object)),
-                     nucleotide=print(.docsum.sequence(object)),
-                     genome=print(.docsum.genome(object)),
-                     pubmed=print(.docsum.pubmed(object)),
-                     taxonomy=print(.docsum.taxonomy(object)),
-                     print(str(object@documentSummary)))
-            return(invisible(NULL))
-          })
-
-print.esearch <- show
-
-### summary methods ########################################################
-
-##' @rdname summary-methods
-##' @aliases summary,esummary-method
-setMethod("summary",
-          signature(object = "esummary"),
-          function (object, ...) {
-            switch(object@database,
-                   protein=return(.docsum.sequence(object)),
-                   nuccore=return(.docsum.sequence(object)),
-                   nucleotide=return(.docsum.sequence(object)),
-                   genome=return(.docsum.genome(object)),
-                   pubmed=return(.docsum.pubmed(object)),
-                   taxonomy=return(.docsum.taxonomy(object)),
-                   return(object@documentSummary))
-          })
-
-
-
-

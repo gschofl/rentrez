@@ -14,11 +14,11 @@ Imports:
     XML,
     RCurl
 Collate:
-    'all-classes.r'
-    'all-methods.r'
+    'eutil.r'
+    'utils.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'
     'package.r'
-    'utils.r'
     'efetch.r'
+    'epost.r'

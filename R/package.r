@@ -1,4 +1,4 @@
-##' The reutils package provides an interface to NCBI's
+##' The rentrez package provides an interface to NCBI's
 ##' EUtils/Entrez server.
 ##'
 ##' NCBI provides the EUtils web service for software to query the Entrez
@@ -16,7 +16,7 @@
 ##'   \code{\link{esummary}}: Retrieves document summaries (DocSums) from
 ##'       a list of primary UIDs.
 ##'
-##' @name reutils-package
+##' @name rentrez-package
 ##' @author Gerhard Schöfl \email{gschofl@@yahoo.de}
 ##' @references \url{www.website.de}
 ##' @docType package

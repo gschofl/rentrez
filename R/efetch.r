@@ -1,30 +1,98 @@
 ### Efetch #################################################################
+#' @include eutil.r
+#' @include utils.r
+NULL
 
-## class "efetch"
+##' efetch class
+##' 
+##' efetch is an S4 class that extends the \code{\link{eutil-class}}.
+##' This class provides a container for data retrived by calls to the 
+##' NCBI EFetch utility.
+##' 
+##' efetch objects have three slots in addition to the slots provided by
+##' basic \code{\link{eutil-class}} objects:
+##' \describe{
+##'   \item{database}{The name of the queried database.}
+##'   \item{type}{A character vector specifying the record view returned,
+##'   such as Abstract or MEDLINE from PubMed, or GenPept or FASTA from 
+##'   protein}
+##'   \item{mode}{A character vector specifying the data format of the
+##'   records returned, such as plain text, HMTL or XML}
+##' }
+##' 
+##' @seealso \code{\link{efetch}} for generating calls to the NCBI EFetch
+##' utility.
+##' 
+##' @name efetch-class
+##' @rdname efetch-class
+##' @exportClass efetch
+##' @aliases show,efetch-method
+##' @aliases efetch,efetch-method
 setClass("efetch", 
-         representation(database = "charOrNULL",
-                        type = "charOrNULL",
-                        mode = "charOrNULL"),
+         representation(database = "character",
+                        type = "character",
+                        mode = "character"),
+         prototype(database = NA_character_,
+                   type = NA_character_,
+                   mode = NA_character_),
          contains = "eutil")
 
-##' Retrieves data from NCBI's databases
+##' @export
+setMethod("show",
+          signature(object = "efetch"),
+          function (object) {
+            cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
+                        sQuote(object@database), sQuote(object@url)))
+            cat(object@data)
+            return(invisible(NULL))
+          })
+
+##' Retrieve data records in the requested format from NCBI
 ##'
-##' If no database is provided \code{einfo} will return a list of databases
-##' available for querying. For specific databases, \code{einfo} provides
-##' the name, a description, the number indexed in the database, the date
-##' of the last update of the database, the fields and the available links
-##' to other Entrez databases.
-##'
-##' @param db \code{NULL} or a valid NCBI database name
-##'
-##' @return ReturnValue
-##'
-##' @seealso linkToSomewhere
+##' \code{efetch} retrieves data records in the requested format from a 
+##' character vector of one or more primary UIDs or from a set of UIDs
+##' stored in the user's web environment.
+##' See the online documentation at
+##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}
+##' for additional information.
+##' 
+##' @param id (Required unless input is from the Entrez History server.)
+##' List of UIDs provided either as a character vector
+##' or as an \code{\link{esearch-class}} object. If UIDs are provided
+##' as a plain character vector \code{db} must be specified explicitly, and
+##' all of the UIDs must be from the database specified by \code{db}.
+##' @param db (Required only when input is from a UID list.)
+##' Database from which to retrieve records.
+##' @param query_key An integer specifying which of the UID lists attached
+##' to a user's Web Environment will be used as input to \code{efetch}.
+##' The query key is obtained drectely from the objects returned by previous
+##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.
+##' @param WebEnv A character string specifying the Web Environment that
+##' contains the UID list to be provided as input to \code{efetch}.
+##' The WebEnv value is obtained directely from the objects returned by previous
+##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.
+##' @param rettype A character string specifying the data format of the
+##' records returned, such as plain text, HMTL or XML. See 
+##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+##' for allowed values for each database.
+##' @param retmode A character string specifying the record view returned,
+##' such as Abstract or MEDLINE from PubMed, or GenPept or FASTA from protein.
+##' See \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+##' for allowed values for each database.
+##' @param retstart Numeric index of the first record to be retrieved.
+##' @param retmax Total number of records from the input set to be retrieved.
+##' @param strand Strand of DNA to retrieve. (1: plus strand, 2: minus strand)
+##' @param seq_start First sequence base to retrieve.
+##' @param seq_stop Last sequence base to retrieve.
+##' @param complexity Data content to return. (0: entire data structure,
+##' 1: bioseq, 2: minimal bioseq-set, 3: minimal nuc-prot, 4: minimal pub-set)
+##' 
+##' @return An \code{\link{efetch-class}} object.
 ##'
 ##' @export
-##'
 ##' @examples
-##'   ## Not run: efetch("1234")
+##'   # Fetch PMIDs 17284678 and 9997 as text abstracts
+##'   efetch(c(17284678,9997), "pubmed", retmode="text", rettype="abstract")
 efetch <- function (id,
                     db=attr(id, "database"),
                     query_key=NULL,
@@ -38,8 +106,9 @@ efetch <- function (id,
                     seq_stop=NULL,
                     complexity=NULL) {
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
-    stop("No UID(s) provided")
-  if (is.null(db)) stop("No database name provided")
+    stop("No UIDs provided")
+  if (is.null(db))
+    stop("No database name provided")
   
   ## setting default rettype and retmode for each database
   if (is.null(rettype)) {
@@ -66,7 +135,7 @@ efetch <- function (id,
                 seq_stop=seq_stop, complexity=complexity)
     hasRes <- TRUE
   }
-  else if (is(id, "esearch")) {
+  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
     if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
       o <- .query("efetch", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
                   retmode=retmode, rettype=rettype, retstart=retstart,
@@ -80,15 +149,7 @@ efetch <- function (id,
   }
   
   if (!hasRes) {
-    if (length(id) > 1) {
-      if (length(id) > 200) {
-        warning("The UID list is too large. Only the first 200 UIDs will be used")
-        id <- id[1:200]
-      }
-      id <- paste(id, collapse = ",")
-    }
-    
-    o <- .query("efetch", db=db, id=id,
+    o <- .query("efetch", db=db, id=collapseUIDs(id),
                 retmode=retmode, rettype=rettype, retstart=retstart,
                 retmax=retmax, strand=strand, seq_start=seq_start,
                 seq_stop=seq_stop, complexity=complexity)
@@ -97,20 +158,6 @@ efetch <- function (id,
   new("efetch", url=o@url, data=o@data, database=db,
       mode=retmode, type=rettype)
 }
-
-##' @rdname show-methods
-##' @aliases show,esearch-method
-setMethod("show",
-          signature(object="efetch"),
-          function (object) {
-            cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
-                        sQuote(object@database), sQuote(object@url)))
-            cat(object@data)
-            return(invisible(NULL))
-          })
-
-print.esearch <- show
-
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
 #       vim:fdm=marker:fmr={{{,}}}:fdl=0

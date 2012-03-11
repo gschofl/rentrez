@@ -5,61 +5,28 @@ remove.packages("reutils")
 
 # test esummary ######################################################## {{{
 psit <- esummary(esearch("Chlamydia psittaci[organism]", "taxonomy"))
-txids <- summary(psit)$txid[which(summary(psit)$genome > 0)]
+txids <- docsum(psit)$txid[which(docsum(psit)$genome > 0)]
 taxid <- txids[2]
 
 
-getFromTaxId <- function (taxid, db="gene") {
+getFromTaxId <- function (taxid, db="gene", record_type="table") {
   if (length(taxid) > 1L) {
     taxid <- taxid[1L]
     warning("Only the first taxid will be used")
   }
   ids <- esearch(term=paste0("txid", taxid, "[Organism:noexp]"),
-                 db=db, usehistory=TRUE, retmax=0) 
-  get <- efetch(ids, retmode="xml", retstart=1, retmax=3)
-  EGSet <- xmlParse(get@data)
-  EGDocs <- lapply(getNodeSet(EGSet, "//Entrezgene"), xmlDoc)
-  
-
-
+                 db=db, usehistory=TRUE, retmax=0)
+  if (record_type == "table") {
+    get <- efetch(ids, rettype="gene_table", retmode="text", retstart=1, retmax=5)
+  }
+  else if (record_type = "xml") {
+    get <- efetch(ids, retmode="xml", retstart=1, retmax=5)
+    entrez_gene_set <- xmlParse(get@data)
+    entrez_gene <- lapply(getNodeSet(entrez_gene_set, "//Entrezgene"), xmlDoc)
 }
 
+  efetch(c(17284678,9997), "pubmed", retmode="text", rettype="abstract")
 
-# Construct url, fetch response, construct eutil object
-.local.query <- function (eutil, ...) {
-  stopifnot(require(XML))
-  stopifnot(require(RCurl))
-  eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-  query_string <- reutils:::.query_string(...)
-  url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
-  xml = xmlTreeParse(getURL(url), useInternalNodes = TRUE)
-  xml
-}
-
-(o <- .local.query(eutil="esearch", db="nucleotide", 
-                  term='\"Penaeus monodon[organism]', retstart=4,
-                  retmax=6, field=NULL, datetype=NULL,
-                  reldate=NULL, mindate=NULL, maxdate=NULL))
-
-
-dtd <- toString.XMLNode(xmlRoot(o, skip=FALSE))
-DTD <- parseDTD(regmatches(dtd, regexpr("http://.*\\.dtd", dtd)))
-
-uids <- esearch('\"Penaeus monodon\"[organism]', db="nucleotide", retmax=2)
-uids
-efetch(uids[1])
-uids@xml
-uids@error
-
-s <- esummary(uids[1])
-s <- esummary("1234", db="pubmed")
-docsums <- s$documentSummary
-as.data.frame(do.call(rbind, docsums))
-
-pm <- getUIDs(term='Chip-Seq[TITLE]', db="pubmed")
-res100 <- esummary(pm[1:100])
-str(res100[1])
-res100[1]$PubDate
 # }}}
 
 # test einfo ########################################################### {{{

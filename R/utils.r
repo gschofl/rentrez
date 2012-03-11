@@ -77,6 +77,20 @@ checkErrors <- function (obj) {
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
+collapseUIDs <- function (id) {
+  
+  if (is(id, "esearch"))
+    id <- id@idList
+  
+  if (length(id) > 1L) {
+    if (length(id) > 200L) {
+      warning("The UID list is too large. Only the first 200 UIDs will be used")
+      id <- id[1:200]
+    }
+    id <- paste(id, collapse = ",")
+  }
+  id
+}
 
 .docsum.sequence <- function (esummary) {
   ds <- esummary@documentSummary
