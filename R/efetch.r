@@ -52,25 +52,30 @@ setMethod("show",
 ##' \code{efetch} retrieves data records in the requested format from a 
 ##' character vector of one or more primary UIDs or from a set of UIDs
 ##' stored in the user's web environment.
+##' 
 ##' See the online documentation at
 ##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}
 ##' for additional information.
 ##' 
-##' @param id (Required unless input is from the Entrez History server.)
-##' List of UIDs provided either as a character vector
-##' or as an \code{\link{esearch-class}} object. If UIDs are provided
-##' as a plain character vector \code{db} must be specified explicitly, and
-##' all of the UIDs must be from the database specified by \code{db}.
-##' @param db (Required only when input is from a UID list.)
+##' @param id (Required)
+##' List of UIDs provided either as a character vector, as an
+##' \code{\link{esearch-class}} object, or by reference to a web environment
+##' and a query key obtained directly from the objects returned by previous
+##' \code{\link{esearch}} (if \code{usehistory} was set \code{TRUE}),
+##' \code{\link{epost}} or \code{\link{elink}} calls.
+##' If UIDs are provided as a plain character vector, \code{db} must be
+##' specified explicitly, and all of the UIDs must be from the database
+##' specified by \code{db}.
+##' @param db (Required only when \code{id} is a character vector of UIDs)
 ##' Database from which to retrieve records.
 ##' @param query_key An integer specifying which of the UID lists attached
 ##' to a user's Web Environment will be used as input to \code{efetch}.
-##' The query key is obtained drectely from the objects returned by previous
-##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.
+##' (Usually obtained drectely from objects returned by previous
+##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.)
 ##' @param WebEnv A character string specifying the Web Environment that
-##' contains the UID list to be provided as input to \code{efetch}.
-##' The WebEnv value is obtained directely from the objects returned by previous
-##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.
+##' contains the UID list. (Usually obtained directely from objects returned
+##' by previous \code{\link{esearch}}, \code{\link{epost}} or
+##' \code{\link{elink}} calls.)
 ##' @param rettype A character string specifying the data format of the
 ##' records returned, such as plain text, HMTL or XML. See 
 ##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}

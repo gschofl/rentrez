@@ -18,7 +18,6 @@
 ##'
 ##' @name rentrez-package
 ##' @author Gerhard Schöfl \email{gschofl@@yahoo.de}
-##' @references \url{www.website.de}
 ##' @docType package
 ##' @keywords package
 NA

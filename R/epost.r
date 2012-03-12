@@ -25,8 +25,8 @@ NULL
 ##' @name post-class
 ##' @rdname epost-class
 ##' @exportClass epost
-##' @aliases epost, epost-method
-##' @aliases show, epost-method
+##' @aliases epost,epost-method
+##' @aliases show,epost-method
 setClass("epost",
          representation(database = "character",
                         queryKey = "numeric",
@@ -49,7 +49,7 @@ setMethod("show",
 ##' Post a list of primary UIDs to the NCBI history server.
 ##'
 ##' \code{epost} posts a list of UIDs for future use the the user's
-##' web environment for use with \code{\link{esummary}} or
+##' web environment for access with \code{\link{esummary}} or
 ##' \code{\link{efetch}}.
 ##' 
 ##' See the online documentation at

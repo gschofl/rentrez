@@ -25,7 +25,7 @@
 }
 \description{
   \code{epost} posts a list of UIDs for future use the the
-  user's web environment for use with
+  user's web environment for access with
   \code{\link{esummary}} or \code{\link{efetch}}.
 }
 \details{

@@ -23,8 +23,5 @@ EUtils/Entrez server.}
 \author{
   Gerhard Schöfl \email{gschofl@yahoo.de}
 }
-\references{
-  \url{www.website.de}
-}
 \keyword{package}
 

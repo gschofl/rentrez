@@ -6,28 +6,30 @@
     WebEnv = NULL, version = "default")
 }
 \arguments{
-  \item{id}{(Required unless input is from the Entrez
-  History server.) List of UIDs provided either as a
-  character vector or as an \code{\link{esearch-class}}
-  object. If UIDs are provided as a plain character vector
-  the database from which to retrieve DocSums must be
-  specified explicitly.}
+  \item{id}{(Required) List of UIDs provided either as a
+  character vector, as an \code{\link{esearch-class}}
+  object, or by reference to a Web Environment and a query
+  key obtained directly from objects returned by previous
+  calls to \code{\link{esearch}}, \code{\link{epost}} or
+  \code{\link{elink}}. If UIDs are provided as a plain
+  character vector, \code{db} must be specified explicitly,
+  and all of the UIDs must be from the database specified
+  by \code{db}.}
 
-  \item{db}{(Required unless UIDs are provided as an
-  \code{\link{esearch-class}} object.) Database from which
-  to retrieve DocSums.}
+  \item{db}{(Required only when \code{id} is a character
+  vector of UIDs) Database from which to retrieve DocSums.}
 
   \item{query_key}{An integer specifying which of the UID
   lists attached to a user's Web Environment will be used
-  as input to \code{esummary}. Query keys are obtained from
-  the output of previous \code{\link{esearch}},
-  \code{\link{epost}} or \code{\link{elink}} calls.}
+  as input to \code{efetch}. (Usually obtained drectely
+  from objects returned by previous \code{\link{esearch}},
+  \code{\link{epost}} or \code{\link{elink}} calls.)}
 
   \item{WebEnv}{A character string specifying the Web
-  Environment that contains the UID list to be provided as
-  input to \code{esummary}. The WebEnv value is obtained
-  from the output of previous \code{\link{esearch}},
-  \code{\link{epost}} or \code{\link{elink}} calls.}
+  Environment that contains the UID list. (Usually obtained
+  directely from objects returned by previous
+  \code{\link{esearch}}, \code{\link{epost}} or
+  \code{\link{elink}} calls.)}
 
   \item{version}{If "2.0" \code{esummary} will retrieve
   version 2.0 ESummary XML output but not, currently,
@@ -39,8 +41,10 @@
 \description{
   \code{esummary} retrieves document summaries for a list
   of primary UIDs or for a set of UIDs stored in the user's
-  web environment (using the Entrez History server). See
-  the online documentation for additional information
+  web environment (using the Entrez History server).
+}
+\details{
+  See the online documentation for additional information
   (\url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary})
 }
 \examples{

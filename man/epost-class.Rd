@@ -1,8 +1,7 @@
 \name{post-class}
-\alias{epost-method}
-\alias{epost,}
+\alias{epost,epost-method}
 \alias{post-class}
-\alias{show,}
+\alias{show,epost-method}
 \title{epost class}
 \description{
   epost is an S4 class that extends the

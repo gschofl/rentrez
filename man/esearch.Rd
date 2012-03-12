@@ -1,6 +1,6 @@
 \name{esearch}
 \alias{esearch}
-\title{Search and retrieve primary UIDs matching a text query.}
+\title{Search and retrieve primary UIDs matching a text query}
 \usage{
   esearch(term, db = "nucleotide", usehistory = FALSE,
     WebEnv = NULL, query_key = NULL, retstart = 0,
@@ -10,30 +10,30 @@
 \arguments{
   \item{term}{A valid Entrez text query.}
 
-  \item{db}{Database to search (default: nucleotide)}
+  \item{db}{Database to search (default: nucleotide).}
 
   \item{usehistory}{If \code{TRUE} search results are
-  stored drectly in the user's web environment so that they
+  stored drectly in the user's Web Environment so that they
   can be used in a subsequent call to \code{\link{efetch}},
   \code{\link{esummary}}, or \code{\link{elink}}. Also,
-  usehistory must be set to \code{TRUE} for \code{esearch}
-  to interpret query key values included in term or to
-  accept a WebEnv as input.}
+  \code{usehistory} must be set to \code{TRUE} for
+  \code{esearch} to interpret query key values included in
+  \code{term} or to accept a \code{WebEnv} as input.}
 
   \item{WebEnv}{Web environment string returned by a
   previous call to \code{\link{esearch}},
   \code{\link{epost}} or \code{\link{elink}}. When
   provided, \code{esearch} will append the results of the
-  search to the pre-existing WebEn. Providing WebEnv also
-  allows query keys to be used in term so that previous
-  search sets can be combined or limited.}
+  search to the pre-existing WebEnv. Providing WebEnv also
+  allows query keys to be used in \code{term} so that
+  previous search sets can be combined or limited.}
 
   \item{query_key}{query key returned by a previous call to
   \code{\link{esearch}}, \code{\link{epost}} or
   \code{\link{elink}}. When provided, \code{esearch} will
   find the intersection of the set specified by query_key
-  and the set retrieved by the query in term (i.e. joins
-  the two with AND).}
+  and the set retrieved by the query in \code{term} (i.e.
+  joins the two with AND).}
 
   \item{retstart}{Numeric index of the first UID in the
   retrieved set to be shown in the XML output (default:
@@ -42,8 +42,8 @@
   \item{retmax}{Total number of UIDs to be retrieved
   (default: 100).}
 
-  \item{field}{Optional. Search field. Limits the entire
-  search term, if used.}
+  \item{field}{Optional. Search field. If used, limits the
+  entire search term.}
 
   \item{datetype}{Optional. Type of date to limit the
   search. One of "mdat" (modification date), "pdat"
@@ -64,8 +64,8 @@
 \description{
   \code{esearch} searches and retrieves primary UIDs for
   use with \code{\link{efetch}}, \code{\link{esummary}},
-  and \code{\link{elink}}, and optinally stores results in
-  the user's web environment for future use.
+  and \code{\link{elink}}, and optionally stores the
+  results in the user's web environment for future access.
 }
 \details{
   See the online documentation at

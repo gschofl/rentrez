@@ -14,14 +14,14 @@ NULL
 ##' \describe{
 ##'   \item{database}{The name of the queried database.}
 ##'   \item{count}{An integer giving the total number of hits for a database
-##'   query}
-##'   \item{retMax}{An integer giving the number of hits retrieved}
-##'   \item{retStart}{An integer giving the index of the first hit retrieved}
-##'   \item{queryKey}{query key parameter specifying the location on the
-##'   Entrez history server of the list of UIDs matching the Entrez query.}
-##'   \item{webEnv}{Web environment parameter specifying the location on the
-##'   Entrez history server of the list of UIDs matching the Entrez query.}
-##'   \item{queryTranslation}{character vector containing the search term as
+##'   query.}
+##'   \item{retMax}{An integer giving the number of hits retrieved.}
+##'   \item{retStart}{An integer giving the index of the first hit retrieved.}
+##'   \item{queryKey}{Parameter specifying a UID list attached to a user's
+##'   Web Environment on the Entrez history server.}
+##'   \item{webEnv}{Parameter specifying the Web Environment on the Entrez
+##'   history server containing the list of UIDs matching an Entrez query.}
+##'   \item{queryTranslation}{Character vector containing the search term as
 ##'   translated by the Entrez search system}
 ##'   \item{idList}{character vector containing the UIDs returned}
 ##' }
@@ -103,47 +103,49 @@ setMethod("length",
             return(length(x@idList))
           })
 
-##' Search and retrieve primary UIDs matching a text query.
+##' Search and retrieve primary UIDs matching a text query
 ##'
 ##' \code{esearch} searches and retrieves primary UIDs for use with
 ##' \code{\link{efetch}}, \code{\link{esummary}}, and \code{\link{elink}},
-##' and optinally stores results in the user's web environment for future
-##' use.
+##' and optionally stores the results in the user's web environment for
+##' future access.
 ##' 
 ##' See the online documentation at
 ##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch}
 ##' for additional information.
 ##' 
 ##' @param term A valid Entrez text query.
-##' @param db Database to search (default: nucleotide)
+##' @param db Database to search (default: nucleotide).
 ##' @param usehistory If \code{TRUE} search results are stored drectly in
-##' the user's web environment so that they can be used in a subsequent 
+##' the user's Web Environment so that they can be used in a subsequent 
 ##' call to \code{\link{efetch}}, \code{\link{esummary}}, or
-##' \code{\link{elink}}. Also, usehistory must be set to \code{TRUE} for
-##' \code{esearch} to interpret query key values included in term or to
-##' accept a WebEnv as input.
+##' \code{\link{elink}}. Also, \code{usehistory} must be set to \code{TRUE}
+##' for \code{esearch} to interpret query key values included in \code{term}
+##' or to accept a \code{WebEnv} as input.
 ##' @param WebEnv Web environment string returned by a previous call to
 ##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}}.
 ##' When provided, \code{esearch} will append the results of the search to
-##' the pre-existing WebEn. Providing WebEnv also allows query keys to be
-##' used in term so that previous search sets can be combined or limited.
+##' the pre-existing WebEnv. Providing WebEnv also allows query keys to be
+##' used in \code{term} so that previous search sets can be combined or
+##' limited.
 ##' @param query_key query key returned by a previous call to
 ##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}}.
 ##' When provided, \code{esearch} will find the intersection of the set
-##' specified by query_key and the set retrieved by the query in term
+##' specified by query_key and the set retrieved by the query in \code{term}
 ##' (i.e. joins the two with AND).  
 ##' @param retstart Numeric index of the first UID in the
 ##' retrieved set to be shown in the XML output (default: 0).
 ##' @param retmax Total number of UIDs to be retrieved (default: 100).
-##' @param field Optional. Search field. Limits the entire search term, if used.
+##' @param field Optional. Search field. If used, limits the entire search
+##' term.
 ##' @param datetype Optional. Type of date to limit the search. One of "mdat"
-##'   (modification date), "pdat" (publication date) or "edat" (Entrez date)
+##' (modification date), "pdat" (publication date) or "edat" (Entrez date)
 ##' @param reldate Optional. Number of days back for which search items are
-##'   returned.
+##' returned.
 ##' @param mindate Optional. Minimum date of search range. Format
-##'   YYYY/MM/DD.
+##' YYYY/MM/DD.
 ##' @param maxdate Optional. Maximum date of search range. Format
-##'   YYYY/MM/DD.
+##' YYYY/MM/DD.
 ##' 
 ##' @return An \code{\link{esearch-class}} object.
 ##'
