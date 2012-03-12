@@ -1,6 +1,6 @@
 ### Efetch #################################################################
-#' @include eutil.r
-#' @include utils.r
+##' @include eutil.r
+##' @include utils.r
 NULL
 
 ##' efetch class
