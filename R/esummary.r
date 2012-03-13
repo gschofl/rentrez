@@ -160,7 +160,7 @@ esummary <- function (id,
                 version=if (identical(version, "2.0")) "2.0" else NULL)
     hasRes <- TRUE
   }
-  else if (is(id, "esearch")) {
+  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
     if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
       o <- .query("esummary", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
                   version=if (identical(version, "2.0")) "2.0" else NULL)

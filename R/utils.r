@@ -46,6 +46,26 @@
   return(value)
 }
 
+# Parse a LinkSet and return it as a named list
+.parseLinkSet <- function (data) {
+  linkSetDb <- getNodeSet(xmlRoot(data), "//LinkSetDb")
+  
+  if (length(linkSetDb) < 1L)
+    return(NULL)
+  
+  ll <- lapply(linkSetDb, function(lsd) {
+    lsd <- xmlDoc(lsd)
+    id <- xpathSApply(lsd, "//Id", xmlValue)
+    score <- xpathSApply(lsd, "//Score", xmlValue)
+    ans <- list(id=id, score=score)
+    ans[vapply(ans, length, integer(1)) == 0L]  <- NULL
+    ans
+  })
+  
+  names(ll) <- xpathSApply(xmlRoot(data), "//LinkName", xmlValue)
+  ll
+}
+
 checkErrors <- function (obj) {
   error <- NULL
   err_msgs <- NULL

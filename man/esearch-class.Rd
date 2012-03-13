@@ -24,10 +24,10 @@
   Entrez history server.} \item{webEnv}{Parameter
   specifying the Web Environment on the Entrez history
   server containing the list of UIDs matching an Entrez
-  query.} \item{queryTranslation}{Character vector
+  query.} \item{queryTranslation}{A Character vector
   containing the search term as translated by the Entrez
-  search system} \item{idList}{character vector containing
-  the UIDs returned} }
+  search system} \item{idList}{A Character vector
+  containing the UIDs returned} }
 }
 \seealso{
   \code{\link{esearch}} for generating calls to the NCBI

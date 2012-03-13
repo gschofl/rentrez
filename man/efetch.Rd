@@ -34,15 +34,15 @@
   \code{\link{esearch}}, \code{\link{epost}} or
   \code{\link{elink}} calls.)}
 
-  \item{rettype}{A character string specifying the data
-  format of the records returned, such as plain text, HMTL
-  or XML. See
+  \item{rettype}{A character string specifying the record
+  view returned, such as 'abstract' or 'medline' from
+  PubMed, or 'gp' or 'fasta' from protein. See
   \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
   for allowed values for each database.}
 
-  \item{retmode}{A character string specifying the record
-  view returned, such as Abstract or MEDLINE from PubMed,
-  or GenPept or FASTA from protein. See
+  \item{retmode}{A character string specifying the data
+  format of the records returned, such as plain text, XML,
+  or asn.1. See
   \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
   for allowed values for each database.}
 
