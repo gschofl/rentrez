@@ -130,6 +130,7 @@ efetch <- function (id,
     WebEnv <- env_list$WebEnv
     query_key <- env_list$query_key
     id <- .collapseUIDs(env_list$id)
+    retmax <- env_list$retmax
   } else
     id <- NULL
   

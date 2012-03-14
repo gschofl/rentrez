@@ -103,10 +103,10 @@ checkErrors <- function (obj) {
 }
 
 .collapseUIDs <- function (id) {
-  
   if (length(id) > 1L) {
     if (length(id) > 200L) {
-      warning("The UID list is too large. Only the first 200 UIDs will be used")
+      warning("The UID list is too large. Only the first 200 UIDs will be used",
+              call.=FALSE)
       id <- id[1:200]
     }
     id <- paste(id, collapse = ",")
@@ -125,6 +125,7 @@ checkErrors <- function (obj) {
 }
 
 .getId <- function (object) {
+  retmax <- NULL
   if (is(object, "epost")) {
     WebEnv <- object@webEnv
     query_key <- object@queryKey
@@ -150,6 +151,11 @@ checkErrors <- function (obj) {
       WebEnv <- object@webEnv
       query_key <- object@queryKey
       id <- NULL
+      if (object@count > 200) {
+        warning(sprintf("The ESearch query returned %s UIDs. Only the first 200 will be used.",
+                        object@count), call.=FALSE)
+        retmax <- 200
+      }
     }
   }
   else if (is.atomic(object)) {
@@ -160,7 +166,7 @@ checkErrors <- function (obj) {
   else
     stop("UIDs must be provided as a vector or as esearch objects.")
   
-  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id)))
+  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id, retmax=retmax)))
 }
 
 .docsum.sequence <- function (esummary) {
