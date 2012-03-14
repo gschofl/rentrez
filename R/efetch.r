@@ -27,6 +27,7 @@ NULL
 ##' @rdname efetch-class
 ##' @exportClass efetch
 ##' @aliases show,efetch-method
+##' @aliases write,efetch-method
 ##' @aliases efetch,efetch-method
 setClass("efetch", 
          representation(database = "character",
@@ -45,6 +46,13 @@ setMethod("show",
                         sQuote(object@database), sQuote(object@url)))
             cat(object@data)
             return(invisible(NULL))
+          })
+
+##' @export
+setMethod("write",
+          signature(x = "efetch"),
+          function (x, file = "data", append = FALSE) {
+            write(x = x@data, file = file, append = append)
           })
 
 ##' Retrieve data records in the requested format from NCBI
