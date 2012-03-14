@@ -1,7 +1,9 @@
 \name{efetch-class}
+\alias{c,efetch-method}
 \alias{efetch-class}
 \alias{efetch,efetch-method}
 \alias{show,efetch-method}
+\alias{write,efetch-method}
 \title{efetch class}
 \description{
   efetch is an S4 class that extends the

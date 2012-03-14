@@ -13,6 +13,7 @@ NULL
 ##' basic \code{\link{eutil-class}} objects:
 ##' \describe{
 ##'   \item{database}{The name of the queried database.}
+##'   \item{count}{The number of items posted}
 ##'   \item{queryKey}{query key parameter specifying the location on the
 ##'   Entrez history server of the list of UIDs matching the Entrez query.}
 ##'   \item{webEnv}{Web environment parameter specifying the location on the
@@ -22,16 +23,18 @@ NULL
 ##' @seealso \code{\link{epost}} for generating calls to the NCBI EPost
 ##' utility.
 ##' 
-##' @name post-class
+##' @name epost-class
 ##' @rdname epost-class
 ##' @exportClass epost
 ##' @aliases epost,epost-method
 ##' @aliases show,epost-method
 setClass("epost",
          representation(database = "character",
+                        count = "numeric",
                         queryKey = "numeric",
                         webEnv = "character"),
          prototype(database = NA_character_,
+                   counr = NA_character_,
                    queryKey = NA_integer_,
                    webEnv = NA_character_),
          contains = "eutil")
@@ -40,8 +43,8 @@ setClass("epost",
 setMethod("show",
           signature(object = "epost"),
           function (object) {
-            cat(sprintf("EPost upload of %s database UIDs.\nQuery url: %s\nQuery Key: %s\nWeb Environment: %s\n",
-                        sQuote(object@database), sQuote(object@url),
+            cat(sprintf("EPost upload of %s UIDs to database %s.\nQuery Key: %s\nWeb Environment: %s\n",
+                        sQuote(object@count), sQuote(object@database),
                         object@queryKey, sQuote(object@webEnv)))
             return(invisible(NULL))
           })
@@ -84,13 +87,14 @@ epost <- function (id,
 
   ## get uids ##############################################################
   env_list <- .getId(id)
+  count <- length(env_list$id)
   id <- .collapseUIDs(env_list$id)
   if (is.null(id))
     stop("No UIDs provided")
 
   o <- .query("epost", id=id, db=db,  WebEnv=WebEnv)
   
-  new("epost", url=o@url, data=o@data, database=db,
+  new("epost", url=o@url, data=o@data, database=db, count=count,
       queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
       webEnv=as.character(xmlValue(xmlRoot(o@data)[["WebEnv"]])))
   

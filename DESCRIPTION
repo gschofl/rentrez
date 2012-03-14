@@ -1,5 +1,5 @@
 Package: rentrez
-Version: 0.2.0
+Version: 0.2.1
 Date: 2012-01-20
 Title: R interface to the NCBI Entrez Utilities
 Description: A set of classes and functions to manage

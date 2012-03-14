@@ -3,7 +3,7 @@
 \title{Retrieve document summaries (DocSums)}
 \usage{
   esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
-    version = "default")
+    retstart = 1, retmax = 100, version = "default")
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a

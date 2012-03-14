@@ -145,8 +145,8 @@ esummary <- function (id,
                       db=NULL,
                       query_key=NULL,
                       WebEnv=NULL,
-                      ## retstart = 1,
-                      ## retmax = 100,
+                      retstart = 1,
+                      retmax = 100,
                       version = "default" ) {
   
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
@@ -171,6 +171,7 @@ esummary <- function (id,
     id <- NULL
 
   o <- .query("esummary", db=db, id=id, query_key=query_key, WebEnv=WebEnv,
+              retstart=retstart, retmax=retmax,
               version=if (identical(version, "2.0")) "2.0" else NULL)
 
   new("esummary", database=db, error=checkErrors(o),

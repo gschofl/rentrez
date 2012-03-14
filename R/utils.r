@@ -125,7 +125,6 @@ checkErrors <- function (obj) {
 }
 
 .getId <- function (object) {
-  retmax <- NULL
   if (is(object, "epost")) {
     WebEnv <- object@webEnv
     query_key <- object@queryKey
@@ -151,11 +150,6 @@ checkErrors <- function (obj) {
       WebEnv <- object@webEnv
       query_key <- object@queryKey
       id <- NULL
-      if (object@count > 200) {
-        warning(sprintf("The ESearch query returned %s UIDs. Only the first 200 will be used.",
-                        object@count), call.=FALSE)
-        retmax <- 200
-      }
     }
   }
   else if (is.atomic(object)) {
@@ -166,7 +160,7 @@ checkErrors <- function (obj) {
   else
     stop("UIDs must be provided as a vector or as esearch objects.")
   
-  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id, retmax=retmax)))
+  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id)))
 }
 
 .docsum.sequence <- function (esummary) {
