@@ -102,10 +102,7 @@ checkErrors <- function (obj) {
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
-collapseUIDs <- function (id) {
-  
-  if (is(id, "esearch"))
-    id <- id@idList
+.collapseUIDs <- function (id) {
   
   if (length(id) > 1L) {
     if (length(id) > 200L) {
@@ -115,6 +112,55 @@ collapseUIDs <- function (id) {
     id <- paste(id, collapse = ",")
   }
   id
+}
+
+.getDb <- function (object) {
+  if (is(object, "esearch") || is(object, "epost"))
+    db <- object@database
+  else if (is(object, "elink"))
+    db <- object@databaseTo
+  else
+    db <- NULL
+  db
+}
+
+.getId <- function (object) {
+  if (is(object, "epost")) {
+    WebEnv <- object@webEnv
+    query_key <- object@queryKey
+    id <- NULL
+  }
+  else if (is(object, "elink")) {
+    if (is.na(object@queryKey) && is.na(object@webEnv)) {
+      WebEnv <- NULL
+      query_key <- NULL
+      id <- unlist(object@linkList)
+    } else {
+      WebEnv <- object@webEnv
+      query_key <- object@queryKey
+      id <- NULL
+    }
+  }
+  else if (is(object, "esearch")) {
+    if (is.na(object@queryKey) && is.na(object@webEnv)) {
+      WebEnv <- NULL
+      query_key <- NULL
+      id <- object@idList
+    } else {
+      WebEnv <- object@webEnv
+      query_key <- object@queryKey
+      id <- NULL
+    }
+  }
+  else if (is.atomic(object)) {
+    WebEnv <- NULL 
+    query_key <- NULL
+    id <- object
+  }
+  else
+    stop("UIDs must be provided as a vector or as esearch objects.")
+  
+  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id)))
 }
 
 .docsum.sequence <- function (esummary) {

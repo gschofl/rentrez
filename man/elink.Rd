@@ -2,8 +2,7 @@
 \alias{elink}
 \title{Post a list of primary UIDs to the NCBI history server.}
 \usage{
-  elink(id, dbFrom = attr(id, "database"),
-    dbTo = attr(id, "database"), cmd = "neighbor",
+  elink(id, dbFrom = NULL, dbTo = NULL, cmd = "neighbor",
     query_key = NULL, WebEnv = NULL, linkname = NULL,
     term = NULL, holding = NULL, datetype = NULL,
     reldate = NULL, mindate = NULL, maxdate = NULL)

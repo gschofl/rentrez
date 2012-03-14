@@ -2,7 +2,7 @@
 \alias{epost}
 \title{Post a list of primary UIDs to the NCBI history server.}
 \usage{
-  epost(id, db = attr(id, "database"), WebEnv = NULL)
+  epost(id, db = NULL, WebEnv = NULL)
 }
 \arguments{
   \item{id}{A character vector of UIDs.}

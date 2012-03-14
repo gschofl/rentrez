@@ -2,10 +2,10 @@
 \alias{efetch}
 \title{Retrieve data records in the requested format from NCBI}
 \usage{
-  efetch(id, db = attr(id, "database"), query_key = NULL,
-    WebEnv = NULL, rettype = NULL, retmode = NULL,
-    retstart = NULL, retmax = NULL, strand = NULL,
-    seq_start = NULL, seq_stop = NULL, complexity = NULL)
+  efetch(id, db = NULL, query_key = NULL, WebEnv = NULL,
+    rettype = NULL, retmode = NULL, retstart = NULL,
+    retmax = NULL, strand = NULL, seq_start = NULL,
+    seq_stop = NULL, complexity = NULL)
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a

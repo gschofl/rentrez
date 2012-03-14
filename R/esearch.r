@@ -172,7 +172,8 @@ esearch <- function (term,
     term <- paste(term, collapse=" OR ")
   
   o <- .query(eutil="esearch", db=db, term=term,
-              usehistory=if (usehistory) "y" else NULL, retstart=retstart,
+              usehistory=if (usehistory) "y" else NULL,
+              WebEnv=WebEnv, query_key=query_key, retstart=retstart,
               retmax=retmax, field=field, datetype=datetype,
               reldate=reldate, mindate=mindate, maxdate=maxdate)
     

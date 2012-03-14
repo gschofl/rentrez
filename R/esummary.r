@@ -115,10 +115,10 @@ setMethod("docsum",
 ##'
 ##' @param id (Required)
 ##' List of UIDs provided either as a character vector, as an
-##' \code{\link{esearch-class}} object, or by reference to a Web Environment
-##' and a query key obtained directly from objects returned by previous
-##' calls to \code{\link{esearch}}, \code{\link{epost}} or
-##' \code{\link{elink}}.
+##' \code{\link{esearch-class}} or \code{\link{elink-class}} object,
+##' or by reference to a Web Environment and a query key obtained directly
+##' from objects returned by previous calls to \code{\link{esearch}},
+##' \code{\link{epost}} or \code{\link{elink}}.
 ##' If UIDs are provided as a plain character vector, \code{db} must be
 ##' specified explicitly, and all of the UIDs must be from the database
 ##' specified by \code{db}.
@@ -142,39 +142,36 @@ setMethod("docsum",
 ##' @examples
 ##'   ##
 esummary <- function (id, 
-                      db=attr(id, "database"),
+                      db=NULL,
                       query_key=NULL,
                       WebEnv=NULL,
                       ## retstart = 1,
                       ## retmax = 100,
                       version = "default" ) {
+  
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
     stop("No UIDs provided")
-  if (is.null(db))
+  
+  ## get db ################################################################
+  # if no db name is provided extract the database name directly from
+  # id if it's an esearch, epost or elink object.
+  if (is.null(db) && is.null(db <- .getDb(id)))
     stop("No database name provided")
   
-  hasRes <- FALSE
-  ## use WebEnv and QueryKey if available
-  if (!is.null(query_key) && !is.null(WebEnv)) {
-    o <- .query("esummary", db=db, query_key=query_key, WebEnv=WebEnv,
-                version=if (identical(version, "2.0")) "2.0" else NULL)
-    hasRes <- TRUE
-  }
-  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
-    if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
-      o <- .query("esummary", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
-                  version=if (identical(version, "2.0")) "2.0" else NULL)
-      hasRes <- TRUE
-    }
-    else {
-      id <- slot(id, "idList")
-    }
-  }
-  
-  if (!hasRes) {
-    o <- .query("esummary", db=db, id=collapseUIDs(id), 
-                version=if (identical(version, "2.0")) "2.0" else NULL)
-  }
+  ## get id, or WebEnv and query_key #######################################
+  # if no Web Environment is provided extract WebEnv and query_key from id 
+  # (or take the idList if an esummary object with usehistory=FALSE was
+  # provided)
+  if (is.null(query_key) && is.null(WebEnv)) {
+    env_list <- .getId(id)
+    WebEnv <- env_list$WebEnv
+    query_key <- env_list$query_key
+    id <- .collapseUIDs(env_list$id)
+  } else
+    id <- NULL
+
+  o <- .query("esummary", db=db, id=id, query_key=query_key, WebEnv=WebEnv,
+              version=if (identical(version, "2.0")) "2.0" else NULL)
 
   new("esummary", database=db, error=checkErrors(o),
       url=o@url, data=o@data,

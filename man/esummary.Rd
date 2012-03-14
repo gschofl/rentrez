@@ -2,15 +2,16 @@
 \alias{esummary}
 \title{Retrieve document summaries (DocSums)}
 \usage{
-  esummary(id, db = attr(id, "database"), query_key = NULL,
-    WebEnv = NULL, version = "default")
+  esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
+    version = "default")
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a
-  character vector, as an \code{\link{esearch-class}}
-  object, or by reference to a Web Environment and a query
-  key obtained directly from objects returned by previous
-  calls to \code{\link{esearch}}, \code{\link{epost}} or
+  character vector, as an \code{\link{esearch-class}} or
+  \code{\link{elink-class}} object, or by reference to a
+  Web Environment and a query key obtained directly from
+  objects returned by previous calls to
+  \code{\link{esearch}}, \code{\link{epost}} or
   \code{\link{elink}}. If UIDs are provided as a plain
   character vector, \code{db} must be specified explicitly,
   and all of the UIDs must be from the database specified

@@ -70,32 +70,25 @@ setMethod("show",
 ##' 
 ##' @export
 epost <- function (id,
-                   db=attr(id, "database"),
+                   db=NULL,
                    WebEnv=NULL) {
+  
   if (missing(id))
     stop("No UIDs provided")
-  if (is.null(db))
+  
+  ## get db ################################################################
+  # if no db name is provided extract the database name directly from
+  # id if it's an esearch, epost or elink object
+  if (is.null(db) && is.null(db <- .getDb(id)))
     stop("No database name provided")
 
-  hasRes <- FALSE
-  ## use WebEnv if available
-  if (!is.null(WebEnv)) {
-    o <- .query("epost", id=collapseUIDs(id), db=db, WebEnv=WebEnv)
-    hasRes <- TRUE
-  }
-  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
-    if (!is.na(id@webEnv)) {
-      o <- .query("epost", id=collapseUIDs(id@idList), db=db, WebEnv=id@webEnv)
-      hasRes <- TRUE
-    }
-    else {
-      id <- slot(id, "idList")
-    }
-  }
-  
-  if (!hasRes)
-    o <- .query("epost", id=collapseUIDs(id), db=db)
+  ## get uids ##############################################################
+  env_list <- .getId(id)
+  id <- .collapseUIDs(env_list$id)
+  if (is.null(id))
+    stop("No UIDs provided")
 
+  o <- .query("epost", id=id, db=db,  WebEnv=WebEnv)
   
   new("epost", url=o@url, data=o@data, database=db,
       queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),

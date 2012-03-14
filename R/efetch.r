@@ -100,7 +100,7 @@ setMethod("show",
 ##'   # Fetch PMIDs 17284678 and 9997 as text abstracts
 ##'   efetch(c(17284678,9997), "pubmed", retmode="text", rettype="abstract")
 efetch <- function (id,
-                    db=attr(id, "database"),
+                    db=NULL,
                     query_key=NULL,
                     WebEnv=NULL,
                     rettype=NULL,
@@ -111,18 +111,36 @@ efetch <- function (id,
                     seq_start=NULL,
                     seq_stop=NULL,
                     complexity=NULL) {
+  
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
     stop("No UIDs provided")
-  if (is.null(db))
+  
+  ## get db ################################################################
+  # if no db name is provided extract the database name directly from
+  # id if it's an esearch, epost or elink object
+  if (is.null(db) && is.null(db <- .getDb(id)))
     stop("No database name provided")
   
-  ## setting default rettype and retmode for each database
+  ## get id, or WebEnv and query_key #######################################
+  # if no Web Environment is provided extract WebEnv and query_key from id 
+  # (or take the idList if an esummary object with usehistory=FALSE was
+  # provided)
+  if (is.null(query_key) && is.null(WebEnv)) {
+    env_list <- .getId(id)
+    WebEnv <- env_list$WebEnv
+    query_key <- env_list$query_key
+    id <- .collapseUIDs(env_list$id)
+  } else
+    id <- NULL
+  
+  ## set default rettype and retmode for some databases
   if (is.null(rettype)) {
     rettype <- switch(db,
                       pubmed="medline",
                       nucleotide="gbwithparts",
                       nuccore="gbwithparts",
-                      protein="gp")
+                      protein="gp",
+                      gene="gene_table")
   }
   
   if (is.null(retmode)) {
@@ -130,37 +148,15 @@ efetch <- function (id,
                       pubmed="text",
                       nucleotide="text",
                       nuccore="text",
-                      protein="text")
+                      protein="text",
+                      gene="text")
   }
   
-  hasRes <- FALSE
-  ## use WebEnv and QueryKey if available
-  if (!is.null(query_key) && !is.null(WebEnv)) {
-    o <- .query("efetch", db=db, query_key=query_key, WebEnv=WebEnv,
-                retmode=retmode, rettype=rettype, retstart=retstart,
-                retmax=retmax, strand=strand, seq_start=seq_start,
-                seq_stop=seq_stop, complexity=complexity)
-    hasRes <- TRUE
-  }
-  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
-    if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
-      o <- .query("efetch", db=db, query_key=id@queryKey, WebEnv=id@webEnv,
-                  retmode=retmode, rettype=rettype, retstart=retstart,
-                  retmax=retmax, strand=strand, seq_start=seq_start,
-                  seq_stop=seq_stop, complexity=complexity)
-      hasRes <- TRUE
-    }
-    else {
-      id <- slot(id, "idList")
-    }
-  }
-  
-  if (!hasRes) {
-    o <- .query("efetch", db=db, id=collapseUIDs(id),
-                retmode=retmode, rettype=rettype, retstart=retstart,
-                retmax=retmax, strand=strand, seq_start=seq_start,
-                seq_stop=seq_stop, complexity=complexity)
-  }
+  o <- .query("efetch", db=db, id=id, query_key=query_key,
+              WebEnv=WebEnv, retmode=retmode, rettype=rettype,
+              retstart=retstart, retmax=retmax, strand=strand,
+              seq_start=seq_start, seq_stop=seq_stop,
+              complexity=complexity)
 
   new("efetch", url=o@url, data=o@data, database=db,
       mode=retmode, type=rettype)

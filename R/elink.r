@@ -50,12 +50,23 @@ setMethod("show",
           function (object) {
             cat(sprintf("ELink from database %s to database %s.\n",
                         sQuote(object@databaseFrom), sQuote(object@databaseTo)))
-            cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
-                        object@queryKey, object@webEnv))
-            cat("IdList:\n")
-            print(object@idList)
-            cat("LinkList:\n")
-            print(object@linkList)
+            
+            if (is.na(object@webEnv)) {
+              cat("IdList:\n")
+              print(object@idList)
+              
+              cat("Summary of LinkSet:\n")
+              lnames <- names(object@linkList)
+              llen <- numeric(0)
+              for (lname in lnames)
+                llen <- c(llen, length(object@linkList[[lname]][["id"]]))
+              print(data.frame(LinkName=lnames, LinkCount=llen))
+            }
+            else {            
+              cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
+                          object@queryKey, object@webEnv))
+            }
+
             return(invisible(NULL))
           })
 
@@ -83,8 +94,8 @@ setMethod("show",
 ##' 
 ##' @export
 elink <- function (id,
-                   dbFrom=attr(id, "database"),
-                   dbTo=attr(id, "database"),
+                   dbFrom=NULL,
+                   dbTo=NULL,
                    cmd="neighbor",
                    query_key=NULL,
                    WebEnv=NULL,
@@ -97,45 +108,52 @@ elink <- function (id,
                    maxdate=NULL) {
   if (missing(id))
     stop("No UIDs provided")
-  if (is.null(dbFrom) || is.null(dbTo)) {
-    stop("No database names provided")
-  }
-  if (cmd != "acheck")
+  
+  ## get db ################################################################
+  # extract the database names directly from id if it's an esearch, epost or
+  # elink object
+  if (is.null(dbFrom) && is.null(dbFrom <- .getDb(id)))
+    stop("Provide the database containing the input UIDs (dbFrom)")
+ 
+  if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
+    stop("Provide the database from which to retrieve UIDs (dbTo)")
+  
+  ## get id, or WebEnv and query_key #######################################
+  # if no Web Environment is provided extract WebEnv and query_key from id 
+  # (or take the idList if an esummary object with usehistory=FALSE was
+  # provided)
+  if (is.null(query_key) && is.null(WebEnv)) {
+    env_list <- .getId(id)
+    WebEnv <- env_list$WebEnv
+    query_key <- env_list$query_key
+    id <- .collapseUIDs(env_list$id)
+  } else
+    id <- NULL
+  
+  if (cmd == "acheck")
     stop(sprintf("%s is not yet supported", sQuote(cmd)))
   
-  hasRes <- FALSE
-  ## use WebEnv if available
-  if (!is.null(WebEnv)) {
-    o <- .query("elink", db=dbTo, dbFrom=dbFrom, cmd=cmd, query_key=query_key,
-                WebEnv=WebEnv, linkname=linkname, term=term, holding=holding,
-                datetype=datetype, reldate=reldate, mindate=mindate,
-                maxdate=maxdate)
-    hasRes <- TRUE
-  }
-  else if (is(id, "esearch") || is(id, "epost") || is(id, "elink")) {
-    if (!is.na(id@queryKey) && !is.na(id@webEnv)) {
-      o <- .query("elink", db=dbTo, dbFrom=dbFrom, cmd=cmd, query_key=id@queryKey,
-                  WebEnv=id@webEnv, linkname=linkname, term=term, holding=holding,
-                  datetype=datetype, reldate=reldate, mindate=mindate,
-                  maxdate=maxdate)
-      hasRes <- TRUE
-    }
-    else {
-      id <- slot(id, "idList")
-    }
-  }
+  o <- .query("elink", id=id, db=dbTo, dbFrom=dbFrom, cmd=cmd,
+              query_key=query_key, WebEnv=WebEnv, linkname=linkname,
+              term=term, holding=holding, datetype=datetype,
+              reldate=reldate, mindate=mindate, maxdate=maxdate)
   
-  if (!hasRes)
-    o <- .query("elink", id=collapseUIDs(id), db=dbTo, dbFrom=dbFrom, cmd=cmd,
-                query_key=NULL, WebEnv=NULL, linkname=linkname, term=term,
-                holding=holding, datetype=datetype, reldate=reldate,
-                mindate=mindate, maxdate=maxdate)
+  queryKey <-
+    if (length(qk <- xpathSApply(o@data, "//QueryKey")) > 0L)
+      as.integer(xmlValue(qk[[1L]]))
+    else
+      NA_integer_
+  
+  webEnv <- 
+    if (length(we <- xpathSApply(o@data, "//WebEnv")) > 0L)
+      xmlValue(we[[1L]])
+  else
+    NA_character_
   
   new("elink", url=o@url, data=o@data, error=checkErrors(o),
       databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
       databaseTo=xmlValue(getNodeSet(o@data, "//DbTo")[[1L]]), command=cmd,
-      queryKey=as.numeric(xmlValue(xpathSApply(o@data, "//QueryKey")[[1L]])), 
-      webEnv=xmlValue(xpathSApply(o@data, "//WebEnv")[[1L]]),
+      queryKey=queryKey, webEnv=webEnv,
       idList=sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue),
       linkList=.parseLinkSet(o@data))
 }
