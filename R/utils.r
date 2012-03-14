@@ -2,7 +2,12 @@
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   query_string <- .query_string(...)
-  url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
+  
+  if (identical(eutil, "egquery"))
+    url <- sprintf('http://eutils.ncbi.nlm.nih.gov/gquery/%s', query_string)
+  else
+    url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
+  
   if (identical(eutil, "efetch"))
     new("eutil",
         url=curlUnescape(url),

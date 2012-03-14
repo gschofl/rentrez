@@ -6,7 +6,7 @@
 \description{
   elink is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a
-  container for data retrived by calls to the NCBI EPnfo
+  container for data retrived by calls to the NCBI ELink
   utility.
 }
 \details{

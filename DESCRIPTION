@@ -23,3 +23,4 @@ Collate:
     'efetch.r'
     'epost.r'
     'elink.r'
+    'egquery.r'

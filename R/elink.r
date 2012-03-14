@@ -7,7 +7,7 @@ NULL
 ##' 
 ##' elink is an S4 class that extends the \code{\link{eutil-class}}.
 ##' This class provides a container for data retrived by calls to the 
-##' NCBI EPnfo utility.
+##' NCBI ELink utility.
 ##' 
 ##' epost objects have three slots in addition to the slots provided by
 ##' basic \code{\link{eutil-class}} objects:
@@ -98,9 +98,10 @@ elink <- function (id,
   if (missing(id))
     stop("No UIDs provided")
   if (is.null(dbFrom) || is.null(dbTo)) {
-    if (cmd != "acheck")
-      stop("No database names provided")
+    stop("No database names provided")
   }
+  if (cmd != "acheck")
+    stop(sprintf("%s is not yet supported", sQuote(cmd)))
   
   hasRes <- FALSE
   ## use WebEnv if available
@@ -136,7 +137,6 @@ elink <- function (id,
       queryKey=as.numeric(xmlValue(xpathSApply(o@data, "//QueryKey")[[1L]])), 
       webEnv=xmlValue(xpathSApply(o@data, "//WebEnv")[[1L]]),
       idList=sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue),
-      #linkList=NULL)
       linkList=.parseLinkSet(o@data))
 }
 
