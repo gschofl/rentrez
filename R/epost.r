@@ -49,11 +49,14 @@ setMethod("show",
             return(invisible(NULL))
           })
 
-##' Post a list of primary UIDs to the NCBI history server.
+##' Post a list of primary UIDs to the Entrez history server
 ##'
-##' \code{epost} posts a list of UIDs for future use the the user's
-##' web environment for access with \code{\link{esummary}} or
-##' \code{\link{efetch}}.
+##' The EPost utility allows a list of UIDs to be uploaded to the Entrez 
+##' History Server and returns an integer label called a query key and
+##' an encoded cookie string called a Web environment.
+##' \code{\link{epost-class}} objects can then be used in stead of a UID
+##' list in subsequent \code{\link{esummary}}, \code{\link{efetch}}, or
+##' \code{\link{elink}} calls.
 ##' 
 ##' See the online documentation at
 ##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EPost}

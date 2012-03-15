@@ -1,39 +1,65 @@
 \name{elink}
 \alias{elink}
-\title{Post a list of primary UIDs to the NCBI history server.}
+\title{Retrive links to records in other Entrez databases}
 \usage{
   elink(id, dbFrom = NULL, dbTo = NULL, cmd = "neighbor",
-    query_key = NULL, WebEnv = NULL, linkname = NULL,
-    term = NULL, holding = NULL, datetype = NULL,
-    reldate = NULL, mindate = NULL, maxdate = NULL)
+    correspondence = FALSE, query_key = NULL,
+    WebEnv = NULL, linkname = NULL, term = NULL,
+    holding = NULL, datetype = NULL, reldate = NULL,
+    mindate = NULL, maxdate = NULL)
 }
 \arguments{
-  \item{id}{A character vector of UIDs.}
+  \item{id}{(Required) A character vector of UIDs.}
 
-  \item{db}{Database containing the UIDs in the input
-  list.}
+  \item{dbFrom}{Initial database containing the UIDs in the
+  input list.}
 
-  \item{WebEnv}{Web Environment. If provided, this
-  parameter specifies the Web Environment that will receive
-  the UIDs sent by \code{epost}. EPost will create a new
-  query key associated with that Web Environment. The
-  WebEnv value is usually returned by a previous call to
-  \code{\link{esearch}}, \code{\link{epost}} or
-  \code{\link{elink}}. If no WebEnv parameter is provided,
-  EPost will create a new Web Environment and post the UIDs
-  to query_key 1.}
+  \item{dbTo}{Target database where the linked records are
+  sought.}
+
+  \item{cmd}{}
+
+  \item{correspondence}{if \code{FALSE} all destination
+  UIDs are lumped together, if \code{TRUE} correspondence
+  between query UIDs and destination UIDs is preseverd.}
+
+  \item{query_key}{Query key.}
+
+  \item{WebEnv}{Web Environment.}
+
+  \item{linkname}{}
+
+  \item{term}{}
+
+  \item{holding}{}
+
+  \item{datetype}{}
+
+  \item{reldate}{}
+
+  \item{mindate}{}
+
+  \item{maxdate}{}
 }
 \value{
-  An \code{\link{epost-class}} object.
+  An \code{\link{elink-class}} object.
 }
 \description{
-  \code{epost} posts a list of UIDs for future use the the
-  user's web environment for access with
-  \code{\link{esummary}} or \code{\link{efetch}}.
+  \code{elink} generates a list of UIDs in a specified
+  Entrez database that are linked to a set of input UIDs in
+  either the same or another database. For instance, the
+  ELink utility can find Entrez gene records linked to
+  records in Entrez Protein.
 }
 \details{
   See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EPost}
+  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}
   for additional information.
+}
+\examples{
+id_list <- c(194680922,50978626,28558982,9507199,6678417)
+links <- elink(id=id_list, dbFrom="protein", dbTo="gene",
+               cmd="neighbor_history")
+links
 }
 

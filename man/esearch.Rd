@@ -4,8 +4,9 @@
 \usage{
   esearch(term, db = "nucleotide", usehistory = FALSE,
     WebEnv = NULL, query_key = NULL, retstart = 0,
-    retmax = 100, field = NULL, datetype = NULL,
-    reldate = NULL, mindate = NULL, maxdate = NULL)
+    retmax = 100, rettype = NULL, field = NULL,
+    datetype = NULL, reldate = NULL, mindate = NULL,
+    maxdate = NULL)
 }
 \arguments{
   \item{term}{A valid Entrez text query.}
@@ -13,12 +14,13 @@
   \item{db}{Database to search (default: nucleotide).}
 
   \item{usehistory}{If \code{TRUE} search results are
-  stored drectly in the user's Web Environment so that they
-  can be used in a subsequent call to \code{\link{efetch}},
-  \code{\link{esummary}}, or \code{\link{elink}}. Also,
-  \code{usehistory} must be set to \code{TRUE} for
-  \code{esearch} to interpret query key values included in
-  \code{term} or to accept a \code{WebEnv} as input.}
+  stored directly in the user's Web environment so that
+  they can be used in a subsequent call to
+  \code{\link{esummary}}, \code{\link{efetch}}, or
+  \code{\link{elink}}. Also, \code{usehistory} must be set
+  to \code{TRUE} for \code{esearch} to interpret query key
+  values included in \code{term} or to accept a
+  \code{WebEnv} as input.}
 
   \item{WebEnv}{Web environment string returned by a
   previous call to \code{\link{esearch}},
@@ -42,7 +44,10 @@
   \item{retmax}{Total number of UIDs to be retrieved
   (default: 100).}
 
-  \item{field}{Optional. Search field. If used, limits the
+  \item{rettype}{Retrieval type. (default: 'uilist',
+  alternative: 'count'.)}
+
+  \item{field}{Optional. Search field used to limit the
   entire search term.}
 
   \item{datetype}{Optional. Type of date to limit the
@@ -62,10 +67,16 @@
   An \code{\link{esearch-class}} object.
 }
 \description{
-  \code{esearch} searches and retrieves primary UIDs for
-  use with \code{\link{efetch}}, \code{\link{esummary}},
-  and \code{\link{elink}}, and optionally stores the
-  results in the user's web environment for future access.
+  The ESearch utility searches and retrieves primary UIDs
+  for use with \code{\link{efetch}},
+  \code{\link{esummary}}, and \code{\link{elink}}.
+  \code{esearch} can also post its output set of UIDs to
+  the Entrez History Server if the \code{usehistory}
+  parameter is set to \code{TRUE}. The resulting
+  \code{\link{esearch-class}} object from either can then
+  be passed on in place of a UID list
+  \code{\link{esummary}}, \code{\link{efetch}}, or
+  \code{\link{elink}}.
 }
 \details{
   See the online documentation at

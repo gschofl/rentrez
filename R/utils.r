@@ -2,6 +2,7 @@
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   query_string <- .query_string(...)
+  #query_string <- .query_string(..., tool="Rentrez", email="gschofl@yahoo.de")
   
   if (identical(eutil, "egquery"))
     url <- sprintf('http://eutils.ncbi.nlm.nih.gov/gquery/%s', query_string)
@@ -26,14 +27,38 @@
   .escape(paste("?", paste(fields, collapse="&"), sep=""))
 }
 
-.escape <- function (s) {
-  s <- paste(strsplit(s, '\"', fixed=TRUE)[[1]], collapse="%22")
-  # s <- gsub("\\[", "%5B", s)
-  # s <- gsub("\\]", "%5D", s)
+.escape <- function (s, httpPOST=FALSE) {
+  if (httpPOST) {
+    s <- gsub(" +", " ", s)
+    s <- gsub("+", " ", s, fixed=TRUE)
+  }
+  else {
+    s <- gsub(" +", "\\+", s)
+  }
+  s <- paste(strsplit(s, '\"', fixed=TRUE)[[1L]], collapse="%22")
   s <- gsub("\\#", "%23", s)
   s <- gsub("\\ (and)\\ |\\ (or)\\ |\\ (not)\\ ","\\ \\U\\1\\U\\2\\U\\3\\ ", s, perl=TRUE)
-  gsub(" +", "\\+", s)
+  s
 }
+
+.httpPOSTcall <- function (eutil, ...) {
+  
+  user_agent <- switch(eutil,
+                       elink="elink/1.0",
+                       esearch="esearch/1.0")
+  
+  http_post_url <- switch(eutil,
+                          elink='elink.fcgi?',
+                          esearch='esearch.fcgi?')
+  
+  xml <- postForm(paste('http://eutils.ncbi.nlm.nih.gov/entrez/eutils',
+                 http_post_url, sep="/"), ..., type='POST',
+                  .opts=curlOptions(useragent=user_agent))
+  new("eutil",
+      url='HTTP_POST',
+      data=xmlTreeParse(xml, useInternalNodes=TRUE))
+}
+
 
 # Parse a DocSum recursively and return it as a named list
 .parseDocSumItems <- function (items) {

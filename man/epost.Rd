@@ -1,6 +1,6 @@
 \name{epost}
 \alias{epost}
-\title{Post a list of primary UIDs to the NCBI history server.}
+\title{Post a list of primary UIDs to the Entrez history server}
 \usage{
   epost(id, db = NULL, WebEnv = NULL)
 }
@@ -24,9 +24,13 @@
   An \code{\link{epost-class}} object.
 }
 \description{
-  \code{epost} posts a list of UIDs for future use the the
-  user's web environment for access with
-  \code{\link{esummary}} or \code{\link{efetch}}.
+  The EPost utility allows a list of UIDs to be uploaded to
+  the Entrez History Server and returns an integer label
+  called a query key and an encoded cookie string called a
+  Web environment. \code{\link{epost-class}} objects can
+  then be used in stead of a UID list in subsequent
+  \code{\link{esummary}}, \code{\link{efetch}}, or
+  \code{\link{elink}} calls.
 }
 \details{
   See the online documentation at

@@ -3,11 +3,14 @@
 ##' @include utils.r
 NULL
 
-##' eutil class
+##' einfo class
 ##'
-##' eutil is a virtual S4 class that is extended by the 
+##' einfo is a virtual S4 class that is extended by the 
 ##' \code{\link{einfoDbList-class}}, and
 ##' \code{\link{einfoDb-class}} classes.
+##' 
+##' @seealso \code{\link{einfo}} for generating calls to the NCBI EInfo
+##' utility.
 ##' 
 ##' @name einfo-class
 ##' @rdname einfo-class
@@ -121,19 +124,22 @@ setMethod("[",
             x@dbList[i]
           })
 
-##' Retrieve information about NCBI's databases
+##' Retrieve information about each database in the NCBI Entrez system
 ##'
-##' If no database is provided \code{einfo} will return a list of databases
-##' available for querying. For specific databases, \code{einfo} provides
-##' the name, a description, the number indexed in the database, the date
-##' of the last update of the database, the fields and the available links
-##' to other Entrez databases.
-##'
+##' If no database is provided \code{einfo} will return the current list of
+##' NCBI databases available for querying.
+##' For specific databases, \code{einfo} provides
+##' the name, a description, the number of records indexed in the database,
+##' the date of the last update of the database, the fields and the
+##' available links from the database to other Entrez databases.
+##' 
+##' See the online documentation at
+##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}
+##' for additional information.
+##' 
 ##' @param db \code{NULL} or a valid NCBI database name
 ##'
-##' @return ReturnValue
-##'
-##' @seealso linkToSomewhere
+##' @return An \code{\link{einfo-class}} object.
 ##'
 ##' @export
 ##'

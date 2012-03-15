@@ -70,33 +70,47 @@ setMethod("show",
             return(invisible(NULL))
           })
 
-##' Post a list of primary UIDs to the NCBI history server.
+##' Retrive links to records in other Entrez databases
 ##'
-##' \code{epost} posts a list of UIDs for future use the the user's
-##' web environment for access with \code{\link{esummary}} or
-##' \code{\link{efetch}}.
+##' \code{elink} generates a list of UIDs in a specified Entrez database
+##' that are linked to a set of input UIDs in either the same or another
+##' database. For instance, the ELink utility can find Entrez gene records
+##' linked to records in Entrez Protein.
 ##' 
 ##' See the online documentation at
-##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EPost}
+##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}
 ##' for additional information.
 ##' 
-##' @param id A character vector of UIDs.
-##' @param db Database containing the UIDs in the input list.
-##' @param WebEnv Web Environment. If provided, this parameter specifies the
-##' Web Environment that will receive the UIDs sent by \code{epost}.
-##' EPost will create a new query key associated with that Web Environment.
-##' The WebEnv value is usually returned by a previous call to
-##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}}.
-##' If no WebEnv parameter is provided, EPost will create a new Web 
-##' Environment and post the UIDs to query_key 1.
+##' @param id (Required) A character vector of UIDs.
+##' @param dbFrom Initial database containing the UIDs in the input list.
+##' @param dbTo Target database where the linked records are sought.
+##' @param cmd
+##' @param correspondence if \code{FALSE} all destination UIDs are lumped
+##' together, if \code{TRUE} correspondence between query UIDs and
+##' destination UIDs is preseverd.
+##' @param query_key Query key.
+##' @param WebEnv Web Environment.
+##' @param linkname
+##' @param term
+##' @param holding
+##' @param datetype
+##' @param reldate
+##' @param mindate
+##' @param maxdate
 ##' 
-##' @return An \code{\link{epost-class}} object.
+##' @return An \code{\link{elink-class}} object.
 ##' 
 ##' @export
+##' @examples
+##' id_list <- c(194680922,50978626,28558982,9507199,6678417)
+##' links <- elink(id=id_list, dbFrom="protein", dbTo="gene",
+##'                cmd="neighbor_history")
+##' links
 elink <- function (id,
                    dbFrom=NULL,
                    dbTo=NULL,
                    cmd="neighbor",
+                   correspondence=FALSE,
                    query_key=NULL,
                    WebEnv=NULL,
                    linkname=NULL,
@@ -126,7 +140,10 @@ elink <- function (id,
     env_list <- .getId(id)
     WebEnv <- env_list$WebEnv
     query_key <- env_list$query_key
-    id <- .collapseUIDs(env_list$id)
+    if  (correspondence && !is.null(env_list$id))
+      id  <- paste0(env_list$id, collapse="&id=")
+    else
+      id <- .collapseUIDs(env_list$id)
   } else
     id <- NULL
   

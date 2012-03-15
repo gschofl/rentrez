@@ -105,10 +105,13 @@ setMethod("length",
 
 ##' Search and retrieve primary UIDs matching a text query
 ##'
-##' \code{esearch} searches and retrieves primary UIDs for use with
-##' \code{\link{efetch}}, \code{\link{esummary}}, and \code{\link{elink}},
-##' and optionally stores the results in the user's web environment for
-##' future access.
+##' The ESearch utility searches and retrieves primary UIDs for use with
+##' \code{\link{efetch}}, \code{\link{esummary}}, and \code{\link{elink}}.
+##' \code{esearch} can also post its output set of UIDs to the Entrez History
+##' Server if the \code{usehistory} parameter is set to \code{TRUE}.
+##' The resulting \code{\link{esearch-class}} object from either can then be
+##' passed on in place of a UID list \code{\link{esummary}},
+##' \code{\link{efetch}}, or \code{\link{elink}}.
 ##' 
 ##' See the online documentation at
 ##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch}
@@ -116,9 +119,9 @@ setMethod("length",
 ##' 
 ##' @param term A valid Entrez text query.
 ##' @param db Database to search (default: nucleotide).
-##' @param usehistory If \code{TRUE} search results are stored drectly in
-##' the user's Web Environment so that they can be used in a subsequent 
-##' call to \code{\link{efetch}}, \code{\link{esummary}}, or
+##' @param usehistory If \code{TRUE} search results are stored directly in
+##' the user's Web environment so that they can be used in a subsequent 
+##' call to \code{\link{esummary}}, \code{\link{efetch}}, or
 ##' \code{\link{elink}}. Also, \code{usehistory} must be set to \code{TRUE}
 ##' for \code{esearch} to interpret query key values included in \code{term}
 ##' or to accept a \code{WebEnv} as input.
@@ -136,7 +139,8 @@ setMethod("length",
 ##' @param retstart Numeric index of the first UID in the
 ##' retrieved set to be shown in the XML output (default: 0).
 ##' @param retmax Total number of UIDs to be retrieved (default: 100).
-##' @param field Optional. Search field. If used, limits the entire search
+##' @param rettype Retrieval type. (default: 'uilist', alternative: 'count'.)
+##' @param field Optional. Search field used to limit the entire search
 ##' term.
 ##' @param datetype Optional. Type of date to limit the search. One of "mdat"
 ##' (modification date), "pdat" (publication date) or "edat" (Entrez date)
@@ -154,12 +158,13 @@ setMethod("length",
 ##'   # Search in Nucleotide for all tRNAs
 ##'   esearch(term = "biomol trna[prop]", db = "nucleotide")
 esearch <- function (term,
-                     db="nucleotide",
+                     db="nuccore",
                      usehistory=FALSE,
                      WebEnv=NULL,
                      query_key=NULL,
                      retstart=0,
                      retmax=100,
+                     rettype="uilist",
                      field=NULL,
                      datetype=NULL,
                      reldate=NULL,
@@ -171,11 +176,20 @@ esearch <- function (term,
   if (length(term) > 1L)
     term <- paste(term, collapse=" OR ")
   
-  o <- .query(eutil="esearch", db=db, term=term,
-              usehistory=if (usehistory) "y" else NULL,
-              WebEnv=WebEnv, query_key=query_key, retstart=retstart,
-              retmax=retmax, field=field, datetype=datetype,
-              reldate=reldate, mindate=mindate, maxdate=maxdate)
+  if (nchar(term) > 100)
+    ## for longer search terms use HTTP POST
+    o <- .httpPOSTcall(eutil="esearch", db=db, term=.escape(term, httpPOST=TRUE),
+                       usehistory=if (usehistory) "y" else NULL,
+                       WebEnv=WebEnv, query_key=as.character(query_key),
+                       retstart=as.character(retstart), retmax=as.character(retmax),
+                       rettype=rettype, field=field, datetype=datetype,
+                       reldate=reldate, mindate=mindate, maxdate=maxdate)
+  else
+    o <- .query(eutil="esearch", db=db, term=term,
+                usehistory=if (usehistory) "y" else NULL,
+                WebEnv=WebEnv, query_key=query_key, retstart=retstart,
+                retmax=retmax, rettype=rettype, field=field, datetype=datetype,
+                reldate=reldate, mindate=mindate, maxdate=maxdate)
     
   new("esearch", url=o@url, data=o@data,
       error=checkErrors(o), database=db,
@@ -189,61 +203,23 @@ esearch <- function (term,
 }
 
 
-### convenience functions ##################################################
-
-##' Retrieve the number of hits for a query.
+##' Retrieve the number of records in an Entrez database matching a text
+##' query
 ##'
 ##' Some additional details about this function
 ##'
 ##' @param term A valid NCBI search term.
 ##' @param db An NCBI database (default =  "pubmed").
-##' @param silent If \code{TRUE} suppress messages.
 ##' @param ... Additional parameters passed on to \code{\link{esearch}}.
 ##'
 ##' @return A numeric.
 ##' @seealso \code{\link{esearch}}.
 ##' @export
 ##' @examples
-##'   getCount('\"gene expression\"[title]')
-getCount <- function (term, db = "pubmed", silent=FALSE, ...) {
-  a <- esearch(term=term, db=db, ...)
-  if (!silent)
-    cat(paste("ESearch query using the \'", slot(a, "database"),
-              "\' database.\nQuery term: ", slot(a, "queryTranslation"),
-              "\n", sep = ""))
-  return(slot(a, "count"))
+##'   ecount('\"gene expression\"[title]')
+ecount <- function (term, db = "nuccore", ...) {
+  a <- esearch(term=term, db=db, rettype="count", ...)
+  cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
+              sQuote(object@database), object@count))
+  return(a@count)
 }
-
-##' Retrieve a list of UIDs for a query
-##'
-##' Some additional details about this function
-##'
-##' @param term A valid NCBI search term.
-##' @param db An NCBI database (default = "pubmed").
-##' @param silent If \code{TRUE} suppress messages.
-##' @param retmax Maximum number of UIDs retrieved.
-##'   (defaults to number of hits)
-##' @param ... Additional parameters passed on to \code{\link{esearch}}.
-##'
-##' @return A numeric vector of UIDs.
-##' @seealso \code{\link{esearch}}.
-##' @export
-##' @examples
-##'   ##
-getUIDs <- function (term,
-                     db = "pubmed",
-                     silent = FALSE, 
-                     retmax = getCount(term, db, TRUE, ...),
-                     ...) {
-  a <- esearch(term=term, db=db, retmax=retmax, ...)
-  if (!silent)
-    cat(paste("ESearch query using the \'", slot(a, "database"),
-              "\' database.\nQuery term: ", slot(a, "queryTranslation"),
-              "\nNumber of hits: ", slot(a, "count"),
-              "\nretmax set to ", slot(a, "retMax"),
-              "\n", sep = ""))
-  new("esearch", database = slot(a, "database"), idList = slot(a, "idList"))
-}
-
-  
-# --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
