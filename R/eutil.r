@@ -1,12 +1,9 @@
 #### eutil class definitions ###############################################
+setOldClass("list")
+setOldClass("data.frame")
 
-## Class Unions
-setClassUnion("listOrNULL", c("list","NULL"))
-setClassUnion("dfOrNULL", c("data.frame","NULL"))
+## Class Union
 setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
-setClassUnion("charOrNULL", c("character","NULL"))
-setClassUnion("numOrNULL", c("numeric","NULL"))
-setClassUnion("POSOrNULL", c("POSIXlt","NULL"))
 
 ##' eutil class
 ##'
@@ -36,11 +33,11 @@ setClassUnion("POSOrNULL", c("POSIXlt","NULL"))
 ##' @aliases eutil,eutil-method
 setClass("eutil",
          representation(url = "character",
-                        error= "listOrNULL",
+                        error = "list",
                         data = "XMLOrChar"),
-         prototype(url = character(),
-                   error = NULL,
-                   data = ""))
+         prototype(url = NA_character_,
+                   error = list(),
+                   data = NA_character_))
 
 #### eutil method definitions ##############################################
 

@@ -2,11 +2,11 @@
 \alias{elink}
 \title{Retrive links to records in other Entrez databases}
 \usage{
-  elink(id, dbFrom = NULL, dbTo = NULL, cmd = "neighbor",
-    correspondence = FALSE, query_key = NULL,
-    WebEnv = NULL, linkname = NULL, term = NULL,
-    holding = NULL, datetype = NULL, reldate = NULL,
-    mindate = NULL, maxdate = NULL)
+  elink(id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
+    cmd = "neighbor", correspondence = FALSE,
+    query_key = NULL, WebEnv = NULL, linkname = NULL,
+    term = NULL, holding = NULL, datetype = NULL,
+    reldate = NULL, mindate = NULL, maxdate = NULL)
 }
 \arguments{
   \item{id}{(Required) A character vector of UIDs.}
@@ -17,7 +17,12 @@
   \item{dbTo}{Target database where the linked records are
   sought.}
 
-  \item{cmd}{}
+  \item{usehistory}{If \code{TRUE} search results are
+  stored directly in the user's Web environment so that
+  they can be used in subsequents call to
+  \code{\link{esummary}} or \code{\link{efetch}}.}
+
+  \item{cmd}{(default: 'neighbor')}
 
   \item{correspondence}{if \code{FALSE} all destination
   UIDs are lumped together, if \code{TRUE} correspondence

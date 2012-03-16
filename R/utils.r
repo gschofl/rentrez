@@ -1,3 +1,5 @@
+isEmpty <- function (x) length(x) == 0L
+
 # Construct url, fetch response, construct eutil object
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
@@ -37,26 +39,39 @@
   }
   s <- paste(strsplit(s, '\"', fixed=TRUE)[[1L]], collapse="%22")
   s <- gsub("\\#", "%23", s)
-  s <- gsub("\\ (and)\\ |\\ (or)\\ |\\ (not)\\ ","\\ \\U\\1\\U\\2\\U\\3\\ ", s, perl=TRUE)
+  s <- gsub("\\+(and)\\+|\\+(or)\\+|\\+(not)\\+","\\+\\U\\1\\U\\2\\U\\3\\+", s, perl=TRUE)
   s
 }
 
-.httpPOSTcall <- function (eutil, ...) {
+.httpPOST <- function (eutil, ...) {
   
   user_agent <- switch(eutil,
-                       elink="elink/1.0",
-                       esearch="esearch/1.0")
+                       elink='elink/1.0',
+                       esearch='esearch/1.0',
+                       epost='epost/1.0',
+                       esummary='esummary/1.0',
+                       efetch='efetch/1.0')
   
   http_post_url <- switch(eutil,
                           elink='elink.fcgi?',
-                          esearch='esearch.fcgi?')
+                          esearch='esearch.fcgi?',
+                          epost='epost.fcgi?',
+                          esummary='esummary.fcgi?',
+                          efetch='efetch.fcgi?')
   
-  xml <- postForm(paste('http://eutils.ncbi.nlm.nih.gov/entrez/eutils',
+  doc <- postForm(paste('http://eutils.ncbi.nlm.nih.gov/entrez/eutils',
                  http_post_url, sep="/"), ..., type='POST',
                   .opts=curlOptions(useragent=user_agent))
-  new("eutil",
-      url='HTTP_POST',
-      data=xmlTreeParse(xml, useInternalNodes=TRUE))
+  
+  if (identical(eutil, "efetch")) {
+    new('eutil', url='HTTP_POST', data=as.character(doc))
+  }
+  else {
+    new('eutil',
+        url='HTTP_POST',
+        data=xmlTreeParse(doc, useInternalNodes=TRUE))
+  }
+
 }
 
 
@@ -81,7 +96,7 @@
   linkSetDb <- getNodeSet(xmlRoot(data), "//LinkSetDb")
   
   if (length(linkSetDb) < 1L)
-    return(NULL)
+    return(list())
   
   ll <- lapply(linkSetDb, function(lsd) {
     lsd <- xmlDoc(lsd)
@@ -127,17 +142,7 @@ checkErrors <- function (obj) {
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
-.collapseUIDs <- function (id) {
-  if (length(id) > 1L) {
-    if (length(id) > 200L) {
-      warning("The UID list is too large. Only the first 200 UIDs will be used",
-              call.=FALSE)
-      id <- id[1:200]
-    }
-    id <- paste(id, collapse = ",")
-  }
-  id
-}
+.collapse <- function (id) paste0(id, collapse = ",")
 
 .getDb <- function (object) {
   if (is(object, "esearch") || is(object, "epost"))
@@ -150,19 +155,24 @@ checkErrors <- function (obj) {
 }
 
 .getId <- function (object) {
+  # we need the count basically for efetch.batch
   if (is(object, "epost")) {
     WebEnv <- object@webEnv
     query_key <- object@queryKey
+    count <- object@count
     id <- NULL
   }
   else if (is(object, "elink")) {
     if (is.na(object@queryKey) && is.na(object@webEnv)) {
       WebEnv <- NULL
       query_key <- NULL
+      count <- length(unlist(object@linkList))
       id <- unlist(object@linkList)
     } else {
       WebEnv <- object@webEnv
       query_key <- object@queryKey
+      count <- NA # we don't have any clue how many UIDs are stored at the
+                 # history server if we use elink with usehistory=TRUE. 
       id <- NULL
     }
   }
@@ -170,22 +180,25 @@ checkErrors <- function (obj) {
     if (is.na(object@queryKey) && is.na(object@webEnv)) {
       WebEnv <- NULL
       query_key <- NULL
+      count <- length(object@idList)
       id <- object@idList
     } else {
       WebEnv <- object@webEnv
       query_key <- object@queryKey
+      count <- object@count
       id <- NULL
     }
   }
   else if (is.atomic(object)) {
     WebEnv <- NULL 
     query_key <- NULL
+    count <- length(object)
     id <- object
   }
   else
     stop("UIDs must be provided as a vector or as esearch objects.")
   
-  return(invisible(list(WebEnv=WebEnv, query_key=query_key, id=id)))
+  return(list(WebEnv=WebEnv, query_key=query_key, count=count, id=id))
 }
 
 .docsum.sequence <- function (esummary) {

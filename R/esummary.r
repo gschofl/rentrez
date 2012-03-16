@@ -23,24 +23,26 @@ NULL
 ##' @name esummary-class
 ##' @rdname esummary-class
 ##' @exportClass esummary
+##' @aliases show,esummary-method
 ##' @aliases $,esummary-method
 ##' @aliases [,esummary-method
-##' @aliases show,esummary-method
+##' @aliases length,esummary-method
 ##' @aliases docsum,esummary-method
 ##' @aliases esummary,esummary-method
 setClass("esummary",
-         representation(database = "charOrNULL",
-                        documentSummary = "listOrNULL"),
-         prototype(database = NULL, documentSummary = NULL),
+         representation(database = "character",
+                        documentSummary = "list"),
+         prototype(database = NA_character_,
+                   documentSummary = list()),
          contains = "eutil")
 
 ##' @export
 setMethod("show",
-          signature("esummary"),
+          signature(object = "esummary"),
           function(object) {
-            cat(paste("Esummary query using the \'", object@database,
-                      "\' database.\n$ documentSummary :\n", sep=""))
-            if (is.null(slot(object, "documentSummary")))
+            cat(sprintf("Esummary query using the %s database\n",
+                        sQuote(object@database)))
+            if (isEmpty(object@documentSummary))
               print(object@data)
             else 
               switch(object@database,
@@ -56,7 +58,7 @@ setMethod("show",
 
 ##' @export
 setMethod("$",
-          signature(x="esummary"),
+          signature(x = "esummary"),
           function (x, name) {
             if (!is.null(x@documentSummary) && !identical(name, "documentSummary"))
               return(slot(x, "documentSummary")[[name, exact=FALSE]])
@@ -66,14 +68,22 @@ setMethod("$",
 
 ##' @export
 setMethod("[",
-          signature(x="esummary", i="ANY", j="missing"),
+          signature(x = "esummary" , i = "ANY", j = "missing"),
           function (x, i) {
             if (is(i, "esearch")) {
-              return(slot(x, "documentSummary")[slot(i, "idList")])
+              return(x@documentSummary[i@idList])
             }
-            return(slot(x, "documentSummary")[i])
+            return(x@documentSummary[i])
           })
 
+##' @export
+setMethod("length",
+          signature(x = "esummary"),
+          function (x) {
+            return(length(x@documentSummary))
+          })
+    
+    
 ##' Access a DocSum from an \code{\link{esummary-class}} object.
 ##'
 ##' Attempts to parse ESummary DocSums into a data frame. Returns a
@@ -132,6 +142,10 @@ setMethod("docsum",
 ##' contains the UID list. (Usually obtained directely from objects returned
 ##' by previous \code{\link{esearch}}, \code{\link{epost}} or
 ##' \code{\link{elink}} calls.)
+##' @param retstart Numeric index of the first DocSum to be retrieved
+##' (default: 1).
+##' @param retmax Total number of DocSums from the input set to be retrieved
+##' (maximum: 10,000).
 ##' @param version If "2.0" \code{esummary} will retrieve version 2.0
 ##' ESummary XML output but not, currently, attempt to parse it.
 ##'
@@ -139,18 +153,20 @@ setMethod("docsum",
 ##'
 ##' @export
 ##'
-##' @examples
-##'   ##
+##' @example inst/examples/esummary.r
 esummary <- function (id, 
-                      db=NULL,
-                      query_key=NULL,
-                      WebEnv=NULL,
+                      db = NULL,
+                      query_key = NULL,
+                      WebEnv = NULL,
                       retstart = 1,
-                      retmax = 100,
+                      retmax = 10000,
                       version = "default" ) {
   
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
     stop("No UIDs provided")
+  
+  if (retmax > 10000)
+    stop("Number of DocSums to be downloaded must not exceed 10,000.")
   
   ## get db ################################################################
   # if no db name is provided extract the database name directly from
@@ -159,20 +175,36 @@ esummary <- function (id,
     stop("No database name provided")
   
   ## get id, or WebEnv and query_key #######################################
-  # if no Web Environment is provided extract WebEnv and query_key from id 
-  # (or take the idList if an esummary object with usehistory=FALSE was
-  # provided)
   if (is.null(query_key) && is.null(WebEnv)) {
+    # extract WebEnv and query_key from id or take the idList/linkList if an
+    # esearch/elink object with usehistory=FALSE was provided.
     env_list <- .getId(id)
     WebEnv <- env_list$WebEnv
     query_key <- env_list$query_key
-    id <- .collapseUIDs(env_list$id)
-  } else
+    count <- length(env_list$id)
+    id <- env_list$id
+  } else {
+    # if there is an explicit user provided WebEnv we simply set id=NULL
+    # and count=0
+    count <- 0
     id <- NULL
-
-  o <- .query("esummary", db=db, id=id, query_key=query_key, WebEnv=WebEnv,
-              retstart=retstart, retmax=retmax,
-              version=if (identical(version, "2.0")) "2.0" else NULL)
+  }
+  
+  if (count > 100) {
+    # use HTTP POST if dealing with more than 100 user provided UIDs.
+    message(gettextf("%s UIDs were provided. ESummary request uses HTTP POST.",
+                     count))
+    o <- .httpPOST(eutil="esummary", db=db, id=.collapse(id),
+                   query_key=as.character(query_key), WebEnv=WebEnv,
+                   retstart=as.character(retstart), retmax=as.character(retmax),
+                   version=if (identical(version, "2.0")) "2.0" else NULL)
+  }
+  else {
+    o <- .query(eutil="esummary", db=db, id=.collapse(id),
+                query_key=query_key, WebEnv=WebEnv, 
+                retstart=retstart, retmax=retmax,
+                version=if (identical(version, "2.0")) "2.0" else NULL)
+  }
 
   new("esummary", database=db, error=checkErrors(o),
       url=o@url, data=o@data,

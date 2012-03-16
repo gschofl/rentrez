@@ -1,15 +1,14 @@
-\name{getCount}
-\alias{getCount}
-\title{Retrieve the number of hits for a query.}
+\name{ecount}
+\alias{ecount}
+\title{Retrieve the number of records in an Entrez database matching a text
+query}
 \usage{
-  getCount(term, db = "pubmed", silent = FALSE, ...)
+  ecount(term, db = "nuccore", ...)
 }
 \arguments{
   \item{term}{A valid NCBI search term.}
 
   \item{db}{An NCBI database (default = "pubmed").}
-
-  \item{silent}{If \code{TRUE} suppress messages.}
 
   \item{...}{Additional parameters passed on to
   \code{\link{esearch}}.}
@@ -21,7 +20,7 @@
   Some additional details about this function
 }
 \examples{
-getCount('\\"gene expression\\"[title]')
+
 }
 \seealso{
   \code{\link{esearch}}.

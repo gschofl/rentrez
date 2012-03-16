@@ -43,8 +43,8 @@ setClass("epost",
 setMethod("show",
           signature(object = "epost"),
           function (object) {
-            cat(sprintf("EPost upload of %s UIDs to database %s.\nQuery Key: %s\nWeb Environment: %s\n",
-                        sQuote(object@count), sQuote(object@database),
+            cat(sprintf("EPost upload of %s UIDs for database %s.\nQuery Key: %s\nWeb Environment: %s\n",
+                        object@count, sQuote(object@database),
                         object@queryKey, sQuote(object@webEnv)))
             return(invisible(NULL))
           })
@@ -75,6 +75,7 @@ setMethod("show",
 ##' @return An \code{\link{epost-class}} object.
 ##' 
 ##' @export
+##' @example /inst/examples/epost.r
 epost <- function (id,
                    db=NULL,
                    WebEnv=NULL) {
@@ -90,12 +91,15 @@ epost <- function (id,
 
   ## get uids ##############################################################
   env_list <- .getId(id)
-  count <- length(env_list$id)
-  id <- .collapseUIDs(env_list$id)
   if (is.null(id))
     stop("No UIDs provided")
-
-  o <- .query("epost", id=id, db=db,  WebEnv=WebEnv)
+         
+  count <- length(env_list$id)
+  if (count > 100)
+    o <- .httpPOST(eutil="epost", id=.collapse(env_list$id),
+                   db=db, WebEnv=WebEnv)
+  else
+    o <- .query("epost", id=.collapse(env_list$id), db=db, WebEnv=WebEnv)
   
   new("epost", url=o@url, data=o@data, database=db, count=count,
       queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),

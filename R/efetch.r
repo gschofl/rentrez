@@ -155,21 +155,6 @@ efetch <- function (id,
   if (is.null(db) && is.null(db <- .getDb(id)))
     stop("No database name provided")
   
-  ## get id, or WebEnv and query_key #######################################
-  # if no Web Environment is provided extract WebEnv and query_key from id 
-  # (or take the idList if an esearch object with usehistory=FALSE was
-  # provided)
-  if (is.null(query_key) && is.null(WebEnv)) {
-    env_list <- .getId(id)
-    WebEnv <- env_list$WebEnv
-    query_key <- env_list$query_key
-    id <- .collapseUIDs(env_list$id)
-  } else
-    id <- NULL
-  
-  ## restrict retmax
-  if (is.null(retmax) || retmax > 200) retmax <- 200
-  
   ## set default rettype and retmode for some databases
   if (is.null(rettype)) {
     rettype <- switch(db,
@@ -189,11 +174,57 @@ efetch <- function (id,
                       gene="text")
   }
   
-  o <- .query("efetch", db=db, id=id, query_key=query_key,
-              WebEnv=WebEnv, retmode=retmode, rettype=rettype,
-              retstart=retstart, retmax=retmax, strand=strand,
-              seq_start=seq_start, seq_stop=seq_stop,
-              complexity=complexity)
+  ## get id, or WebEnv and query_key #######################################
+  if (is.null(query_key) && is.null(WebEnv)) {
+    # extract WebEnv and query_key from id or take the idList/linkList if an
+    # esearch/elink object with usehistory=FALSE was provided.
+    env_list <- .getId(id)
+    WebEnv <- env_list$WebEnv
+    query_key <- env_list$query_key
+    record_count <- env_list$count # number of  items to be downloaded
+    count <- length(env_list$id) # number of UIDs to be uploaded
+    id <- env_list$id
+    
+    if (!is.na(record_count) &&
+        record_count > 500 && (is.null(retmax) || retmax > 500)) {
+      # if record_count exceeds 500 issue a warning and recommend
+      # efetch.batch()
+      message(gettextf("You are attempting to download %s records.\nOnly the first 500 were downloaded. Use efetch.batch() instead.",
+              max(c(record_count, retmax))))
+      retmax <- 500
+      id <- id[seq_len(500)]
+    }
+    else if (is.na(record_count)) {
+      # this takes care of the case where we use elink with
+      # cmd='neighbor_history' and don't actually know how many UIDs are
+      # stored on the history server
+      retmax <- 500
+    }
+  } else {
+    # if there is an explicit user provided WebEnv we simply set id=NULL
+    # count=0, and restrict retmax to 500
+    count <- 0
+    id <- NULL
+    retmax <- 500
+  }
+  
+  if (count > 100) {
+    # use HTTP POST if uploading more than 100 user provided UIDs.
+    o <- .httpPOST(eutil="efetch", db=db, id=.collapse(id),
+                   WebEnv=WebEnv, retmode=retmode, rettype=rettype,
+                   retstart=as.character(retstart), retmax=as.character(retmax),
+                   strand=as.character(strand),
+                   seq_start=as.character(seq_start),
+                   seq_stop=as.character(seq_stop),
+                   complexity=as.character(complexity))
+  }
+  else {
+    o <- .query("efetch", db=db, id=.collapse(id), query_key=query_key,
+                WebEnv=WebEnv, retmode=retmode, rettype=rettype,
+                retstart=retstart, retmax=retmax, strand=strand,
+                seq_start=seq_start, seq_stop=seq_stop,
+                complexity=complexity)
+  }
 
   new("efetch", url=o@url, data=o@data, database=db,
       mode=retmode, type=rettype)
@@ -247,7 +278,7 @@ efetch.batch <- function (id,
                           complexity=NULL) {
   
   if (!is(id, "esearch") && !is(id, "epost") && !is(id, "elink"))
-    stop("efetch.batch expects an 'esearch', 'epost', or 'elink' object")
+    stop("efetch.batch() expects an 'esearch', 'epost', or 'elink' object")
   
   max_chunk <- 500
   if (chunk_size > max_chunk) {

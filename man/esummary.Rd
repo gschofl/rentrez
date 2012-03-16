@@ -3,7 +3,7 @@
 \title{Retrieve document summaries (DocSums)}
 \usage{
   esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
-    retstart = 1, retmax = 100, version = "default")
+    retstart = 1, retmax = 10000, version = "default")
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a
@@ -32,6 +32,12 @@
   \code{\link{esearch}}, \code{\link{epost}} or
   \code{\link{elink}} calls.)}
 
+  \item{retstart}{Numeric index of the first DocSum to be
+  retrieved (default: 1).}
+
+  \item{retmax}{Total number of DocSums from the input set
+  to be retrieved (maximum: 10,000).}
+
   \item{version}{If "2.0" \code{esummary} will retrieve
   version 2.0 ESummary XML output but not, currently,
   attempt to parse it.}
@@ -49,6 +55,30 @@
   (\url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary})
 }
 \examples{
-##
+# View Document Summaries from PubMed
+
+doc <- esummary(id=c(22382892,22302240,22299031,22296995), db="pubmed")
+doc
+
+# View Document Summaries from Journals
+
+doc <- esummary("37381", "journals")
+doc
+
+# Combine a esearch with esummary
+
+doc <- esummary(esearch(term="Evolution", db="journals", retmax=10))
+sapply(doc$documentSummary, "[", "Title")
+
+# View Document Summaries from Gene
+
+esummary(c(828392,790,470338), "gene")
+
+# Get accession numbers for a list of GIs
+
+prot <- esummary(c(403164,45447012,27806117), "protein")
+prot
+# use docsum() to transform the Document Summary into a data frame
+accn <- docsum(prot)$caption
 }
 

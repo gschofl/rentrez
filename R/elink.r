@@ -30,18 +30,20 @@ NULL
 setClass("elink",
          representation(databaseFrom = "character",
                         databaseTo = "character",
+                        count = "numeric",
                         command = "character",
                         queryKey = "numeric",
                         webEnv = "character",
                         idList = "character",
-                        linkList = "listOrNULL"),
+                        linkList = "list"),
          prototype(databaseFrom = NA_character_,
                    databaseTo = NA_character_,
+                   count = NA_integer_,
                    command = NA_character_,
                    queryKey = NA_integer_,
                    webEnv = NA_character_,
                    idList = NA_character_,
-                   linkList = NULL),
+                   linkList = list()),
          contains = "eutil")
 
 ##' @export
@@ -84,7 +86,10 @@ setMethod("show",
 ##' @param id (Required) A character vector of UIDs.
 ##' @param dbFrom Initial database containing the UIDs in the input list.
 ##' @param dbTo Target database where the linked records are sought.
-##' @param cmd
+##' @param usehistory If \code{TRUE} search results are stored directly in
+##' the user's Web environment so that they can be used in subsequents 
+##' call to \code{\link{esummary}} or \code{\link{efetch}}.
+##' @param cmd (default: 'neighbor')
 ##' @param correspondence if \code{FALSE} all destination UIDs are lumped
 ##' together, if \code{TRUE} correspondence between query UIDs and
 ##' destination UIDs is preseverd.
@@ -109,6 +114,7 @@ setMethod("show",
 elink <- function (id,
                    dbFrom=NULL,
                    dbTo=NULL,
+                   usehistory=FALSE,
                    cmd="neighbor",
                    correspondence=FALSE,
                    query_key=NULL,
@@ -132,28 +138,47 @@ elink <- function (id,
   if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
     stop("Provide the database from which to retrieve UIDs (dbTo)")
   
-  ## get id, or WebEnv and query_key #######################################
-  # if no Web Environment is provided extract WebEnv and query_key from id 
-  # (or take the idList if an esummary object with usehistory=FALSE was
-  # provided)
-  if (is.null(query_key) && is.null(WebEnv)) {
-    env_list <- .getId(id)
-    WebEnv <- env_list$WebEnv
-    query_key <- env_list$query_key
-    if  (correspondence && !is.null(env_list$id))
-      id  <- paste0(env_list$id, collapse="&id=")
-    else
-      id <- .collapseUIDs(env_list$id)
-  } else
-    id <- NULL
-  
   if (cmd == "acheck")
     stop(sprintf("%s is not yet supported", sQuote(cmd)))
   
-  o <- .query("elink", id=id, db=dbTo, dbFrom=dbFrom, cmd=cmd,
-              query_key=query_key, WebEnv=WebEnv, linkname=linkname,
-              term=term, holding=holding, datetype=datetype,
-              reldate=reldate, mindate=mindate, maxdate=maxdate)
+  if (usehistory)
+    cmd <- "neighbor_history"
+  
+  ## get id, or WebEnv and query_key #######################################
+  if (is.null(query_key) && is.null(WebEnv)) {
+    # extract WebEnv and query_key from id or take the idList if an
+    # esearch object with usehistory=FALSE was provided.
+    env_list <- .getId(id)
+    WebEnv <- env_list$WebEnv
+    query_key <- env_list$query_key
+    count <- length(env_list$id)
+    if  (correspondence && !is.null(env_list$id))
+      id  <- paste0(env_list$id, collapse="&id=")
+    else
+      id <- .collapse(env_list$id)
+  }
+  else {
+    count <- 0
+    id <- NULL
+  }
+
+  if (count > 100) {
+    # use HTTP POST if dealing with more than 100 user provided UIDs.
+    message(gettextf("%s UIDs were provided. ELink request uses HTTP POST.",
+                     count))  
+    o <- .httpPOST(eutil="esummary",id=id, db=dbTo, dbFrom=dbFrom,
+                   cmd=cmd, query_key=as.character(query_key),
+                   WebEnv=WebEnv, linkname=linkname, term=term,
+                   holding=holding, datetype=datetype, reldate=reldate,
+                   mindate=mindate, maxdate=maxdate)
+  }
+  else {
+    o <- .query(eutil="esummary",id=id, db=dbTo, dbFrom=dbFrom,
+                cmd=cmd, query_key=query_key, WebEnv=WebEnv,
+                linkname=linkname, term=term, holding=holding,
+                datetype=datetype, reldate=reldate, mindate=mindate,
+                maxdate=maxdate)
+  }
   
   queryKey <-
     if (length(qk <- xpathSApply(o@data, "//QueryKey")) > 0L)

@@ -32,10 +32,10 @@ NULL
 ##' @name esearch-class
 ##' @rdname esearch-class
 ##' @exportClass esearch
-##' @aliases esearch,esearch-method
 ##' @aliases show,esearch-method
 ##' @aliases [,esearch-method
 ##' @aliases length,esearch-method
+##' @aliases esearch,esearch-method
 setClass("esearch",
          representation(database = "character",
                         count = "numeric",
@@ -51,42 +51,44 @@ setClass("esearch",
                    queryTranslation = NA_character_, idList = NA_character_),
          contains = "eutil")
 
-### show methods ###########################################################
-
+    
 ##' @export
 setMethod("show",
           signature(object = "esearch"),
           function (object) {
-            if (is.null(object@count)) {
-              cat(sprintf("ESearch query using the %s database.\n",
-                          sQuote(object@database)))
-              if (length(ids <- object@idList) > 0L) {
-                print(ids)
-              }
-              else {
-                cat("No hits")
-              }
-              return(invisible(NULL))
-            }
-            else {
+            if (is(object@data, "XMLInternalDocument") &&
+                !isEmpty(getNodeSet(xmlRoot(object@data), "//IdList"))) {
+              ## has IdList, hence rettype = "uilist"
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\nNumber of hits: %s\n",
-                          sQuote(object@database), sQuote(object@queryTranslation), object@count))
+                          sQuote(object@database), sQuote(object@queryTranslation),
+                          object@count))
               if (!is.na(object@webEnv) && !is.na(object@queryKey))
                 cat(sprintf("Query Key: %s\nWebEnv: %s\n",
                             object@queryKey, object@webEnv))
-              if (!all(is.na(object@idList))) {
+              if (!isEmpty(object@idList) && !is.na(object@idList))
                 print(object@idList)
-              }
-              return(invisible(NULL))
             }
+            else if (is(object@data, "XMLInternalDocument") &&
+                     isEmpty(getNodeSet(xmlRoot(object@data), "//IdList"))) {
+              ## show if esearch was performed with rettype = "count"
+              cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
+                          sQuote(object@database), object@count))
+            }
+            else if (is.na(object@data)) {
+              ## show after subsetting an esearch object
+              cat(sprintf("ESearch query using the %s database.\n",
+                          sQuote(object@database)))
+              print(object@idList)
+            }
+            
+            return(invisible(NULL))
           })
 
-### extract methods ########################################################
-
+    
 ##' @export
 setMethod("[",
-          signature(x = "esearch", i = "numeric"),
-          function (x, i, j, ..., drop = FALSE) {
+          signature(x = "esearch", i = "numeric", j = "missing"),
+          function (x, i) {
             new("esearch",
                 database=x@database,
                 queryKey=NA_integer_,
@@ -94,7 +96,6 @@ setMethod("[",
                 idList=x@idList[i])
           })
   
-### length methods #########################################################
 
 ##' @export
 setMethod("length",
@@ -103,6 +104,7 @@ setMethod("length",
             return(length(x@idList))
           })
 
+    
 ##' Search and retrieve primary UIDs matching a text query
 ##'
 ##' The ESearch utility searches and retrieves primary UIDs for use with
@@ -154,9 +156,7 @@ setMethod("length",
 ##' @return An \code{\link{esearch-class}} object.
 ##'
 ##' @export
-##' @examples 
-##'   # Search in Nucleotide for all tRNAs
-##'   esearch(term = "biomol trna[prop]", db = "nucleotide")
+##' @example inst/examples/esearch.r
 esearch <- function (term,
                      db="nuccore",
                      usehistory=FALSE,
@@ -178,12 +178,12 @@ esearch <- function (term,
   
   if (nchar(term) > 100)
     ## for longer search terms use HTTP POST
-    o <- .httpPOSTcall(eutil="esearch", db=db, term=.escape(term, httpPOST=TRUE),
-                       usehistory=if (usehistory) "y" else NULL,
-                       WebEnv=WebEnv, query_key=as.character(query_key),
-                       retstart=as.character(retstart), retmax=as.character(retmax),
-                       rettype=rettype, field=field, datetype=datetype,
-                       reldate=reldate, mindate=mindate, maxdate=maxdate)
+    o <- .httpPOST(eutil="esearch", db=db, term=.escape(term, httpPOST=TRUE),
+                   usehistory=if (usehistory) "y" else NULL,
+                   WebEnv=WebEnv, query_key=as.character(query_key),
+                   retstart=as.character(retstart), retmax=as.character(retmax),
+                   rettype=rettype, field=field, datetype=datetype,
+                   reldate=reldate, mindate=mindate, maxdate=maxdate)
   else
     o <- .query(eutil="esearch", db=db, term=term,
                 usehistory=if (usehistory) "y" else NULL,
@@ -215,11 +215,11 @@ esearch <- function (term,
 ##' @return A numeric.
 ##' @seealso \code{\link{esearch}}.
 ##' @export
-##' @examples
-##'   ecount('\"gene expression\"[title]')
+##' @example inst/examples/ecount.r
 ecount <- function (term, db = "nuccore", ...) {
-  a <- esearch(term=term, db=db, rettype="count", ...)
+  x <- esearch(term=term, db=db, rettype="count", ...)
   cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
-              sQuote(object@database), object@count))
-  return(a@count)
+              sQuote(x@database), x@count))
+  return(x@count)
 }
+

@@ -4,10 +4,11 @@ Date: 2012-01-20
 Title: R interface to the NCBI Entrez Utilities
 Description: A set of classes and functions to manage
     NCBI Entrez web service queries via the EUtilities service.
-Author: Gerhard Schöfl <gschofl@yahoo.de>
-Maintainer: Gerhard Schöfl <gschofl@yahoo.de>
+Author: Gerhard Schoefl <gschofl@yahoo.de>
+Maintainer: Gerhard Schoefl <gschofl@yahoo.de>
 License: MIT
 Depends:
+    methods,
     XML,
     RCurl
 Imports:

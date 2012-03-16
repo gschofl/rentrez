@@ -15,8 +15,8 @@ NULL
 ##' @name einfo-class
 ##' @rdname einfo-class
 ##' @exportClass einfo
-##' @aliases einfo,einfo-method
 ##' @aliases show,einfo-method
+##' @aliases einfo,einfo-method
 setClass("einfo", representation("VIRTUAL"), contains = "eutil")
 
 
@@ -40,8 +40,8 @@ setClass("einfo", representation("VIRTUAL"), contains = "eutil")
 ##' @exportClass einfoDbList
 ##' @aliases [,einfoDbList-method
 setClass("einfoDbList",
-         representation(dbList = "charOrNULL"),
-         prototype(dbList = NULL),
+         representation(dbList = "character"),
+         prototype(dbList = NA_character_),
          contains = "einfo")
 
 
@@ -70,20 +70,19 @@ setClass("einfoDbList",
 ##' @rdname einfoDb-class
 ##' @exportClass einfoDb
 setClass("einfoDb",
-         representation(dbName = "charOrNULL",
-                        menuName = "charOrNULL",
-                        description = "charOrNULL",
-                        records = "numOrNULL",
-                        lastUpdate = "POSOrNULL",
-                        fields = "dfOrNULL",
-                        links = "dfOrNULL"),
-         prototype(dbName = NULL, menuName = NULL,
-                   description = NULL, records = NULL,
-                   lastUpdate = NULL, fields = NULL,
-                   links = NULL),
+         representation(dbName = "character",
+                        menuName = "character",
+                        description = "character",
+                        records = "numeric",
+                        lastUpdate = "POSIXlt",
+                        fields = "data.frame",
+                        links = "data.frame"),
+         prototype(dbName = NA_character_, menuName = NA_character_,
+                   description = NA_character_, records = NA_integer_,
+                   lastUpdate = as.POSIXlt(NA), fields = data.frame(),
+                   links = data.frame()),
          contains = "einfo")
 
-### show method ############################################################
 
 ##' @export
 setMethod("show",
@@ -115,12 +114,11 @@ setMethod("show",
             }
           })
 
-### extract methods ########################################################
 
 ##' @export
 setMethod("[",
-          signature(x="einfoDbList", i="numeric"),
-          function (x, i, j, ..., drop) {
+          signature(x = "einfoDbList", i = "numeric", j = "missing"),
+          function (x, i) {
             x@dbList[i]
           })
 
@@ -142,9 +140,7 @@ setMethod("[",
 ##' @return An \code{\link{einfo-class}} object.
 ##'
 ##' @export
-##'
-##' @examples
-##'   databases <- einfo()
+##' @example inst/examples/einfo.r
 einfo <- function (db=NULL) {
   if (is.null(db)) {
     o <- .query(eutil='einfo')
@@ -247,4 +243,3 @@ listLinks <- function (db) {
   return(slot(einfo(db), "links"))
 }
 
-# --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
