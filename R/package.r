@@ -9,25 +9,33 @@
 ##' query results.
 ##'
 ##' Important functions:
-##'   \code{\link{einfo}}: Provides field names, term counts, last update,
-##'   and available updates for each database.
-##'   \code{\link{esearch}}: Searches and retrieves primary UIDs (for use
-##'   with \code{epost}, \code{esummary}, \code{elink}, or \code{efetch})
-##'   \code{\link{epost}}: Uploads primary UIDs to the Entrez history server
-##'   for subsequent use with e.g. \code{esummary}, \code{elink}, or 
+##' \itemize{
+##'   \item \code{\link{einfo}}: Provides field names, term counts, last
+##'   update, and available updates for each database.
+##'   
+##'   \item \code{\link{esearch}}: Searches and retrieves primary UIDs
+##'   (for use with \code{epost}, \code{esummary}, \code{elink}, or
 ##'   \code{efetch})
-##'   \code{\link{esummary}}: Retrieves document summaries (DocSums) from
+##'   
+##'   \item \code{\link{epost}}: Uploads primary UIDs to the Entrez history
+##'   server for subsequent use with e.g. \code{esummary}, \code{elink}, or 
+##'   \code{efetch})
+##'   
+##'   \item \code{\link{esummary}}: Retrieves document summaries (DocSums) from
 ##'   a list of primary UIDs.
-##'   \code{\link{elink}}: Returns a list of UIDs (and relevancy scores) from
-##'   a target database that are related to a list of UIDs in the same
-##'   database or in another Entrez database.
-##'   \code{\link{efetch}}: Retrieves data records in a specified format
+##'   
+##'   \item \code{\link{elink}}: Returns a list of UIDs (and relevancy
+##'   scores) from a target database that are related to a list of UIDs in
+##'   the same database or in another Entrez database.
+##'   
+##'   \item \code{\link{efetch}}: Retrieves data records in a specified format
 ##'   corresponding to a list of UIDs.
+##' }
 ##'   
 ##' @example inst/examples/package.r
 ##'
 ##' @name rentrez-package
-##' @author Gerhard Schoefl \email{gschofl@@yahoo.de}
+##' @author Gerhard \enc{Schöfl}{Schofl} \email{gschofl@@yahoo.de}
 ##' @docType package
 ##' @import XML
 ##' @keywords package

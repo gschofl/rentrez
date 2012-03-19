@@ -141,7 +141,7 @@ elink <- function (id,
   if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
     stop("Provide the database from which to retrieve UIDs (dbTo)")
   
-  if (cmd == "acheck")
+  if (cmd != "neighbor" && cmd != "neighbor_history")
     stop(sprintf("%s is not yet supported", sQuote(cmd)))
   
   if (usehistory)

@@ -13,22 +13,28 @@ Entrez utilities.}
   This package provides an interface to construct query
   URLs and parse query results.
 
-  Important functions: \code{\link{einfo}}: Provides field
-  names, term counts, last update, and available updates
-  for each database.  \code{\link{esearch}}: Searches and
-  retrieves primary UIDs (for use with \code{epost},
+  Important functions: \itemize{ \item \code{\link{einfo}}:
+  Provides field names, term counts, last update, and
+  available updates for each database.
+
+  \item \code{\link{esearch}}: Searches and retrieves
+  primary UIDs (for use with \code{epost}, \code{esummary},
+  \code{elink}, or \code{efetch})
+
+  \item \code{\link{epost}}: Uploads primary UIDs to the
+  Entrez history server for subsequent use with e.g.
   \code{esummary}, \code{elink}, or \code{efetch})
-  \code{\link{epost}}: Uploads primary UIDs to the Entrez
-  history server for subsequent use with e.g.
-  \code{esummary}, \code{elink}, or \code{efetch})
-  \code{\link{esummary}}: Retrieves document summaries
-  (DocSums) from a list of primary UIDs.
-  \code{\link{elink}}: Returns a list of UIDs (and
+
+  \item \code{\link{esummary}}: Retrieves document
+  summaries (DocSums) from a list of primary UIDs.
+
+  \item \code{\link{elink}}: Returns a list of UIDs (and
   relevancy scores) from a target database that are related
   to a list of UIDs in the same database or in another
-  Entrez database.  \code{\link{efetch}}: Retrieves data
-  records in a specified format corresponding to a list of
-  UIDs.
+  Entrez database.
+
+  \item \code{\link{efetch}}: Retrieves data records in a
+  specified format corresponding to a list of UIDs. }
 }
 \examples{
 ############################################################################
@@ -68,7 +74,7 @@ prot <- efetch(p, rettype="fasta")
 write(prot, file="~/prot.fa")
 }
 \author{
-  Gerhard Schoefl \email{gschofl@yahoo.de}
+  Gerhard \enc{Schöfl}{Schofl} \email{gschofl@yahoo.de}
 }
 \keyword{package}
 

@@ -48,6 +48,7 @@
 #' use HTTP POST
 #' 
 #' @importFrom RCurl postForm
+#' @importFrom RCurl curlOptions
 #' @keywords internal
 .httpPOST <- function (eutil, ...) {
   

@@ -1,13 +1,13 @@
 Package: rentrez
-Version: 0.2.1
+Version: 0.1-0
 Date: 2012-01-20
-Title: R interface to the NCBI EUtilities
+Title: An R interface to the NCBI EUtilities
+Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),
+    email="gschofl@yahoo.de")
 Description: A set of classes and functions to manage
     NCBI Entrez web service queries via the EUtilities service.
-Author: Gerhard Schoefl <gschofl@yahoo.de>
-Maintainer: Gerhard Schoefl <gschofl@yahoo.de>
 License: MIT
-Type: Package
+Encoding: latin1
 Depends:
     R (>= 2.15),
     methods
