@@ -20,7 +20,9 @@ query}
   Some additional details about this function
 }
 \examples{
-
+## retrieve the number of records for a search term in a database
+n <- ecount(term="Chlamydia psittaci", db="gene")
+n
 }
 \seealso{
   \code{\link{esearch}}.

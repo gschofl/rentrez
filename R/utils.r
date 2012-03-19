@@ -1,6 +1,8 @@
-isEmpty <- function (x) length(x) == 0L
-
-# Construct url, fetch response, construct eutil object
+#' Construct url, fetch response, construct eutil object
+#' 
+#' @importFrom RCurl curlUnescape
+#' @importFrom RCurl getURL
+#' @keywords internal
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   query_string <- .query_string(...)
@@ -43,6 +45,10 @@ isEmpty <- function (x) length(x) == 0L
   s
 }
 
+#' use HTTP POST
+#' 
+#' @importFrom RCurl postForm
+#' @keywords internal
 .httpPOST <- function (eutil, ...) {
   
   user_agent <- switch(eutil,
@@ -110,6 +116,8 @@ isEmpty <- function (x) length(x) == 0L
   names(ll) <- xpathSApply(xmlRoot(data), "//LinkName", xmlValue)
   ll
 }
+
+isEmpty <- function (x) length(x) == 0L
 
 checkErrors <- function (obj) {
   error <- NULL

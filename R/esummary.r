@@ -120,8 +120,9 @@ setMethod("docsum",
 ##' UIDs or for a set of UIDs stored in the user's web environment
 ##' (using the Entrez History server).
 ##' 
-##' See the online documentation for additional information
-##' (\url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary})
+##' See the official online documentation for NCBI's
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary}{EUtilities}
+##' for additional information.
 ##'
 ##' @param id (Required)
 ##' List of UIDs provided either as a character vector, as an

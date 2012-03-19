@@ -11,13 +11,12 @@
   \item{id}{(Required) List of UIDs provided either as a
   character vector, as an \code{\link{esearch-class}}
   object, or by reference to a web environment and a query
-  key obtained directly from the objects returned by
-  previous \code{\link{esearch}} (if \code{usehistory} was
-  set \code{TRUE}), \code{\link{epost}} or
-  \code{\link{elink}} calls. If UIDs are provided as a
-  plain character vector, \code{db} must be specified
-  explicitly, and all of the UIDs must be from the database
-  specified by \code{db}.}
+  key obtained directly from previous calls to
+  \code{\link{esearch}} (if \code{usehistory} was set
+  \code{TRUE}), \code{\link{epost}} or \code{\link{elink}}.
+  If UIDs are provided as a plain character vector,
+  \code{db} must be specified explicitly, and all of the
+  UIDs must be from the database specified by \code{db}.}
 
   \item{db}{(Required only when \code{id} is a character
   vector of UIDs) Database from which to retrieve records.}
@@ -37,13 +36,13 @@
   \item{rettype}{A character string specifying the report
   type returned, such as 'abstract' or 'medline' from
   PubMed, or 'gp' or 'fasta' from protein. See
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
   for allowed values for each database.}
 
   \item{retmode}{A character string specifying the data
   mode of the records returned, such as plain text, XML, or
   asn.1. See
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
   for allowed values for each database.}
 
   \item{retstart}{Numeric index of the first record to be
@@ -73,12 +72,27 @@
   environment.
 }
 \details{
-  See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}
+  See the official online documentation for NCBI's
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
   for additional information.
 }
 \examples{
-# Fetch PMIDs 17284678 and 9997 as text abstracts
-  efetch(c(17284678,9997), "pubmed", retmode="text", rettype="abstract")
+## Download full records ###################################################
+
+# Download nucleotide GIs 84785889 and 84785885 in FASTA format
+gi_list <- c("84785889","84785885")
+fasta <- efetch(id=gi_list, db="nucleotide", rettype="fasta")
+fasta
+
+# Download data from a previous search
+
+query <- "Chlamydia psittaci and genome and 2011[pdat]"
+(cpsit <- esearch(term=query, db="pubmed", usehistory=TRUE))
+abstr <- efetch(cpsit, rettype="abstract")
+abstr
+}
+\seealso{
+  \code{\link{efetch.batch}} for downloading more than
+  about 500 data records.
 }
 

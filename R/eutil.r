@@ -13,9 +13,9 @@ setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
 ##' \code{\link{epost-class}} classes.
 ##' 
 ##' These classes provide containers for the data returned from calls to the
-##' NCBI Entrez Utilities. 
-##' Detailed information about the services provided by NCBI is available
-##' at \url{http://www.ncbi.nlm.nih.gov/books/NBK25501/}
+##' NCBI Entrez Utilities.
+##' Detailed information about the EUtilities provided by NCBI is available
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25501/}{here}.
 ##'
 ##' Eutil class objects have three slots:
 ##' \describe{
@@ -31,6 +31,8 @@ setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
 ##' @rdname eutil-class
 ##' @exportClass eutil
 ##' @aliases eutil,eutil-method
+##' @aliases $,eutil-method
+##' @aliases names,eutil-method
 setClass("eutil",
          representation(url = "character",
                         error = "list",
@@ -39,16 +41,7 @@ setClass("eutil",
                    error = list(),
                    data = NA_character_))
 
-#### eutil method definitions ##############################################
-
-### extract methods ########################################################
-
-##' Extact slots of \code{eutil-class} objects
-##'
-##' @rdname extract-methods
-##' @aliases $,eutil-method
-##' @docType methods
-##' @keywords internal
+##' @export
 setMethod("$",
           signature(x = "eutil"),
           function (x, name) {
@@ -56,22 +49,12 @@ setMethod("$",
           })
 
 
-### names methods ##########################################################
-
-##' Access slots names of \code{eutil-class} objects
-##'
-##' @name names
-##' @rdname names-methods
-##' @aliases names,eutil-method
-##' @docType methods
-##' @keywords internal
+##' @export
 setMethod("names",
           signature(x = "eutil"),
           function (x) {
             return(slotNames(x))
           })
-
-
 
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:

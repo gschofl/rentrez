@@ -20,15 +20,22 @@
   other Entrez databases.
 }
 \details{
-  See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}
+  See the official online documentation for NCBI's
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}{EUtilities}
   for additional information.
 }
 \examples{
+## get database statistics and search fields
+
+# a list of all valid Entrez databases
 databases <- einfo()
 databases
 
-pubmed <- einfo(db="pubmed")
-pubmed$fields[,c("Name", "Description")]
+# database statistics for protein
+protein <- einfo(db="protein")
+protein
+
+# search fields for protein
+cbind(protein$fields$Name, strtrim(protein$fields$Description, 60))
 }
 

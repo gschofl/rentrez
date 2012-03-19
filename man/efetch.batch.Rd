@@ -18,13 +18,13 @@
   \item{rettype}{A character string specifying the record
   view returned, such as 'abstract' or 'medline' from
   PubMed, or 'gp' or 'fasta' from protein. See
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
   for allowed values for each database.}
 
   \item{retmode}{A character string specifying the data
   format of the records returned, such as plain text, XML,
   or asn.1. See
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
   for allowed values for each database.}
 
   \item{strand}{Strand of DNA to retrieve. (1: plus strand,
@@ -46,15 +46,26 @@
   in batches.
 }
 \details{
-  See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}
+  See the official online documentation for NCBI's
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
   for additional information.
 }
 \examples{
-query <- 'chimpanzee[orgn] and biomol mrna[prop]'
-  (s <- esearch(query, "nuccore", usehistory=TRUE))
-  ## This takes some time
-  f <- efetch.batch(s, chunk_size=200, rettype="fasta")
-  write(f, file="~/chimp_mrna.fa")
+## Download a large set of records (>500)
+
+# Download all human ncRNAs in FASTA format
+query <- "human[orgn] and biomol ncrna[prop]"
+
+# Let's check how many there are
+n <- ecount(query, "nucleotide")
+
+# upload the GIs to the history server
+ncrna <- esearch(query, "nucleotide", usehistory=TRUE)
+ncrna
+
+## Not run
+## download ncRNAs in batch mode
+# fasta <- efetch.batch(id=ncrna, chunk_size=200, rettype="fasta")
+# write(fasta, "~/human_small_nuclear_rna.fasta")
 }
 

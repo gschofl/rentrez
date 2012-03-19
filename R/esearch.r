@@ -109,14 +109,14 @@ setMethod("length",
 ##'
 ##' The ESearch utility searches and retrieves primary UIDs for use with
 ##' \code{\link{efetch}}, \code{\link{esummary}}, and \code{\link{elink}}.
-##' \code{esearch} can also post its output set of UIDs to the Entrez History
-##' Server if the \code{usehistory} parameter is set to \code{TRUE}.
+##' \code{esearch} can also post its output set of UIDs to the Entrez history
+##' server if the \code{usehistory} parameter is set to \code{TRUE}.
 ##' The resulting \code{\link{esearch-class}} object from either can then be
 ##' passed on in place of a UID list \code{\link{esummary}},
 ##' \code{\link{efetch}}, or \code{\link{elink}}.
 ##' 
-##' See the online documentation at
-##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch}
+##' See the official online documentation for NCBI's
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch}{EUtilities}
 ##' for additional information.
 ##' 
 ##' @param term A valid Entrez text query.

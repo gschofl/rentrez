@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Retrieve batches of data records in the requested format from NCBI. rentrez 0.2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {padding-top: 60px;}
+      h2 {padding-top: 20px}
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/highlight.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class = "container">
+          <a class="brand" href="#">rentrez 0.2.1</a>
+          <div class="nav">
+            <ul class="nav">
+              <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>Retrieve batches of data records in the requested format from NCBI</h1>
+
+      <div class="row">
+        <div class="span8">
+          <h2>Usage</h2>
+          <pre><span class="functioncall"><a href='efetch.batch.html'>efetch.batch</a></span><span class="keyword">(</span><span class="symbol">id</span><span class="keyword">,</span> <span class="argument">chunk_size</span> <span class="argument">=</span> <span class="number">200</span><span class="keyword">,</span> <span class="argument">rettype</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">retmode</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">strand</span> <span class="argument">=</span> NULL<span class="keyword">,</span>
+  <span class="argument">seq_start</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">seq_stop</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">complexity</span> <span class="argument">=</span> NULL<span class="keyword">)</span></pre>
+          
+          <h2>Arguments</h2>
+          <dl>
+            <dt>id</dt>
+            <dd>(Required) List of UIDs provided (via the
+  Entrez History server) by an <code><a href='esearch-class.html'>esearch-class</a></code>,
+  <code><a href='epost-class.html'>epost-class</a></code> or <code><a href='elink-class.html'>elink-class</a></code>
+  object.</dd>
+            <dt>chunk_size</dt>
+            <dd>Number of records downloaded as a batch
+  (default: 200; maximum: 500).</dd>
+            <dt>rettype</dt>
+            <dd>A character string specifying the record
+  view returned, such as 'abstract' or 'medline' from
+  PubMed, or 'gp' or 'fasta' from protein. See
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly'>here</a>
+  for allowed values for each database.</dd>
+            <dt>retmode</dt>
+            <dd>A character string specifying the data
+  format of the records returned, such as plain text, XML,
+  or asn.1. See
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly'>here</a>
+  for allowed values for each database.</dd>
+            <dt>strand</dt>
+            <dd>Strand of DNA to retrieve. (1: plus strand,
+  2: minus strand)</dd>
+            <dt>seq_start</dt>
+            <dd>First sequence base to retrieve.</dd>
+            <dt>seq_stop</dt>
+            <dd>Last sequence base to retrieve.</dd>
+            <dt>complexity</dt>
+            <dd>Data content to return. (0: entire data
+  structure, 1: bioseq, 2: minimal bioseq-set, 3: minimal
+  nuc-prot, 4: minimal pub-set)</dd>
+          </dl>
+          
+          <div class="Description">
+            <h2>Description</h2>
+            
+            <p><code>efetch.batch</code> retrieves large data sets from NCBI
+  in batches.</p>
+        
+          </div>
+
+          <div class="Details">
+            <h2>Details</h2>
+            
+            <p>See the official online documentation for NCBI's
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch'>EUtilities</a>
+  for additional information.</p>
+        
+          </div>
+
+          <div class="Value">
+            <h2>Value</h2>
+            
+            <p>An <code><a href='efetch-class.html'>efetch-class</a></code> object.</p>
+        
+          </div>
+      
+          <h2 id="examples">Examples</h2>
+          <pre class="examples"><div class='input'><span class="comment">## Download a large set of records (&gt;500)</span>
+
+<span class="comment"># Download all human ncRNAs in FASTA format</span>
+<span class="symbol">query</span> <span class="assignement">&lt;-</span> <span class="string">"human[orgn] and biomol ncrna[prop]"</span>
+
+<span class="comment"># Let's check how many there are</span>
+<span class="symbol">n</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='ecount.html'>ecount</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="string">"nucleotide"</span><span class="keyword">)</span></div>
+<div class='output'>ESearch query using the ‘nucleotide’ database.
+Number of hits: 1926
+</div>
+<div class='input'>
+<span class="comment"># upload the GIs to the history server</span>
+<span class="symbol">ncrna</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="string">"nucleotide"</span><span class="keyword">,</span> <span class="argument">usehistory</span><span class="argument">=</span><span class="number">TRUE</span><span class="keyword">)</span>
+<span class="symbol">ncrna</span></div>
+<div class='output'>ESearch query using the ‘nucleotide’ database.
+Query term: ‘"Homo sapiens"[Organism] AND biomol ncrna[prop]’
+Number of hits: 1926
+Query Key: 1
+WebEnv: NCID_1_290997800_130.14.22.101_9001_1332157987_1246744573
+</div>
+<div class='input'>
+## Not run
+## download ncRNAs in batch mode
+# fasta <- efetch.batch(id=ncrna, chunk_size=200, rettype="fasta")
+# write(fasta, "~/human_small_nuclear_rna.fasta")
+</div></pre>
+        </div>
+        <div class="span4">
+          <!-- <ul>
+            <li>efetch.batch</li>
+          </ul>
+          <ul>
+            
+          </ul> -->
+            
+                    
+        </div>
+      </div>
+      <footer class="footer">
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>The rentrez package provides an interface to NCBI's
+Entrez utilities.. rentrez 0.2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="
+  Gerhard Schoefl &lt;a href='mailto:gschofl@yahoo.de'&gt;gschofl@yahoo.de&lt;/a&gt;
+">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {padding-top: 60px;}
+      h2 {padding-top: 20px}
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/highlight.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class = "container">
+          <a class="brand" href="#">rentrez 0.2.1</a>
+          <div class="nav">
+            <ul class="nav">
+              <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>The rentrez package provides an interface to NCBI's
+Entrez utilities.</h1>
+
+      <div class="row">
+        <div class="span8">
+                    
+          <div class="Description">
+            <h2>Description</h2>
+            
+            <p>NCBI provides the EUtilities web service for software to
+  query the Entrez databases directly, rather than through
+  the web interface. For more information see
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25500/'>here</a>.</p>
+        
+          </div>
+
+          <div class="Details">
+            <h2>Details</h2>
+            
+            <p>This package provides an interface to construct query
+  URLs and parse query results.</p>
+        
+            <p>Important functions: <code><a href='einfo.html'>einfo</a></code>: Provides field
+  names, term counts, last update, and available updates
+  for each database.  <code><a href='esearch.html'>esearch</a></code>: Searches and
+  retrieves primary UIDs (for use with <code>epost</code>,
+  <code>esummary</code>, <code>elink</code>, or <code>efetch</code>)
+  <code><a href='epost.html'>epost</a></code>: Uploads primary UIDs to the Entrez
+  history server for subsequent use with e.g.
+  <code>esummary</code>, <code>elink</code>, or <code>efetch</code>)
+  <code><a href='esummary.html'>esummary</a></code>: Retrieves document summaries
+  (DocSums) from a list of primary UIDs.
+  <code><a href='elink.html'>elink</a></code>: Returns a list of UIDs (and
+  relevancy scores) from a target database that are related
+  to a list of UIDs in the same database or in another
+  Entrez database.  <code><a href='efetch.html'>efetch</a></code>: Retrieves data
+  records in a specified format corresponding to a list of
+  UIDs.</p>
+        
+          </div>
+      
+          <h2 id="examples">Examples</h2>
+          <pre class="examples"><div class='input'><span class="comment">############################################################################</span>
+<span class="comment"># combine esearch with esummary/efetch</span>
+
+<span class="comment"># Download PubMed records that are indexed in MeSH for both 'Clamydia' and </span>
+<span class="comment"># 'genome' and were published in 2011.</span>
+<span class="symbol">query</span> <span class="assignement">&lt;-</span> <span class="string">"Chlamydia[mesh] and genome[mesh] and 2011[pdat]"</span>
+
+<span class="comment"># check how many records fit the bill and download the PMIDs</span>
+<span class="symbol">n</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='ecount.html'>ecount</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="argument">db</span><span class="argument">=</span><span class="string">"pubmed"</span><span class="keyword">)</span></div>
+<div class='output'>ESearch query using the ‘pubmed’ database.
+Number of hits: 17
+</div>
+<div class='input'><span class="symbol">pmids</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="argument">db</span><span class="argument">=</span><span class="string">"pubmed"</span><span class="keyword">,</span> <span class="argument">retmax</span><span class="argument">=</span><span class="symbol">n</span><span class="keyword">)</span>
+
+<span class="comment"># Have a quick look at the titles</span>
+<span class="symbol">titles</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='docsum.html'>docsum</a></span><span class="keyword">(</span><span class="functioncall"><a href='esummary.html'>esummary</a></span><span class="keyword">(</span><span class="symbol">pmids</span><span class="keyword">)</span><span class="keyword">)</span><span class="keyword">$</span><span class="symbol">title</span>
+<span class="symbol">titles</span></div>
+<div class='output'> [1] "Identification and functional analysis of CT069 as a novel transcriptional regulator in Chlamydia."                                                                                                                            
+ [2] "Still no evidence of new variant Chlamydia trachomatis in England and Wales."                                                                                                                                                  
+ [3] "Non-coding nucleotides and amino acids near the active site regulate peptide deformylase expression and inhibitor susceptibility in Chlamydia trachomatis."                                                                    
+ [4] "Evaluation of high-resolution typing methods for Chlamydia trachomatis in samples from heterosexual couples."                                                                                                                  
+ [5] "Research brief."                                                                                                                                                                                                               
+ [6] "Evolution of Chlamydia trachomatis."                                                                                                                                                                                           
+ [7] "Identification of immunodominant antigens by probing a whole Chlamydia trachomatis open reading frame proteome microarray using sera from immunized mice."                                                                     
+ [8] "Chlamydia muridarum major outer membrane protein-specific antibodies inhibit in vitro infection but enhance pathology in vivo."                                                                                                
+ [9] "Multi-genome identification and characterization of chlamydiae-specific type III secretion substrates: the Inc proteins."                                                                                                      
+[10] "CT406 encodes a chlamydial ortholog of NrdR, a repressor of ribonucleotide reductase."                                                                                                                                         
+[11] "The atypical OmpR/PhoB response regulator ChxR from Chlamydia trachomatis forms homodimers in vivo and binds a direct repeat of nucleotide sequences."                                                                         
+[12] "Interplay of recombination and selection in the genomes of Chlamydia trachomatis."                                                                                                                                             
+[13] "A novel chimeric MOMP antigen expressed in Escherichia coli, Arabidopsis thaliana, and Daucus carota as a potential Chlamydia trachomatis vaccine candidate."                                                                  
+[14] "A live-attenuated chlamydial vaccine protects against trachoma in nonhuman primates."                                                                                                                                          
+[15] "Genome sequence of the obligate intracellular animal pathogen Chlamydia pecorum E58."                                                                                                                                          
+[16] "Toll-like receptor 2 activation by Chlamydia trachomatis is plasmid dependent, and plasmid-responsive chromosomal loci are coordinately regulated in response to glucose limitation by C. trachomatis but not by C. muridarum."
+[17] "Hypervirulent Chlamydia trachomatis clinical strain is a recombinant between lymphogranuloma venereum (L(2)) and D lineages."                                                                                                  
+</div>
+<div class='input'>
+<span class="comment"># Fetch the abstracts and write them to file</span>
+<span class="symbol">abstracts</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='efetch.html'>efetch</a></span><span class="keyword">(</span><span class="symbol">pmids</span><span class="keyword">,</span> <span class="argument">rettype</span><span class="argument">=</span><span class="string">"abstract"</span><span class="keyword">)</span>
+<span class="functioncall"><a href='http://www.inside-r.org/r-doc/base/write'>write</a></span><span class="keyword">(</span><span class="symbol">abstracts</span><span class="keyword">,</span> <span class="argument">file</span><span class="argument">=</span><span class="string">"~/chlamydia_genome_2011.pmd"</span><span class="keyword">)</span>
+
+<span class="comment">############################################################################</span>
+<span class="comment"># combine epost with esummary/efetch</span>
+
+<span class="comment"># Download protein records corresponding to a list of GI numbers.</span>
+<span class="symbol">id_list</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='http://www.inside-r.org/r-doc/base/c'>c</a></span><span class="keyword">(</span><span class="number">194680922</span><span class="keyword">,</span><span class="number">50978626</span><span class="keyword">,</span><span class="number">28558982</span><span class="keyword">,</span><span class="number">9507199</span><span class="keyword">,</span><span class="number">6678417</span><span class="keyword">)</span>
+
+<span class="comment"># post the GI numbers to the Entrez history server</span>
+<span class="symbol">p</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='epost.html'>epost</a></span><span class="keyword">(</span><span class="symbol">id_list</span><span class="keyword">,</span> <span class="string">"protein"</span><span class="keyword">)</span>
+
+<span class="comment"># retrieve docsums with esummary</span>
+<span class="symbol">docsums</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='docsum.html'>docsum</a></span><span class="keyword">(</span><span class="functioncall"><a href='esummary.html'>esummary</a></span><span class="keyword">(</span><span class="symbol">p</span><span class="keyword">)</span><span class="keyword">)</span>
+<span class="symbol">docsums</span></div>
+<div class='output'>        uid      caption
+1 194680922    XP_603356
+2  28558982    NP_000538
+3  50978626 NP_001003009
+4   6678417    NP_033443
+5   9507199    NP_062226
+                                                                  title
+1 PREDICTED: similar to Thyroid peroxidase precursor (TPO) [Bos taurus]
+2                 thyroid peroxidase isoform a precursor [Homo sapiens]
+3                 thyroid peroxidase precursor [Canis lupus familiaris]
+4                           thyroid peroxidase precursor [Mus musculus]
+5                      thyroid peroxidase precursor [Rattus norvegicus]
+                                      extra        gi    created    updated
+1  gi|194680922|ref|XP_603356.4|[194680922] 194680922 2005-03-25 2008-07-29
+2    gi|28558982|ref|NP_000538.3|[28558982]  28558982 1999-03-19 2012-01-23
+3 gi|50978626|ref|NP_001003009.1|[50978626]  50978626 2004-08-05 2011-02-09
+4      gi|6678417|ref|NP_033443.1|[6678417]   6678417 2000-01-04 2012-01-23
+5      gi|9507199|ref|NP_062226.1|[9507199]   9507199 2000-07-22 2012-01-23
+  flags tax_id length   status    replaced_by
+1   512   9913   1107 replaced    XP_603356.5
+2   512   9606    933     live               
+3   512   9615    933 replaced NP_001003009.2
+4   512  10090    914     live               
+5   512  10116    914     live               
+                                 comment
+1  This record was replaced or removed. 
+2                                       
+3  This record was replaced or removed. 
+4                                       
+5                                       
+</div>
+<div class='input'>
+<span class="comment"># get FASTAs with efetch and write them to file</span>
+<span class="symbol">prot</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='efetch.html'>efetch</a></span><span class="keyword">(</span><span class="symbol">p</span><span class="keyword">,</span> <span class="argument">rettype</span><span class="argument">=</span><span class="string">"fasta"</span><span class="keyword">)</span>
+<span class="functioncall"><a href='http://www.inside-r.org/r-doc/base/write'>write</a></span><span class="keyword">(</span><span class="symbol">prot</span><span class="keyword">,</span> <span class="argument">file</span><span class="argument">=</span><span class="string">"~/prot.fa"</span><span class="keyword">)</span></div></pre>
+        </div>
+        <div class="span4">
+          <!-- <ul>
+            <li>rentrez-package</li>
+          </ul>
+          <ul>
+            <li>package</li>
+          </ul> -->
+            
+          
+          <h2>Author</h2>
+          
+  Gerhard Schoefl <a href='mailto:gschofl@yahoo.de'>gschofl@yahoo.de</a>
+
+          
+        </div>
+      </div>
+      <footer class="footer">
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

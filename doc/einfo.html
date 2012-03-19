@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Retrieve information about each database in the NCBI Entrez system. rentrez 0.2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {padding-top: 60px;}
+      h2 {padding-top: 20px}
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/highlight.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class = "container">
+          <a class="brand" href="#">rentrez 0.2.1</a>
+          <div class="nav">
+            <ul class="nav">
+              <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>Retrieve information about each database in the NCBI Entrez system</h1>
+
+      <div class="row">
+        <div class="span8">
+          <h2>Usage</h2>
+          <pre><span class="functioncall"><a href='einfo.html'>einfo</a></span><span class="keyword">(</span><span class="argument">db</span> <span class="argument">=</span> NULL<span class="keyword">)</span></pre>
+          
+          <h2>Arguments</h2>
+          <dl>
+            <dt>db</dt>
+            <dd><code>NULL</code> or a valid NCBI database name</dd>
+          </dl>
+          
+          <div class="Description">
+            <h2>Description</h2>
+            
+            <p>If no database is provided <code>einfo</code> will return the
+  current list of NCBI databases available for querying.
+  For specific databases, <code>einfo</code> provides the name, a
+  description, the number of records indexed in the
+  database, the date of the last update of the database,
+  the fields and the available links from the database to
+  other Entrez databases.</p>
+        
+          </div>
+
+          <div class="Details">
+            <h2>Details</h2>
+            
+            <p>See the official online documentation for NCBI's
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo'>EUtilities</a>
+  for additional information.</p>
+        
+          </div>
+
+          <div class="Value">
+            <h2>Value</h2>
+            
+            <p>An <code><a href='einfo-class.html'>einfo-class</a></code> object.</p>
+        
+          </div>
+      
+          <h2 id="examples">Examples</h2>
+          <pre class="examples"><div class='input'><span class="comment">## get database statistics and search fields</span>
+
+<span class="comment"># a list of all valid Entrez databases</span>
+<span class="symbol">databases</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='einfo.html'>einfo</a></span><span class="keyword">(</span><span class="keyword">)</span>
+<span class="symbol">databases</span></div>
+<div class='output'>List of all valid Entrez databases
+ [1] "pubmed"          "protein"         "nuccore"         "nucleotide"     
+ [5] "nucgss"          "nucest"          "structure"       "genome"         
+ [9] "genomeprj"       "bioproject"      "biosample"       "biosystems"     
+[13] "blastdbinfo"     "books"           "cdd"             "clone"          
+[17] "gap"             "dbvar"           "epigenomics"     "gene"           
+[21] "gds"             "geo"             "geoprofiles"     "homologene"     
+[25] "journals"        "mesh"            "ncbisearch"      "nlmcatalog"     
+[29] "omia"            "omim"            "pmc"             "popset"         
+[33] "probe"           "proteinclusters" "pcassay"         "pccompound"     
+[37] "pcsubstance"     "pubmedhealth"    "seqannot"        "snp"            
+[41] "sra"             "taxonomy"        "toolkit"         "toolkitall"     
+[45] "unigene"         "unists"          "gencoll"         "gcassembly"     
+</div>
+<div class='input'>
+<span class="comment"># database statistics for protein</span>
+<span class="symbol">protein</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='einfo.html'>einfo</a></span><span class="keyword">(</span><span class="argument">db</span><span class="argument">=</span><span class="string">"protein"</span><span class="keyword">)</span>
+<span class="symbol">protein</span></div>
+<div class='output'>Statistics for Entrez Protein 
+$dbName
+[1] "protein"
+$menuName
+[1] "Protein"
+$description
+[1] "Protein sequence record"
+$records
+[1] 48485754
+$lastUpdate
+[1] "2012-03-11 05:19:00"
+$fields$Name $fields$FullName $fields$Description $fields$TermCount $fields$IsDate $fields$IsNumerical $fields$SingleToken $fields$Hierarchy $fields$IsHidden 
+ [1] "ALL"  "UID"  "FILT" "WORD" "TITL" "KYWD" "AUTH" "JOUR" "VOL"  "ISS" 
+[11] "PAGE" "ORGN" "ACCN" "PACC" "GENE" "PROT" "ECNO" "PDAT" "MDAT" "SUBS"
+[21] "PROP" "SQID" "GPRJ" "SLEN" "MLWT" "FKEY" "PORG"
+$links$Name $links$Menu $links$Description $links$DbTo 
+ [1] "protein_bioproject"             "protein_biosystems"            
+ [3] "protein_cdd"                    "protein_cdd_concise_2"         
+ [5] "protein_cdd_summary"            "protein_gene"                  
+ [7] "protein_genome"                 "protein_homologene"            
+ [9] "protein_mapview"                "protein_nuccore"               
+[11] "protein_nuccore_mat_peptide"    "protein_nuccore_mgc"           
+[13] "protein_nuccore_mrna"           "protein_nuccore_wgs"           
+[15] "protein_nucgss"                 "protein_nucleotide_mgc_url"    
+[17] "protein_omia"                   "protein_omim"                  
+[19] "protein_pcassay"                "protein_pcassay_target"        
+[21] "protein_pcassay_target_pig"     "protein_pccompound"            
+[23] "protein_pcsubstance"            "protein_pmc"                   
+[25] "protein_popset"                 "protein_protein"               
+[27] "protein_protein_cdart_summary"  "protein_protein_identical"     
+[29] "protein_protein_refseq2uniprot" "protein_protein_uniprot2refseq"
+[31] "protein_proteinclusters"        "protein_pubmed"                
+[33] "protein_pubmed_refseq"          "protein_pubmed_weighted"       
+[35] "protein_snp"                    "protein_snp_genegenotype"      
+[37] "protein_snp_geneview"           "protein_structure"             
+[39] "protein_structure_related"      "protein_structure_related_list"
+[41] "protein_taxonomy"               "protein_unigene"               
+</div>
+<div class='input'>
+<span class="comment"># search fields for protein</span>
+<span class="functioncall"><a href='http://www.inside-r.org/r-doc/base/cbind'>cbind</a></span><span class="keyword">(</span><span class="symbol">protein</span><span class="keyword">$</span><span class="symbol">fields</span><span class="keyword">$</span><span class="symbol">Name</span><span class="keyword">,</span> <span class="functioncall"><a href='http://www.inside-r.org/r-doc/base/strtrim'>strtrim</a></span><span class="keyword">(</span><span class="symbol">protein</span><span class="keyword">$</span><span class="symbol">fields</span><span class="keyword">$</span><span class="symbol">Description</span><span class="keyword">,</span> <span class="number">60</span><span class="keyword">)</span><span class="keyword">)</span></div>
+<div class='output'>      [,1]   [,2]                                                          
+ [1,] "ALL"  "All terms from all searchable fields"                        
+ [2,] "UID"  "Unique number assigned to each sequence"                     
+ [3,] "FILT" "Limits the records"                                          
+ [4,] "WORD" "Free text associated with record"                            
+ [5,] "TITL" "Words in definition line"                                    
+ [6,] "KYWD" "Nonstandardized terms provided by submitter"                 
+ [7,] "AUTH" "Author(s) of publication"                                    
+ [8,] "JOUR" "Journal abbreviation of publication"                         
+ [9,] "VOL"  "Volume number of publication"                                
+[10,] "ISS"  "Issue number of publication"                                 
+[11,] "PAGE" "Page number(s) of publication"                               
+[12,] "ORGN" "Scientific and common names of organism, and all higher leve"
+[13,] "ACCN" "Accession number of sequence"                                
+[14,] "PACC" "Does not include retired secondary accessions"               
+[15,] "GENE" "Name of gene associated with sequence"                       
+[16,] "PROT" "Name of protein associated with sequence"                    
+[17,] "ECNO" "EC number for enzyme or CAS registry number"                 
+[18,] "PDAT" "Date sequence added to GenBank"                              
+[19,] "MDAT" "Date of last update"                                         
+[20,] "SUBS" "CAS chemical name or MEDLINE Substance Name"                 
+[21,] "PROP" "Classification by source qualifiers and molecule type"       
+[22,] "SQID" "String identifier for sequence"                              
+[23,] "GPRJ" "BioProject"                                                  
+[24,] "SLEN" "Length of sequence"                                          
+[25,] "MLWT" "Molecular Weight"                                            
+[26,] "FKEY" "Feature annotated on sequence"                               
+[27,] "PORG" "Scientific and common names of primary organism, and all hig"
+</div></pre>
+        </div>
+        <div class="span4">
+          <!-- <ul>
+            <li>einfo</li>
+          </ul>
+          <ul>
+            
+          </ul> -->
+            
+                    
+        </div>
+      </div>
+      <footer class="footer">
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

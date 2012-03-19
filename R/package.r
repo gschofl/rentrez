@@ -1,9 +1,9 @@
 ##' The rentrez package provides an interface to NCBI's
 ##' Entrez utilities.
 ##'
-##' NCBI provides the EUtils web service for software to query the Entrez
+##' NCBI provides the EUtilities web service for software to query the Entrez
 ##' databases directly, rather than through the web interface. For more
-##' information see \url{http://www.ncbi.nlm.nih.gov/books/NBK25500/}.
+##' information see \href{http://www.ncbi.nlm.nih.gov/books/NBK25500/}{here}.
 ##' 
 ##' This package provides an interface to construct query URLs and parse 
 ##' query results.
@@ -29,6 +29,7 @@
 ##' @name rentrez-package
 ##' @author Gerhard Schoefl \email{gschofl@@yahoo.de}
 ##' @docType package
+##' @import XML
 ##' @keywords package
 NA
 ####

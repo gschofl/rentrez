@@ -1,6 +1,8 @@
 \name{eutil-class}
+\alias{$,eutil-method}
 \alias{eutil-class}
 \alias{eutil,eutil-method}
+\alias{names,eutil-method}
 \title{eutil class}
 \description{
   eutil is an S4 class that is extended by the
@@ -11,9 +13,9 @@
 \details{
   These classes provide containers for the data returned
   from calls to the NCBI Entrez Utilities. Detailed
-  information about the services provided by NCBI is
-  available at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25501/}
+  information about the EUtilities provided by NCBI is
+  available
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25501/}{here}.
 
   Eutil class objects have three slots: \describe{
   \item{url}{A character vector containing the URL

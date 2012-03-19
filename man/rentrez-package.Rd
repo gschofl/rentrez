@@ -4,10 +4,10 @@
 \title{The rentrez package provides an interface to NCBI's
 Entrez utilities.}
 \description{
-  NCBI provides the EUtils web service for software to
+  NCBI provides the EUtilities web service for software to
   query the Entrez databases directly, rather than through
   the web interface. For more information see
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25500/}.
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25500/}{here}.
 }
 \details{
   This package provides an interface to construct query

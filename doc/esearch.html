@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Search and retrieve primary UIDs matching a text query. rentrez 0.2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {padding-top: 60px;}
+      h2 {padding-top: 20px}
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/highlight.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class = "container">
+          <a class="brand" href="#">rentrez 0.2.1</a>
+          <div class="nav">
+            <ul class="nav">
+              <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>Search and retrieve primary UIDs matching a text query</h1>
+
+      <div class="row">
+        <div class="span8">
+          <h2>Usage</h2>
+          <pre><span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="symbol">term</span><span class="keyword">,</span> <span class="argument">db</span> <span class="argument">=</span> <span class="string">"nuccore"</span><span class="keyword">,</span> <span class="argument">usehistory</span> <span class="argument">=</span> <span class="number">FALSE</span><span class="keyword">,</span> <span class="argument">WebEnv</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">query_key</span> <span class="argument">=</span> NULL<span class="keyword">,</span>
+  <span class="argument">retstart</span> <span class="argument">=</span> <span class="number">0</span><span class="keyword">,</span> <span class="argument">retmax</span> <span class="argument">=</span> <span class="number">100</span><span class="keyword">,</span> <span class="argument">rettype</span> <span class="argument">=</span> <span class="string">"uilist"</span><span class="keyword">,</span> <span class="argument">field</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">datetype</span> <span class="argument">=</span> NULL<span class="keyword">,</span>
+      <span class="argument">reldate</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">mindate</span> <span class="argument">=</span> NULL<span class="keyword">,</span> <span class="argument">maxdate</span> <span class="argument">=</span> NULL<span class="keyword">)</span></pre>
+          
+          <h2>Arguments</h2>
+          <dl>
+            <dt>term</dt>
+            <dd>A valid Entrez text query.</dd>
+            <dt>db</dt>
+            <dd>Database to search (default: nucleotide).</dd>
+            <dt>usehistory</dt>
+            <dd>If <code>TRUE</code> search results are
+  stored directly in the user's Web environment so that
+  they can be used in a subsequent call to
+  <code><a href='esummary.html'>esummary</a></code>, <code><a href='efetch.html'>efetch</a></code>, or
+  <code><a href='elink.html'>elink</a></code>. Also, <code>usehistory</code> must be set
+  to <code>TRUE</code> for <code>esearch</code> to interpret query key
+  values included in <code>term</code> or to accept a
+  <code>WebEnv</code> as input.</dd>
+            <dt>WebEnv</dt>
+            <dd>Web environment string returned by a
+  previous call to <code><a href='esearch.html'>esearch</a></code>,
+  <code><a href='epost.html'>epost</a></code> or <code><a href='elink.html'>elink</a></code>. When
+  provided, <code>esearch</code> will append the results of the
+  search to the pre-existing WebEnv. Providing WebEnv also
+  allows query keys to be used in <code>term</code> so that
+  previous search sets can be combined or limited.</dd>
+            <dt>query_key</dt>
+            <dd>query key returned by a previous call to
+  <code><a href='esearch.html'>esearch</a></code>, <code><a href='epost.html'>epost</a></code> or
+  <code><a href='elink.html'>elink</a></code>. When provided, <code>esearch</code> will
+  find the intersection of the set specified by query_key
+  and the set retrieved by the query in <code>term</code> (i.e.
+  joins the two with AND).</dd>
+            <dt>retstart</dt>
+            <dd>Numeric index of the first UID in the
+  retrieved set to be shown in the XML output (default:
+  0).</dd>
+            <dt>retmax</dt>
+            <dd>Total number of UIDs to be retrieved
+  (default: 100).</dd>
+            <dt>rettype</dt>
+            <dd>Retrieval type. (default: 'uilist',
+  alternative: 'count'.)</dd>
+            <dt>field</dt>
+            <dd>Optional. Search field used to limit the
+  entire search term.</dd>
+            <dt>datetype</dt>
+            <dd>Optional. Type of date to limit the
+  search. One of "mdat" (modification date), "pdat"
+  (publication date) or "edat" (Entrez date)</dd>
+            <dt>reldate</dt>
+            <dd>Optional. Number of days back for which
+  search items are returned.</dd>
+            <dt>mindate</dt>
+            <dd>Optional. Minimum date of search range.
+  Format YYYY/MM/DD.</dd>
+            <dt>maxdate</dt>
+            <dd>Optional. Maximum date of search range.
+  Format YYYY/MM/DD.</dd>
+          </dl>
+          
+          <div class="Description">
+            <h2>Description</h2>
+            
+            <p>The ESearch utility searches and retrieves primary UIDs
+  for use with <code><a href='efetch.html'>efetch</a></code>,
+  <code><a href='esummary.html'>esummary</a></code>, and <code><a href='elink.html'>elink</a></code>.
+  <code>esearch</code> can also post its output set of UIDs to
+  the Entrez history server if the <code>usehistory</code>
+  parameter is set to <code>TRUE</code>. The resulting
+  <code><a href='esearch-class.html'>esearch-class</a></code> object from either can then
+  be passed on in place of a UID list
+  <code><a href='esummary.html'>esummary</a></code>, <code><a href='efetch.html'>efetch</a></code>, or
+  <code><a href='elink.html'>elink</a></code>.</p>
+        
+          </div>
+
+          <div class="Details">
+            <h2>Details</h2>
+            
+            <p>See the official online documentation for NCBI's
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch'>EUtilities</a>
+  for additional information.</p>
+        
+          </div>
+
+          <div class="Value">
+            <h2>Value</h2>
+            
+            <p>An <code><a href='esearch-class.html'>esearch-class</a></code> object.</p>
+        
+          </div>
+      
+          <h2 id="examples">Examples</h2>
+          <pre class="examples"><div class='input'><span class="comment">## Basic searching #########################################################</span>
+
+<span class="comment"># Get th PubMed IDs (PMIDs) for articles about Chlamydia psittaci</span>
+<span class="comment"># that have been published in 2011.</span>
+
+<span class="symbol">cpsit</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="argument">term</span><span class="argument">=</span><span class="string">"Chlamydia psittaci and 2011[pdat]"</span><span class="keyword">,</span> <span class="argument">db</span><span class="argument">=</span><span class="string">"pubmed"</span><span class="keyword">)</span>
+<span class="symbol">cpsit</span></div>
+<div class='output'>ESearch query using the ‘pubmed’ database.
+Query term: ‘("chlamydophila psittaci"[MeSH Terms] OR ("chlamydophila"[All Fields] AND "psittaci"[All Fields]) OR "chlamydophila psittaci"[All Fields] OR ("chlamydia"[All Fields] AND "psittaci"[All Fields]) OR "chlamydia psittaci"[All Fields]) AND 2011[pdat]’
+Number of hits: 39
+ [1] "22216179" "22153301" "22104141" "22041215" "22030889" "22024723"
+ [7] "21933318" "21921110" "21908306" "21885218" "21872782" "21846923"
+[13] "21816232" "21791668" "21786334" "21764961" "21761223" "21719838"
+[19] "21705611" "21679409" "21629695" "21622741" "21500640" "21487989"
+[25] "21471346" "21450942" "21441521" "21393457" "21314912" "21304914"
+[31] "21270000" "21239044" "21215905" "21183672" "21173126" "21055877"
+[37] "20980178" "20948172" "20800518"
+</div>
+<div class='input'>
+<span class="comment"># Search in PubMed for articles published by the journal PNAS in Volume 97.</span>
+
+<span class="symbol">pnas</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="argument">term</span><span class="argument">=</span><span class="string">"PNAS[jour] and 97[vol]"</span><span class="keyword">,</span> <span class="argument">db</span><span class="argument">=</span><span class="string">"pubmed"</span><span class="keyword">)</span>
+<span class="symbol">pnas</span></div>
+<div class='output'>ESearch query using the ‘pubmed’ database.
+Query term: ‘"Proc Natl Acad Sci U S A"[Journal] AND 97[vol]’
+Number of hits: 2651
+  [1] "16578858" "11186225" "11121081" "11121080" "11121079" "11121078"
+  [7] "11121077" "11121076" "11121075" "11121074" "11121073" "11121072"
+ [13] "11121071" "11121070" "11121069" "11121068" "11121067" "11121066"
+ [19] "11121065" "11121064" "11121063" "11121062" "11121061" "11121060"
+ [25] "11121059" "11121058" "11121057" "11121056" "11121055" "11121054"
+ [31] "11121053" "11121052" "11121051" "11121050" "11121049" "11121048"
+ [37] "11121047" "11121046" "11121045" "11121044" "11121043" "11121042"
+ [43] "11121041" "11121040" "11121039" "11121038" "11121037" "11121036"
+ [49] "11121035" "11121034" "11121033" "11121032" "11121031" "11121030"
+ [55] "11121029" "11121028" "11121027" "11121026" "11121025" "11121024"
+ [61] "11121023" "11121022" "11121021" "11121020" "11121019" "11121018"
+ [67] "11121017" "11121015" "11121014" "11121012" "11121011" "11121010"
+ [73] "11121009" "11114205" "11114204" "11114203" "11114202" "11114201"
+ [79] "11114200" "11114199" "11114198" "11114197" "11114196" "11114195"
+ [85] "11114194" "11114193" "11114192" "11114191" "11114190" "11114189"
+ [91] "11114188" "11114187" "11114186" "11114185" "11114184" "11114183"
+ [97] "11114182" "11114181" "11114180" "11114179"
+</div>
+<div class='input'>
+<span class="comment"># Search for protein UIDs corresponding to BRCA1 in humans.</span>
+<span class="comment"># To ensure that we retrieve the full list of IDs, we use </span>
+<span class="comment"># ecount() to set the 'retmax' parameter.</span>
+
+<span class="symbol">query</span> <span class="assignement">&lt;-</span> <span class="string">"BRCA1 and human"</span>
+<span class="symbol">brca1</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="string">"protein"</span><span class="keyword">,</span> <span class="argument">retmax</span><span class="argument">=</span><span class="functioncall"><a href='ecount.html'>ecount</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="string">"protein"</span><span class="keyword">)</span><span class="keyword">)</span></div>
+<div class='output'>ESearch query using the ‘protein’ database.
+Number of hits: 2443
+</div>
+<div class='input'>
+<span class="comment">## Storing search results on the Entrez history server #####################</span>
+
+<span class="symbol">query</span> <span class="assignement">&lt;-</span> <span class="string">"BRCA1 and human"</span>
+<span class="symbol">brca1</span> <span class="assignement">&lt;-</span> <span class="functioncall"><a href='esearch.html'>esearch</a></span><span class="keyword">(</span><span class="symbol">query</span><span class="keyword">,</span> <span class="string">"protein"</span><span class="keyword">,</span> <span class="argument">retmax</span><span class="argument">=</span><span class="number">2443</span><span class="keyword">,</span> <span class="argument">usehistory</span><span class="argument">=</span><span class="number">TRUE</span><span class="keyword">)</span>
+<span class="symbol">brca1</span></div>
+<div class='output'>ESearch query using the ‘protein’ database.
+Query term: ‘BRCA1[All Fields] AND ("Homo sapiens"[Organism] OR human[All Fields])’
+Number of hits: 2443
+Query Key: 1
+WebEnv: NCID_1_221877794_130.14.22.28_9001_1332157997_878196413
+</div></pre>
+        </div>
+        <div class="span4">
+          <!-- <ul>
+            <li>esearch</li>
+          </ul>
+          <ul>
+            
+          </ul> -->
+            
+                    
+        </div>
+      </div>
+      <footer class="footer">
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

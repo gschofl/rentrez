@@ -1,16 +1,16 @@
 Package: rentrez
 Version: 0.2.1
 Date: 2012-01-20
-Title: R interface to the NCBI Entrez Utilities
+Title: R interface to the NCBI EUtilities
 Description: A set of classes and functions to manage
     NCBI Entrez web service queries via the EUtilities service.
 Author: Gerhard Schoefl <gschofl@yahoo.de>
 Maintainer: Gerhard Schoefl <gschofl@yahoo.de>
 License: MIT
+Type: Package
 Depends:
-    methods,
-    XML,
-    RCurl
+    R (>= 2.15),
+    methods
 Imports:
     XML,
     RCurl

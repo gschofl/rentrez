@@ -5,15 +5,15 @@
   epost(id, db = NULL, WebEnv = NULL)
 }
 \arguments{
-  \item{id}{A character vector of UIDs.}
+  \item{id}{(Required) List of UIDs.}
 
-  \item{db}{Database containing the UIDs in the input
-  list.}
+  \item{db}{(Required) Database containing the UIDs in the
+  input list.}
 
-  \item{WebEnv}{Web Environment. If provided, this
-  parameter specifies the Web Environment that will receive
-  the UIDs sent by \code{epost}. EPost will create a new
-  query key associated with that Web Environment. The
+  \item{WebEnv}{(Optional) Web Environment. If provided,
+  this parameter specifies the Web Environment that will
+  receive the UIDs sent by \code{epost}. EPost will create
+  a new query key associated with that Web Environment. The
   WebEnv value is usually returned by a previous call to
   \code{\link{esearch}}, \code{\link{epost}} or
   \code{\link{elink}}. If no WebEnv parameter is provided,
@@ -33,12 +33,12 @@
   \code{\link{elink}} calls.
 }
 \details{
-  See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EPost}
+  See the official online documentation for NCBI's
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EPost}{EUtilities}
   for additional information.
 }
 \examples{
-# Post a list of protein GI numbers to the Entrez history server
+## Uploading UIDs to the Entrez history server #############################
 
 id_list <- c(194680922,50978626,28558982,9507199,6678417)
 p <- epost(id=id_list, db="protein")

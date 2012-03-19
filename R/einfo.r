@@ -131,8 +131,8 @@ setMethod("[",
 ##' the date of the last update of the database, the fields and the
 ##' available links from the database to other Entrez databases.
 ##' 
-##' See the online documentation at
-##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}
+##' See the official online documentation for NCBI's
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}{EUtilities}
 ##' for additional information.
 ##' 
 ##' @param db \code{NULL} or a valid NCBI database name

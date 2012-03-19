@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Retrieve the number of records in all Entrez databases for a single
+text query. rentrez 0.2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {padding-top: 60px;}
+      h2 {padding-top: 20px}
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/highlight.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class = "container">
+          <a class="brand" href="#">rentrez 0.2.1</a>
+          <div class="nav">
+            <ul class="nav">
+              <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>Retrieve the number of records in all Entrez databases for a single
+text query</h1>
+
+      <div class="row">
+        <div class="span8">
+          <h2>Usage</h2>
+          <pre><span class="functioncall"><a href='egquery.html'>egquery</a></span><span class="keyword">(</span><span class="symbol">term</span><span class="keyword">)</span></pre>
+          
+          <h2>Arguments</h2>
+          <dl>
+            <dt>term</dt>
+            <dd>A valid Entrez text query.</dd>
+          </dl>
+          
+          <div class="Description">
+            <h2>Description</h2>
+            
+            <p><code>egquery</code> provides Entrez database counts for a
+  global search.</p>
+        
+          </div>
+
+          <div class="Details">
+            <h2>Details</h2>
+            
+            <p>See the official online documentation for NCBI's
+  <a href = 'http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery'>EUtilities</a>
+  for additional information.</p>
+        
+          </div>
+
+          <div class="Value">
+            <h2>Value</h2>
+            
+            <p>An <code><a href='egquery-class.html'>egquery-class</a></code> object.</p>
+        
+          </div>
+      
+          <h2 id="examples">Examples</h2>
+          <pre class="examples"><div class='input'><span class="comment">## Perform a global Entrez Search</span>
+
+<span class="comment"># Determine the number of records for "Chlamydia psittaci" in Entrez</span>
+<span class="functioncall"><a href='egquery.html'>egquery</a></span><span class="keyword">(</span><span class="string">"Chlamydia psittaci"</span><span class="keyword">)</span></div>
+<div class='output'>EGQuery for ‘Chlamydia psittaci’
+            dbName          menuName count                        status
+1           pubmed            PubMed  2245                            Ok
+2              pmc    PubMed Central  1848                            Ok
+3             mesh              MeSH     5                            Ok
+4            books             Books    20                            Ok
+5             omim              OMIM    10                            Ok
+6             omia              OMIA     0 Term or Database is not found
+7       ncbisearch       Site Search     0 Term or Database is not found
+8          nuccore        Nucleotide  1231                            Ok
+9           nucgss               GSS     1                            Ok
+10          nucest               EST     0 Term or Database is not found
+11         protein           Protein 12710                            Ok
+12          genome            Genome     1                            Ok
+13       structure         Structure     0 Term or Database is not found
+14        taxonomy          Taxonomy     1                            Ok
+15             snp               SNP     0 Term or Database is not found
+16           dbvar             dbVar     0 Term or Database is not found
+17     epigenomics       Epigenomics     0 Term or Database is not found
+18            gene              Gene  1092                            Ok
+19             sra               SRA     6                            Ok
+20      biosystems        BioSystems    76                            Ok
+21         unigene           UniGene     0 Term or Database is not found
+22             cdd               CDD     1                            Ok
+23           clone             Clone     0 Term or Database is not found
+24          unists            UniSTS     0 Term or Database is not found
+25          popset            PopSet     5                            Ok
+26     geoprofiles      GEO Profiles 45101                            Ok
+27             gds      GEO DataSets     9                            Ok
+28      homologene        HomoloGene     0 Term or Database is not found
+29      pccompound  PubChem Compound     0 Term or Database is not found
+30     pcsubstance PubChem Substance     0 Term or Database is not found
+31         pcassay  PubChem BioAssay    12                            Ok
+32      nlmcatalog       NLM Catalog     6                            Ok
+33           probe             Probe    47                            Ok
+34             gap             dbGaP     2                            Ok
+35 proteinclusters  Protein Clusters     8                            Ok
+36      bioproject        BioProject    59                            Ok
+37       biosample         BioSample     2                            Ok
+</div></pre>
+        </div>
+        <div class="span4">
+          <!-- <ul>
+            <li>egquery</li>
+          </ul>
+          <ul>
+            
+          </ul> -->
+            
+                    
+        </div>
+      </div>
+      <footer class="footer">
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

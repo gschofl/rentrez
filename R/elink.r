@@ -72,45 +72,47 @@ setMethod("show",
             return(invisible(NULL))
           })
 
-##' Retrive links to records in other Entrez databases
+##' Retrieve links to records in other Entrez databases
 ##'
 ##' \code{elink} generates a list of UIDs in a specified Entrez database
 ##' that are linked to a set of input UIDs in either the same or another
 ##' database. For instance, the ELink utility can find Entrez gene records
 ##' linked to records in Entrez Protein.
 ##' 
-##' See the online documentation at
-##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}
+##' See the official online documentation for NCBI's
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}{EUtilities}
 ##' for additional information.
+##' 
+##' If \code{dbTo} and \code{dbFrom} are set to the same database, ELink will
+##' return neighbors within that database.
 ##' 
 ##' @param id (Required) A character vector of UIDs.
 ##' @param dbFrom Initial database containing the UIDs in the input list.
-##' @param dbTo Target database where the linked records are sought.
+##' @param dbTo Destination database where the linked records are sought.
 ##' @param usehistory If \code{TRUE} search results are stored directly in
 ##' the user's Web environment so that they can be used in subsequents 
-##' call to \code{\link{esummary}} or \code{\link{efetch}}.
-##' @param cmd (default: 'neighbor')
+##' calls to \code{\link{esummary}} or \code{\link{efetch}}.
+##' @param cmd ELink command mode (default: 'neighbor').
 ##' @param correspondence if \code{FALSE} all destination UIDs are lumped
 ##' together, if \code{TRUE} correspondence between query UIDs and
-##' destination UIDs is preseverd.
+##' destination UIDs is preserved.
 ##' @param query_key Query key.
 ##' @param WebEnv Web Environment.
-##' @param linkname
-##' @param term
-##' @param holding
-##' @param datetype
-##' @param reldate
-##' @param mindate
-##' @param maxdate
+##' @param linkname Name of the Entrez link to retrieve. Every link in
+##' Entrez is given a name of the form 'dbFrom_dbTo_subset'.
+##' @param term Seqrch query to limit the output set of linked UIDs.
+##' @param holding Name of LinkOut provider.
+##' @param datetype Type of date to limit the search. One of 'mdat'
+##' (modification date), 'pdat' (publication date) or 'edat' (Entrez date).
+##' @param reldate umber of days back for which search items are
+##' returned.
+##' @param mindate Minimum date of search range. Format YYYY/MM/DD.
+##' @param maxdate Maximum date of search range. Format YYYY/MM/DD.
 ##' 
 ##' @return An \code{\link{elink-class}} object.
 ##' 
 ##' @export
-##' @examples
-##' id_list <- c(194680922,50978626,28558982,9507199,6678417)
-##' links <- elink(id=id_list, dbFrom="protein", dbTo="gene",
-##'                cmd="neighbor_history")
-##' links
+##' @example inst/examples/elink.r
 elink <- function (id,
                    dbFrom=NULL,
                    dbTo=NULL,
@@ -126,6 +128,7 @@ elink <- function (id,
                    reldate=NULL,
                    mindate=NULL,
                    maxdate=NULL) {
+
   if (missing(id))
     stop("No UIDs provided")
   
@@ -166,14 +169,14 @@ elink <- function (id,
     # use HTTP POST if dealing with more than 100 user provided UIDs.
     message(gettextf("%s UIDs were provided. ELink request uses HTTP POST.",
                      count))  
-    o <- .httpPOST(eutil="esummary",id=id, db=dbTo, dbFrom=dbFrom,
+    o <- .httpPOST(eutil="elink",id=id, db=dbTo, dbFrom=dbFrom,
                    cmd=cmd, query_key=as.character(query_key),
                    WebEnv=WebEnv, linkname=linkname, term=term,
                    holding=holding, datetype=datetype, reldate=reldate,
                    mindate=mindate, maxdate=maxdate)
   }
   else {
-    o <- .query(eutil="esummary",id=id, db=dbTo, dbFrom=dbFrom,
+    o <- .query(eutil="elink",id=id, db=dbTo, dbFrom=dbFrom,
                 cmd=cmd, query_key=query_key, WebEnv=WebEnv,
                 linkname=linkname, term=term, holding=holding,
                 datetype=datetype, reldate=reldate, mindate=mindate,
@@ -189,13 +192,12 @@ elink <- function (id,
   webEnv <- 
     if (length(we <- xpathSApply(o@data, "//WebEnv")) > 0L)
       xmlValue(we[[1L]])
-  else
-    NA_character_
+    else
+      NA_character_
   
   new("elink", url=o@url, data=o@data, error=checkErrors(o),
       databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
-      databaseTo=xmlValue(getNodeSet(o@data, "//DbTo")[[1L]]), command=cmd,
-      queryKey=queryKey, webEnv=webEnv,
+      databaseTo=dbTo, command=cmd, queryKey=queryKey, webEnv=webEnv,
       idList=sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue),
       linkList=.parseLinkSet(o@data))
 }

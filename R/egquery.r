@@ -47,8 +47,8 @@ setMethod("show",
 ##' 
 ##' \code{egquery} provides Entrez database counts for a global search.
 ##' 
-##' See the online documentation at
-##' \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery}
+##' See the official online documentation for NCBI's
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery}{EUtilities}
 ##' for additional information.
 ##' 
 ##' @param term A valid Entrez text query.
@@ -56,6 +56,7 @@ setMethod("show",
 ##' @return An \code{\link{egquery-class}} object.
 ##' 
 ##' @export
+##' @example inst/examples/egquery.r
 egquery <- function (term ) {
 
   if (missing(term))

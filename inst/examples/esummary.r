@@ -1,25 +1,24 @@
-# View Document Summaries from PubMed
+## Downloading Document Summaries ##########################################
 
-doc <- esummary(id=c(22382892,22302240,22299031,22296995), db="pubmed")
+# Download DocSums for some protein GIs: 313848131,313847824,313847819,
+# 313847818,313847817
+
+gi_list <- c(313848131,313847824,313847819,313847818,313847817)
+doc <- esummary(id=gi_list, db="protein")
 doc
 
-# View Document Summaries from Journals
+# Download data from a previous ESearch
 
-doc <- esummary("37381", "journals")
-doc
+(s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE))
+doc <- esummary(s)
 
-# Combine a esearch with esummary
-
-doc <- esummary(esearch(term="Evolution", db="journals", retmax=10))
-sapply(doc$documentSummary, "[", "Title")
-
-# View Document Summaries from Gene
-
-esummary(c(828392,790,470338), "gene")
+data.frame(stringsAsFactors=FALSE,
+           uids = names(doc$documentSummary), 
+           titles = sapply(doc$documentSummary, "[[", "Title"))
 
 # Get accession numbers for a list of GIs
 
-prot <- esummary(c(403164,45447012,27806117), "protein")
-prot
-# use docsum() to transform the Document Summary into a data frame
+gi_list <- c(313848131,313847824,313847819,313847818,313847817)
+prot <- esummary(gi_list, "protein")
+# use docsum() to access the Document Summary information
 accn <- docsum(prot)$caption

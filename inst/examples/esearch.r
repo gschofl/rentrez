@@ -1,10 +1,12 @@
-# Search in PubMed with the term cancer for abstracts that have an Entrez
-# date within the last 60 days and retrieve the first 100 PMIDs.
+## Basic searching #########################################################
 
-cancer <- esearch(term="cancer", db="pubmed", reldate=60, datetype='edat')
-cancer
+# Get th PubMed IDs (PMIDs) for articles about Chlamydia psittaci
+# that have been published in 2011.
 
-# Search in PubMed for the journal PNAS, Volume 97.
+cpsit <- esearch(term="Chlamydia psittaci and 2011[pdat]", db="pubmed")
+cpsit
+
+# Search in PubMed for articles published by the journal PNAS in Volume 97.
 
 pnas <- esearch(term="PNAS[jour] and 97[vol]", db="pubmed")
 pnas
@@ -14,17 +16,10 @@ pnas
 # ecount() to set the 'retmax' parameter.
 
 query <- "BRCA1 and human"
-brca1 <- esearch(query, db="protein", retmax=ecount(query, "protein"))
+brca1 <- esearch(query, "protein", retmax=ecount(query, "protein"))
+
+## Storing search results on the Entrez history server #####################
+
+query <- "BRCA1 and human"
+brca1 <- esearch(query, "protein", retmax=2443, usehistory=TRUE)
 brca1
-
-# Search in the Entrez Nucleotide database for all tRNAs and post the
-# results on the Entrez history server and return a WebEnv and query_key.
-
-trna <- esearch("biomol trna[prop]", "nucleotide", usehistory=TRUE)
-trna
-
-# Search in the Entrez Protein database for molecules within a molecular
-# weight range and return the first 100 UIDs.
-
-prot <- esearch("80000:90000[molecular weight]", "protein")
-prot

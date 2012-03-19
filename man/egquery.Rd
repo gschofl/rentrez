@@ -16,8 +16,14 @@ text query}
   global search.
 }
 \details{
-  See the online documentation at
-  \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery}
+  See the official online documentation for NCBI's
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery}{EUtilities}
   for additional information.
+}
+\examples{
+## Perform a global Entrez Search
+
+# Determine the number of records for "Chlamydia psittaci" in Entrez
+egquery("Chlamydia psittaci")
 }
 
