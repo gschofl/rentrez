@@ -227,7 +227,6 @@ checkErrors <- function (obj) {
   fr$created <- as.Date(fr$created, "%Y/%m/%d")
   fr$updated <- as.Date(fr$updated, "%Y/%m/%d")
   fr$length <- as.numeric(fr$length)
-  fr <- fr[order(fr$title),]
   row.names(fr) <- NULL
   fr
 }
@@ -247,7 +246,6 @@ checkErrors <- function (obj) {
     fr[i,] <- c(names(ds[i]), ds[[i]])
   
   fr$created <- as.Date(strsplit(fr$created, " ")[[1L]][1L], "%Y/%m/%d")
-  fr <- fr[order(fr$name),]
   row.names(fr) <- NULL
   fr
 }
@@ -272,7 +270,6 @@ checkErrors <- function (obj) {
                 ds[[i]]$EPubDate)
       
   fr$epubdate <- as.Date(fr$epubdate, "%Y %b %d")
-  fr <- fr[order(fr$authors),]
   row.names(fr) <- NULL
   fr
 }
@@ -296,7 +293,6 @@ checkErrors <- function (obj) {
   fr$structure <- as.numeric(fr$structure)
   fr$genome <- as.numeric(fr$genome)
   fr$gene <- as.numeric(fr$gene)
-  fr <- fr[order(fr$scientific_name),]
   row.names(fr) <- NULL
   fr
 }
