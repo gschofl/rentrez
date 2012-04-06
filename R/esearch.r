@@ -36,20 +36,21 @@ NULL
 ##' @aliases [,esearch-method
 ##' @aliases length,esearch-method
 ##' @aliases esearch,esearch-method
-setClass("esearch",
-         representation(database = "character",
-                        count = "numeric",
-                        retMax = "numeric",
-                        retStart = "numeric",
-                        queryKey = "numeric",
-                        webEnv = "character",
-                        queryTranslation = "character",
-                        idList = "character"),
-         prototype(database = NA_character_, count = NA_integer_,
-                   retMax = NA_integer_, retStart = NA_integer_,
-                   queryKey = NA_integer_, webEnv = NA_character_,
-                   queryTranslation = NA_character_, idList = NA_character_),
-         contains = "eutil")
+##' @keywords internal
+.esearch <- setClass("esearch",
+                     representation(database = "character",
+                                    count = "numeric",
+                                    retMax = "numeric",
+                                    retStart = "numeric",
+                                    queryKey = "numeric",
+                                    webEnv = "character",
+                                    queryTranslation = "character",
+                                    idList = "character"),
+                     prototype(database = NA_character_, count = NA_integer_,
+                               retMax = NA_integer_, retStart = NA_integer_,
+                               queryKey = NA_integer_, webEnv = NA_character_,
+                               queryTranslation = NA_character_, idList = NA_character_),
+                     contains = "eutil")
 
     
 ##' @export
@@ -89,11 +90,10 @@ setMethod("show",
 setMethod("[",
           signature(x = "esearch", i = "numeric", j = "missing"),
           function (x, i) {
-            new("esearch",
-                database=x@database,
-                queryKey=NA_integer_,
-                webEnv=NA_character_,
-                idList=x@idList[i])
+            .idlist(database=x@database,
+                    queryKey=NA_integer_,
+                    webEnv=NA_character_,
+                    idList=x@idList[i])
           })
   
 
@@ -191,15 +191,14 @@ esearch <- function (term,
                 retmax=retmax, rettype=rettype, field=field, datetype=datetype,
                 reldate=reldate, mindate=mindate, maxdate=maxdate)
     
-  new("esearch", url=o@url, data=o@data,
-      error=checkErrors(o), database=db,
-      count=as.numeric(xmlValue(xmlRoot(o@data)[["Count"]])),
-      retMax=as.numeric(xmlValue(xmlRoot(o@data)[["RetMax"]])),
-      retStart=as.numeric(xmlValue(xmlRoot(o@data)[["RetStart"]])),
-      queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
-      webEnv=xmlValue(xmlRoot(o@data)[["WebEnv"]]),
-      queryTranslation=xmlValue(xmlRoot(o@data)[["QueryTranslation"]]),
-      idList=if (usehistory) NA_character_ else as.character(sapply(getNodeSet(o@data, '//Id'), xmlValue)))
+  .esearch(url=o@url, data=o@data, error=checkErrors(o), database=db,
+    count=as.numeric(xmlValue(xmlRoot(o@data)[["Count"]])),
+    retMax=as.numeric(xmlValue(xmlRoot(o@data)[["RetMax"]])),
+    retStart=as.numeric(xmlValue(xmlRoot(o@data)[["RetStart"]])),
+    queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
+    webEnv=xmlValue(xmlRoot(o@data)[["WebEnv"]]),
+    queryTranslation=xmlValue(xmlRoot(o@data)[["QueryTranslation"]]),
+    idList=if (usehistory) NA_character_ else as.character(sapply(getNodeSet(o@data, '//Id'), xmlValue)))
 }
 
 

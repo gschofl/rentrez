@@ -5,6 +5,9 @@
 \alias{length,esearch-method}
 \alias{show,esearch-method}
 \title{esearch class}
+\usage{
+  .esearch(...)
+}
 \description{
   esearch is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a
@@ -33,4 +36,5 @@
   \code{\link{esearch}} for generating calls to the NCBI
   ESearch utility.
 }
+\keyword{internal}
 

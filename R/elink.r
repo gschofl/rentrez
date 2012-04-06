@@ -1,4 +1,4 @@
-### Epost ################################################################
+### ELink ################################################################
 ##' @include eutil.r
 ##' @include utils.r
 NULL
@@ -9,14 +9,17 @@ NULL
 ##' This class provides a container for data retrived by calls to the 
 ##' NCBI ELink utility.
 ##' 
-##' epost objects have three slots in addition to the slots provided by
+##' elink objects have three slots in addition to the slots provided by
 ##' basic \code{\link{eutil-class}} objects:
 ##' \describe{
-##'   \item{databaseFrom}{The name of the database containing the input UIDs.}
-##'   \item{databaseTo}{The name of the database from which UIDs were retrieved.}
+##'   \item{databaseFrom}{The name of the database containing the input
+##'   UIDs.}
+##'   \item{databaseTo}{The name of the database from which UIDs were
+##'   retrieved.}
 ##'   \item{command}{The ELink command mode used for a query.}
 ##'   \item{idList}{A character vector containing the UIDs sent.}
-##'   \item{linkList}{A character vector containing the UIDs returned.}
+##'   \item{linkList}{A list of character vectors containing the UIDs
+##'   returned.}
 ##' }
 ##' 
 ##' @seealso \code{\link{elink}} for generating calls to the NCBI ELink
@@ -27,50 +30,75 @@ NULL
 ##' @exportClass elink
 ##' @aliases elink,elink-method
 ##' @aliases show,elink-method
-setClass("elink",
-         representation(databaseFrom = "character",
-                        databaseTo = "character",
-                        count = "numeric",
-                        command = "character",
-                        queryKey = "numeric",
-                        webEnv = "character",
-                        idList = "character",
-                        linkList = "list"),
-         prototype(databaseFrom = NA_character_,
-                   databaseTo = NA_character_,
-                   count = NA_integer_,
-                   command = NA_character_,
-                   queryKey = NA_integer_,
-                   webEnv = NA_character_,
-                   idList = NA_character_,
-                   linkList = list()),
-         contains = "eutil")
+##' @aliases [,elink-method
+##' @keywords internal
+.elink <- setClass("elink",
+                   representation(databaseFrom = "character",
+                                  databaseTo = "character",
+                                  count = "numeric",
+                                  command = "character",
+                                  queryKey = "numeric",
+                                  webEnv = "character",
+                                  idList = "character",
+                                  linkList = "ListOrFrame"),
+                   prototype(databaseFrom = NA_character_,
+                             databaseTo = NA_character_,
+                             count = NA_integer_,
+                             command = NA_character_,
+                             queryKey = NA_integer_,
+                             webEnv = NA_character_,
+                             idList = NA_character_,
+                             linkList = list()),
+                   contains = "eutil")
 
 ##' @export
 setMethod("show",
           signature(object = "elink"),
           function (object) {
-            cat(sprintf("ELink from database %s to database %s.\n",
-                        sQuote(object@databaseFrom), sQuote(object@databaseTo)))
-            
-            if (is.na(object@webEnv)) {
-              cat("IdList:\n")
-              print(object@idList)
+            if (object@command == "acheck")
+              .show.acheck(object)
+            else {
+              cat(sprintf("ELink from database %s to database %s.\n",
+                          sQuote(object@databaseFrom), sQuote(object@databaseTo)))
               
-              cat("Summary of LinkSet:\n")
-              lnames <- names(object@linkList)
-              llen <- numeric(0)
-              for (lname in lnames)
-                llen <- c(llen, length(object@linkList[[lname]][["id"]]))
-              print(data.frame(LinkName=lnames, LinkCount=llen))
+              if (is.na(object@webEnv)) {
+                cat("IdList:\n")
+                print(object@idList)
+                
+                cat("Summary of LinkSet:\n")
+                lnames <- names(object@linkList)
+                llen <- numeric(0)
+                for (lname in lnames)
+                  llen <- c(llen, length(object@linkList[[lname]][["id"]]))
+                print(data.frame(LinkName=lnames, LinkCount=llen))
+              }
+              else {            
+                cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
+                            object@queryKey, object@webEnv))
+              }
+  
+              return(invisible(NULL))
             }
-            else {            
-              cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
-                          object@queryKey, object@webEnv))
-            }
-
-            return(invisible(NULL))
           })
+
+.show.acheck <- function (object) {
+  cat("ELink list of possible links for a set of UIDs:\n")
+  print(object@linkList)
+  return(invisible(NULL))
+}
+
+
+##' @export
+setMethod("[",
+          signature(x = "elink", i = "ANY", j = "missing"),
+          function (x, i) {
+            .idlist(database=x@databaseTo,
+                    queryKey=NA_integer_,
+                    webEnv=NA_character_,
+                    idList=unlist(x@linkList[i][[1L]][["id"]],
+                                  use.names=FALSE))
+          })
+
 
 ##' Retrieve links to records in other Entrez databases
 ##'
@@ -141,8 +169,8 @@ elink <- function (id,
   if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
     stop("Provide the database from which to retrieve UIDs (dbTo)")
   
-  if (cmd != "neighbor" && cmd != "neighbor_history")
-    stop(sprintf("%s is not yet supported", sQuote(cmd)))
+  #if (cmd != "neighbor" && cmd != "neighbor_history")
+  #  stop(sprintf("%s is not yet supported", sQuote(cmd)))
   
   if (usehistory)
     cmd <- "neighbor_history"
@@ -195,11 +223,19 @@ elink <- function (id,
     else
       NA_character_
   
-  new("elink", url=o@url, data=o@data, error=checkErrors(o),
-      databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
-      databaseTo=dbTo, command=cmd, queryKey=queryKey, webEnv=webEnv,
-      idList=sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue),
-      linkList=.parseLinkSet(o@data))
+  if (cmd == "acheck") {
+    idList <- xpathSApply(xmlRoot(o@data), "//Id", xmlValue)
+    linkList <- .parseIdLinkSet(o@data)
+  }
+  else {
+    idList <- sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue)
+    linkList <- .parseLinkSet(o@data)
+  }
+     
+  .elink(url=o@url, data=o@data, error=checkErrors(o),
+         databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
+         databaseTo=dbTo, command=cmd, queryKey=queryKey, webEnv=webEnv,
+         idList=idList, linkList=linkList)
 }
 
 

@@ -129,7 +129,7 @@ esummary <- function (id,
   
   ## get db ################################################################
   # if no db name is provided extract the database name directly from
-  # id if it's an esearch, epost or elink object.
+  # id if it's an esearch, epost, elink, or idlist object.
   if (is.null(db) && is.null(db <- .getDb(id)))
     stop("No database name provided")
   

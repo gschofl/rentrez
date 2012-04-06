@@ -118,6 +118,31 @@
   }
 }
 
+
+# Parse a LinkSet and return it as a data.frame
+.parseIdLinkSet <- function (data) {
+  data <- xmlRoot(data)
+  dbFrom <- xpathSApply(data, "(//DbFrom)[1]", xmlValue)
+  idLinkSet <- getNodeSet(xmlRoot(data), "//IdLinkSet")
+  
+  if (length(idLinkSet) < 1L)
+    return(list())
+  
+  ll <- lapply(idLinkSet, function (ls) {
+    ls <- xmlDoc(ls)
+    data.frame(stringsAsFactors=FALSE,
+               Id=xpathSApply(ls, "(//Id)[1]", xmlValue),
+               DbTo=xpathSApply(ls, "//DbTo", xmlValue), 
+               LinkName=xpathSApply(ls, "//LinkName", xmlValue),
+               MenuTag=xpathSApply(ls, "//MenuTag", xmlValue),
+               HtmlTag=xpathSApply(ls, "//HtmlTag", xmlValue),
+               Priority=xpathSApply(ls, "//Priority", xmlValue))
+  })
+  
+  ll
+}
+
+
 # Parse a LinkSet and return it as a named list
 .parseLinkSet <- function (data) {
   linkSetDb <- getNodeSet(xmlRoot(data), "//LinkSetDb")
@@ -173,7 +198,7 @@ checkErrors <- function (obj) {
 
 
 .getDb <- function (object) {
-  if (is(object, "esearch") || is(object, "epost"))
+  if (is(object, "esearch") || is(object, "epost") || is(object, "idlist"))
     db <- object@database
   else if (is(object, "elink"))
     db <- object@databaseTo
@@ -204,7 +229,7 @@ checkErrors <- function (obj) {
       id <- NULL
     }
   }
-  else if (is(object, "esearch")) {
+  else if (is(object, "esearch") || is(object, "idlist")) {
     if (is.na(object@queryKey) && is.na(object@webEnv)) {
       WebEnv <- NULL
       query_key <- NULL

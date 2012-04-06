@@ -57,5 +57,36 @@ setMethod("names",
             return(slotNames(x))
           })
 
+# An internal class that contains UID and the name of their database 
+.idlist <- setClass("idlist",
+                    representation(database = "character",
+                                   queryKey = "integer",
+                                   webEnv = "character",
+                                   idList = "character"),
+                    prototype(database = NA_character_,
+                              queryKey = NA_integer_,
+                              webEnv = NA_character_,
+                              idList = NA_character_))
+
+##' @export
+setMethod("show",
+          signature(object = "idlist"),
+          function (object) {
+            cat(sprintf("List of UIDs from the %s database.\n",
+                        sQuote(object@database)))
+            print(object@idList)
+            return(invisible(NULL))
+          })
+
+##' @export
+setMethod("[",
+          signature(x = "idlist", i = "numeric", j = "missing"),
+          function (x, i) {
+            .idlist(database=x@database,
+                     queryKey=NA_integer_,
+                     webEnv=NA_character_,
+                     idList=x@idList[i])
+          })
+
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
