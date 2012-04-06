@@ -122,7 +122,7 @@
 # Parse a LinkSet and return it as a data.frame
 .parseIdLinkSet <- function (data) {
   data <- xmlRoot(data)
-  dbFrom <- xpathSApply(data, "(//DbFrom)[1]", xmlValue)
+  dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
   idLinkSet <- getNodeSet(xmlRoot(data), "//IdLinkSet")
   
   if (length(idLinkSet) < 1L)
@@ -130,18 +130,24 @@
   
   ll <- lapply(idLinkSet, function (ls) {
     ls <- xmlDoc(ls)
-    data.frame(stringsAsFactors=FALSE,
-               Id=xpathSApply(ls, "(//Id)[1]", xmlValue),
-               DbTo=xpathSApply(ls, "//DbTo", xmlValue), 
-               LinkName=xpathSApply(ls, "//LinkName", xmlValue),
-               MenuTag=xpathSApply(ls, "//MenuTag", xmlValue),
-               HtmlTag=xpathSApply(ls, "//HtmlTag", xmlValue),
-               Priority=xpathSApply(ls, "//Priority", xmlValue))
+    Id <- xpathSApply(ls, "(//Id)[1]", xmlValue)
+    link_info <- 
+      lapply(getNodeSet(ls, "//LinkInfo"), function (li) {
+        li <- xmlDoc(li)
+        li <- list(DbTo=xpathSApply(li, "//DbTo", xmlValue), 
+                   LinkName=xpathSApply(li, "//LinkName", xmlValue),
+                   MenuTag=xpathSApply(li, "//MenuTag", xmlValue),
+                   HtmlTag=xpathSApply(li, "//HtmlTag", xmlValue),
+                   Priority=xpathSApply(li, "//Priority", xmlValue))
+        li[vapply(li, length, integer(1)) == 0L] <- NA_character_
+        li
+      })
+    data.frame(stringsAsFactors=FALSE, Id=Id, 
+               do.call(rbind, link_info))
   })
   
   ll
 }
-
 
 # Parse a LinkSet and return it as a named list
 .parseLinkSet <- function (data) {

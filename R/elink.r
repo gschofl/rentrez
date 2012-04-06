@@ -165,9 +165,11 @@ elink <- function (id,
   # elink object
   if (is.null(dbFrom) && is.null(dbFrom <- .getDb(id)))
     stop("Provide the database containing the input UIDs (dbFrom)")
- 
-  if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
-    stop("Provide the database from which to retrieve UIDs (dbTo)")
+  
+  if (!grepl(pattern="check$", cmd)) {
+    if (is.null(dbTo) && is.null(dbTo <- .getDb(id)))
+      stop("Provide the database from which to retrieve UIDs (dbTo)")
+  }
   
   #if (cmd != "neighbor" && cmd != "neighbor_history")
   #  stop(sprintf("%s is not yet supported", sQuote(cmd)))
@@ -187,8 +189,7 @@ elink <- function (id,
       id  <- paste0(env_list$id, collapse="&id=")
     else
       id <- .collapse(env_list$id)
-  }
-  else {
+  } else {
     count <- 0
     id <- NULL
   }
@@ -234,7 +235,8 @@ elink <- function (id,
      
   .elink(url=o@url, data=o@data, error=checkErrors(o),
          databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
-         databaseTo=dbTo, command=cmd, queryKey=queryKey, webEnv=webEnv,
+         databaseTo=if (is.null(dbTo)) "any" else dbTo, command=cmd,
+         queryKey=queryKey, webEnv=webEnv,
          idList=idList, linkList=linkList)
 }
 
