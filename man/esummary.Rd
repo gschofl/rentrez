@@ -3,7 +3,8 @@
 \title{Retrieve document summaries (DocSums)}
 \usage{
   esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
-    retstart = 1, retmax = 10000, version = "default")
+    retstart = 1, retmax = 10000, version = "default",
+    parse = TRUE)
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a
@@ -39,8 +40,10 @@
   to be retrieved (maximum: 10,000).}
 
   \item{version}{If "2.0" \code{esummary} will retrieve
-  version 2.0 ESummary XML output but not, currently,
-  attempt to parse it.}
+  version 2.0 ESummary XML output.}
+
+  \item{parse}{if \code{TRUE} parses XML results to a data
+  frame, otherwise a structured named list is returned}
 }
 \value{
   An \code{\link{esummary-class}} object.
@@ -69,16 +72,13 @@ doc
 
 (s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE))
 doc <- esummary(s)
-
-data.frame(stringsAsFactors=FALSE,
-           uids = names(doc$documentSummary), 
-           titles = sapply(doc$documentSummary, "[[", "Title"))
+doc["Title"]
 
 # Get accession numbers for a list of GIs
 
 gi_list <- c(313848131,313847824,313847819,313847818,313847817)
 prot <- esummary(gi_list, "protein")
-# use docsum() to access the Document Summary information
-accn <- docsum(prot)$caption
+names(prot$docsum)
+prot[,c("Id","Caption","Length","TaxId")]
 }
 

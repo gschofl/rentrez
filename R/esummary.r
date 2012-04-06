@@ -17,6 +17,8 @@ NULL
 ##'   the XML DocSums returned from a call to the NCBI ESearch utility.}
 ##' }
 ##' 
+##' @param ... arguments passed to the constructor method
+##' 
 ##' @seealso \code{\link{esummary}} for generating calls to the NCBI
 ##' ESummary utility.
 ##'
@@ -29,12 +31,13 @@ NULL
 ##' @aliases length,esummary-method
 ##' @aliases docsum,esummary-method
 ##' @aliases esummary,esummary-method
-setClass("esummary",
-         representation(database = "character",
-                        documentSummary = "list"),
-         prototype(database = NA_character_,
-                   documentSummary = list()),
-         contains = "eutil")
+##' @keywords internal
+.esummary <- setClass("esummary",
+                      representation(database = "character",
+                                     docsum = "ListOrFrame"),
+                      prototype(database = NA_character_,
+                                docsum = list()),
+                      contains = "eutil")
 
 ##' @export
 setMethod("show",
@@ -42,17 +45,10 @@ setMethod("show",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
                         sQuote(object@database)))
-            if (isEmpty(object@documentSummary))
+            if (isEmpty(object@docsum))
               print(object@data)
             else 
-              switch(object@database,
-                     protein=print(.docsum.sequence(object)),
-                     nuccore=print(.docsum.sequence(object)),
-                     nucleotide=print(.docsum.sequence(object)),
-                     genome=print(.docsum.genome(object)),
-                     pubmed=print(.docsum.pubmed(object)),
-                     taxonomy=print(.docsum.taxonomy(object)),
-                     print(str(object@documentSummary)))
+              print(object@docsum)
             return(invisible(NULL))
           })
 
@@ -60,58 +56,17 @@ setMethod("show",
 setMethod("$",
           signature(x = "esummary"),
           function (x, name) {
-            if (!is.null(x@documentSummary) && !identical(name, "documentSummary"))
-              return(slot(x, "documentSummary")[[name, exact=FALSE]])
+            if (!is.null(x@docsum) && !identical(name, "docsum"))
+              return(slot(x, "docsum")[[name, exact=FALSE]])
             else
               return(slot(x, name))
           })
 
 ##' @export
 setMethod("[",
-          signature(x = "esummary" , i = "ANY", j = "missing"),
-          function (x, i) {
-            if (is(i, "esearch")) {
-              return(x@documentSummary[i@idList])
-            }
-            return(x@documentSummary[i])
-          })
-
-##' @export
-setMethod("length",
-          signature(x = "esummary"),
-          function (x) {
-            return(length(x@documentSummary))
-          })
-    
-    
-##' Access a DocSum from an \code{\link{esummary-class}} object.
-##'
-##' Attempts to parse ESummary DocSums into a data frame. Returns a
-##' named list if not implemented for a specific database.
-##'
-##' @param object An \code{\link{esummary-class}} object.
-##' 
-##' @return A data frame or a list
-##'
-##' @docType methods
-##' @examples
-##'    ## examples
-setGeneric("docsum", function (object) {
-  standardGeneric("docsum")
-})
-
-##' @export
-setMethod("docsum",
-          signature(object = "esummary"),
-          function (object) {
-            switch(object@database,
-                   protein=return(.docsum.sequence(object)),
-                   nuccore=return(.docsum.sequence(object)),
-                   nucleotide=return(.docsum.sequence(object)),
-                   genome=return(.docsum.genome(object)),
-                   pubmed=return(.docsum.pubmed(object)),
-                   taxonomy=return(.docsum.taxonomy(object)),
-                   return(object@documentSummary))
+          signature(x = "esummary" , i = "ANY", j = "ANY"),
+          function (x, i, j) {
+            return(x@docsum[i,j])
           })
 
 ##' Retrieve document summaries (DocSums)
@@ -148,7 +103,9 @@ setMethod("docsum",
 ##' @param retmax Total number of DocSums from the input set to be retrieved
 ##' (maximum: 10,000).
 ##' @param version If "2.0" \code{esummary} will retrieve version 2.0
-##' ESummary XML output but not, currently, attempt to parse it.
+##' ESummary XML output.
+##' @param parse if \code{TRUE} parses XML results to a data frame, otherwise
+##' a structured named list is returned
 ##'
 ##' @return An \code{\link{esummary-class}} object.
 ##'
@@ -161,8 +118,9 @@ esummary <- function (id,
                       WebEnv = NULL,
                       retstart = 1,
                       retmax = 10000,
-                      version = "default" ) {
-  
+                      version = "default",
+                      parse = TRUE)
+{
   if (missing(id) && is.null(query_key) && is.null(WebEnv))
     stop("No UIDs provided")
   
@@ -207,14 +165,35 @@ esummary <- function (id,
                 version=if (identical(version, "2.0")) "2.0" else NULL)
   }
 
-  new("esummary", database=db, error=checkErrors(o),
-      url=o@url, data=o@data,
-      documentSummary = 
-        if (identical(version, "2.0")) 
-          NULL 
-        else {
-          docSums <- lapply(getNodeSet(o@data, '//DocSum'), .parseDocSumItems)
-          names(docSums) <- lapply(getNodeSet(o@data, '//DocSum/Id'), xmlValue)
-          docSums }
-      )
+  if (identical(version, "default")) {
+    nodes <- getNodeSet(o@data, '//DocSum')
+    uids <- vapply(nodes, function (x) {
+      xmlValue(xmlChildren(x)[["Id"]])
+    }, character(1))
+  }
+  else if (identical(version, "2.0")) {
+    nodes <- getNodeSet(o@data, '//DocumentSummary')
+    uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
+  }
+  
+  docsum <- 
+    if (parse) {
+      docSumList <- lapply(nodes, .parseDocSum)
+      flatDocSumList <- flatten(docSumList, start_after=1, delim_path=".")
+      
+      # check if all docsums have same number of tags
+      if (length(unique(vapply(flatDocSumList, length, numeric(1)))) > 1L) {
+        warning("DocSum records have unequal numbers of tags.\nI can not return a data frame.")
+        flatDocSumList
+      }
+      else
+        data.frame(stringsAsFactors=FALSE, 
+                   cbind(Id=uids, do.call(rbind, flatDocSumList)))
+    }
+    else
+      lapply(nodes, .parseDocSum)
+
+  .esummary(database=db, error=checkErrors(o), url=o@url, data=o@data,
+            docsum=docsum)
 }
+

@@ -49,8 +49,7 @@ n <- ecount(query, db="pubmed")
 pmids <- esearch(query, db="pubmed", retmax=n)
 
 # Have a quick look at the titles
-titles <- docsum(esummary(pmids))$title
-titles
+# doc <- esummary(pmids)
 
 # Fetch the abstracts and write them to file
 abstracts <- efetch(pmids, rettype="abstract")
@@ -66,8 +65,8 @@ id_list <- c(194680922,50978626,28558982,9507199,6678417)
 p <- epost(id_list, "protein")
 
 # retrieve docsums with esummary
-docsums <- docsum(esummary(p))
-docsums
+# docsums <- docsum(esummary(p))
+# docsums
 
 # get FASTAs with efetch and write them to file
 prot <- efetch(p, rettype="fasta")

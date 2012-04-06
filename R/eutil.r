@@ -4,6 +4,7 @@ setOldClass("data.frame")
 
 ## Class Union
 setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
+setClassUnion("ListOrFrame", c("data.frame", "list"))
 
 ##' eutil class
 ##'

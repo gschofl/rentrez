@@ -11,14 +11,11 @@ doc
 
 (s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE))
 doc <- esummary(s)
-
-data.frame(stringsAsFactors=FALSE,
-           uids = names(doc$documentSummary), 
-           titles = sapply(doc$documentSummary, "[[", "Title"))
+doc["Title"]
 
 # Get accession numbers for a list of GIs
 
 gi_list <- c(313848131,313847824,313847819,313847818,313847817)
 prot <- esummary(gi_list, "protein")
-# use docsum() to access the Document Summary information
-accn <- docsum(prot)$caption
+names(prot$docsum)
+prot[,c("Id","Caption","Length","TaxId")]

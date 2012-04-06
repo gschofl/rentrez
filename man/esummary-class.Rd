@@ -7,6 +7,12 @@
 \alias{length,esummary-method}
 \alias{show,esummary-method}
 \title{esummary class}
+\usage{
+  .esummary(...)
+}
+\arguments{
+  \item{...}{arguments passed to the constructor method}
+}
 \description{
   esummary is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a
@@ -25,4 +31,5 @@
   \code{\link{esummary}} for generating calls to the NCBI
   ESummary utility.
 }
+\keyword{internal}
 

@@ -5,8 +5,8 @@
 #' @keywords internal
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-  query_string <- .query_string(...)
-  #query_string <- .query_string(..., tool="Rentrez", email="gschofl@yahoo.de")
+  #query_string <- .query_string(...)
+  query_string <- .query_string(..., tool="Rentrez", email="gschofl@yahoo.de")
   
   if (identical(eutil, "egquery"))
     url <- sprintf('http://eutils.ncbi.nlm.nih.gov/gquery/%s', query_string)
@@ -81,21 +81,41 @@
 
 }
 
-
 # Parse a DocSum recursively and return it as a named list
-.parseDocSumItems <- function (items) {
-  items <- 
-    xmlChildren(items, addNames=FALSE)[names(xmlChildren(items)) == "Item"]
-  value <- 
-    lapply(items, function (item) {
-      if (!xmlSize(item) > 1)
-        xmlValue(item)
-      else
-        .parseDocSumItems(item)
-    })
-  names(value) <- 
-    lapply(items, function (item) xmlGetAttr(item, "Name"))
-  return(value)
+.parseDocSum <- function (ds) {
+  if (xmlName(ds) == "DocSum") {
+    .docsum <- function (ds) {
+      items <- 
+        xmlChildren(ds, addNames=FALSE)[names(xmlChildren(ds)) == "Item"]      
+      value <- 
+        lapply(items, function (item) {
+          if (all(xmlSApply(item, xmlSize) == 0L))
+            xmlValue(item)
+          else
+            .docsum(item)
+        })
+      names(value) <- 
+        lapply(items, function (item) xmlGetAttr(item, "Name"))
+      return(value)
+    }
+    return(.docsum(ds))
+  }
+  else if (xmlName(ds) == "DocumentSummary") {
+    .docsum <- function (ds) {
+      items <- 
+        xmlChildren(ds, addNames=TRUE)
+      value <- 
+        lapply(items, function (item) {
+          if (all(xmlSApply(item, xmlSize) == 0L))
+            xmlValue(item)
+          else
+            .docsum(item)
+        })
+      names(value) <- lapply(items, xmlName)
+      return(value)
+    }
+    return(.docsum(ds))
+  }
 }
 
 # Parse a LinkSet and return it as a named list
@@ -118,7 +138,6 @@
   ll
 }
 
-isEmpty <- function (x) length(x) == 0L
 
 checkErrors <- function (obj) {
   error <- NULL
@@ -151,7 +170,7 @@ checkErrors <- function (obj) {
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
-.collapse <- function (id) paste0(id, collapse = ",")
+
 
 .getDb <- function (object) {
   if (is(object, "esearch") || is(object, "epost"))
@@ -210,90 +229,209 @@ checkErrors <- function (obj) {
   return(list(WebEnv=WebEnv, query_key=query_key, count=count, id=id))
 }
 
-.docsum.sequence <- function (esummary) {
-  ds <- esummary@documentSummary
-  nr <- length(ds)
-  fr <- data.frame(stringsAsFactors=FALSE, uid=character(nr),
-                   caption=character(nr), title=character(nr),
-                   extra=character(nr), gi=character(nr),
-                   created=character(nr), updated=character(nr),
-                   flags=character(nr), tax_id=character(nr),
-                   length=numeric(nr), status=character(nr),
-                   replaced_by=character(nr), comment=character(nr))
-  
-  for (i in seq.int(nr))
-    fr[i,] <- c(names(ds[i]), ds[[i]])
+isEmpty <- function (x) length(x) == 0L
 
-  fr$created <- as.Date(fr$created, "%Y/%m/%d")
-  fr$updated <- as.Date(fr$updated, "%Y/%m/%d")
-  fr$length <- as.numeric(fr$length)
-  row.names(fr) <- NULL
-  fr
-}
+.collapse <- function (id) paste0(id, collapse = ",")
 
-.docsum.genome <- function (esummary) {
-  ds <- esummary@documentSummary
-  nr <- length(ds)
-  fr <- data.frame(stringsAsFactors=FALSE, uid=character(nr),
-                   name=character(nr), kingdom=character(nr),
-                   defline=character(nr), pid=character(nr),
-                   chromosomes=character(nr), plasmids=character(nr),
-                   organelles=character(nr), assembly=character(nr),
-                   accession=character(nr), assembly_id=character(nr),
-                   created=character(nr), options=character(nr))
-  
-  for (i in seq.int(nr))
-    fr[i,] <- c(names(ds[i]), ds[[i]])
-  
-  fr$created <- as.Date(strsplit(fr$created, " ")[[1L]][1L], "%Y/%m/%d")
-  row.names(fr) <- NULL
-  fr
-}
+#' Flatten (Nested) Lists.
+#'
+#' Flatten \code{lists} according to specifications made via
+#' \code{start_after} and/or \code{stop_at}. When keeping 
+#' the defaults, the function will traverse \code{src} to retrieve the
+#' values at the respective bottom layers/bottom elements. These values are
+#' arranged in a named \code{list} where the respective names can be
+#' interpreted as the the paths to the retrieved values.   
+#'
+#' @param x An arbitrarily deeply nested \code{list}
+#' @param start_after An \code{integer} specifying the layer after which to 
+#' start the flattening. \code{NULL} means to start at the very top.
+#' @param stop_at An \code{integer} specifying the layer at which to stop
+#' the flattening. \code{NULL} means there is not stop criterion.
+#' @param delim_path A \code{character} specifying how the names
+#' of the resulting flattened list should be pasted.
+#' @param ... Further args.
+#' @return A named \code{list} that features the desired degree of flattening.
+#' @keywords internal
+#' @author Janko Thyson \email{janko.thyson.rstuff@@googlemail.com}
+#' @examples
+#'  ##
+#'
+flatten <- function (x, 
+                     start_after=NULL, 
+                     stop_at=NULL, 
+                     delim_path=".",
+                     do_warn=TRUE,
+                     ... )
+{
+  # VALIDATE
+  if (!is.list(x)) {
+    stop("'src' must be a list.")
+  }
+  if (!is.null(start_after) && !is.null(stop_at)) {
+    if (start_after == 1 && stop_at == 1)
+      stop(sprintf("Invalid specification:\nstart_after: %s\nstop_at: %s\n",
+                   start_after, stop_at))
+  }
 
-.docsum.pubmed <- function (esummary) {
-  ds <- esummary@documentSummary
-  nr <- length(ds)
-  fr <- data.frame(stringsAsFactors=FALSE, pmid=character(nr),
-                   authors=character(nr), year=character(nr),
-                   title=character(nr), journal=character(nr),
-                   volume=character(nr), issue=character(nr),
-                   pages=character(nr), doi=character(nr),
-                   epubdate=character(nr))
+  # INNER FUNCTIONS
+  .startAfterInner <- function(envir, nms, out.1, ...)
+  {
+    idx_diff <- diff(c(envir$start_after, length(envir$counter)))
 
-  for (i in seq.int(nr))
-    fr[i,] <- c(names(ds[i]), 
-                paste(ds[[i]]$AuthorList, collapse=", "),
-                substr(ds[[i]]$PubDate, 1, 4) , ds[[i]]$Title,
-                ds[[i]]$Source, ds[[i]]$Volume,
-                ds[[i]]$Issue, ds[[i]]$Pages,
-                if (!is.null(ds[[i]]$DOI)) ds[[i]]$DOI else "",
-                ds[[i]]$EPubDate)
+    # UPDATE IF DEGREE OF NESTEDNESS EXCEEDS START CRITERION
+    if (idx_diff > 0) {
+      idx_cutoff <-
+        seq(from=(length(envir$counter) - idx_diff + 1), to=length(envir$counter))
       
-  fr$epubdate <- as.Date(fr$epubdate, "%Y %b %d")
-  row.names(fr) <- NULL
-  fr
+      idx_left        <- envir$counter[-idx_cutoff]
+      nms.1           <- nms[idx_cutoff]
+      names(out.1)    <- paste(nms.1, collapse=envir$delim_path)
+      # UPDATE SRC
+      idx_append <- sapply(envir$history, function (x_hist) {
+        all(idx_left == x_hist)        
+      })
+
+      if (any(idx_append)) {                                          
+        envir$src[[idx_left]] <- append(envir$src[[idx_left]], values=out.1)                    
+      }
+      else {
+        envir$src[[idx_left]] <- out.1
+        # UPDATE HISTORY
+        envir$history <- c(envir$history, list(idx_left))
+      }
+      envir$out <- envir$src          
+    } 
+    else if (idx_diff < 0) {
+      envir$out <- envir$src
+    }
+    
+    # RESET
+    envir$nms <- envir$nms[-length(envir$nms)]
+    envir$counter <- envir$counter[-length(envir$counter)]
+    
+    return(TRUE)
+  }
+  
+  .updateOutInner <- function (envir, out.1, ...)
+  {
+
+    # UPDATE OUT
+    envir$out <- c(get("out", envir = envir), out.1)
+
+    # RESET
+    envir$nms       <- envir$nms[-length(envir$nms)]
+    envir$counter   <- envir$counter[-length(envir$counter)]
+    
+    return(TRUE)
+  }
+  
+  .flattenInner <- function(x, envir, ...)
+  {
+    if ( is(x, "list") && length(x) != 0 ) {
+      
+      # UPDATE
+      envir$counter_history <- c(envir$counter_history, list(envir$counter))
+      
+      # EXIT IF DEGREE EXCEEDS CUTOFF
+      if (!is.null(envir$stop_at)) {
+        if (length(envir$counter) > envir$stop_at) { 
+          nms <- get("nms", envir=envir)
+          out.1 <- list(x)
+          names(out.1) <- paste(nms, collapse=envir$delim_path)
+
+          # DECISION ON FLATTENING
+          if (!is.null(envir$start_after)) {
+            .startAfterInner(envir=envir, nms=nms, out.1=out.1)
+            return(NULL)
+          }
+          else {
+            .updateOutInner(envir=envir, out.1=out.1)
+            return(NULL)
+          }
+        }
+      }
+
+      # LOOP OVER ELEMENTS
+      for (i in seq_along(x)) {
+        # UPDATE COUNTER
+        envir$counter <- c(envir$counter, i)
+        # UPDATE NAMES
+        list_names <- if (is.null(names(x[i]))) paste0("X", i) else names(x[i])
+        assign("nms", c(get("nms", envir=envir), list_names), envir=envir)
+        # RECURSIVE FLATTENING
+        .flattenInner(x=x[[i]], envir) # call  recursively
+        # RESET COUNTER
+        if (i == length(x)) {
+          envir$nms <- envir$nms[-length(envir$nms)]
+          envir$counter <- envir$counter[-length(envir$counter)]
+        }
+      }
+    } 
+    else {
+
+      nms <- get("nms", envir=envir)
+      out.1 <- list(x)
+      names(out.1) <- paste(nms, collapse=envir$delim_path)
+
+      # DECISION ON FLATTENING
+      if (!is.null(envir$start_after))
+        .startAfterInner(envir=envir, nms=nms, out.1=out.1)
+      else
+        .updateOutInner(envir=envir, out.1=out.1)
+    }
+        
+    return(TRUE)
+  }
+  
+  out                     <- list()
+  # ENVIR
+  envir                   <- new.env()
+  envir$counter           <- NULL
+  envir$counter_history   <- NULL
+  envir$delim_path        <- delim_path
+  envir$do_warn           <- do_warn
+  envir$do_block_warning  <- FALSE
+  envir$history           <- NULL
+  envir$nms               <- NULL
+  envir$out               <- list()
+  envir$src               <- x
+  envir$start_after       <- start_after
+  
+  if (!is.null(stop_at)) {
+    stop_at_0 <- stop_at
+    if (stop_at == 1) {
+      return(src)
+    } else {
+      stop_at <- stop_at - 1
+    }
+  }
+  
+  envir$stop_at           <- stop_at
+
+  .flattenInner(x, envir)
+  
+  if (envir$do_warn) {
+    max_length <- max(sapply(envir$counter_history, length))
+
+    if (!is.null(start_after)) {            
+      if (start_after > max_length) {                        
+        warning(paste("Argument 'start_after=", start_after, 
+                      "' exceeds maximum degree of sublayer nestedness (=", 
+                      max_length, ").", sep=""))
+      }
+    }
+    if (!is.null(stop_at)) {
+      if (stop_at_0 > max_length){
+        warning(paste("Argument 'stop_at=", stop_at_0, 
+                      "' exceeds maximum degree of sublayer nestedness (=", 
+                      max_length, ").", sep=""))    
+      }
+    }
+  }
+  
+  out <- envir$out
+  return(out)    
 }
 
-.docsum.taxonomy <- function (esummary) {
-  ds <- esummary@documentSummary
-  nr <- length(ds)
-  fr <- data.frame(stringsAsFactors=FALSE, rank=character(nr),
-                   division=character(nr), scientific_name=character(nr),
-                   common_name=character(nr), txid=character(nr),
-                   nucleotide=character(nr), protein=character(nr),
-                   structure=character(nr), genome=character(nr),
-                   gene=character(nr), genus=character(nr),
-                   species=character(nr), subspecies=character(nr))
-  
-  for (i in seq.int(nr)) fr[i,] <- ds[[i]]
-  
-  fr <- data.frame(fr[5], fr[c(1,2,3,4,6,7,8,9,10,11,12,13)])
-  fr$nucleotide <- as.numeric(fr$nucleotide)
-  fr$protein <- as.numeric(fr$protein)
-  fr$structure <- as.numeric(fr$structure)
-  fr$genome <- as.numeric(fr$genome)
-  fr$gene <- as.numeric(fr$gene)
-  row.names(fr) <- NULL
-  fr
-}
+
 

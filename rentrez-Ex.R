@@ -5,22 +5,6 @@ library('rentrez')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
 cleanEx()
-nameEx("docsum")
-### * docsum
-
-flush(stderr()); flush(stdout())
-
-### Name: docsum
-### Title: Access a DocSum from an 'esummary-class' object.
-### Aliases: docsum
-
-### ** Examples
-
-## examples
-
-
-
-cleanEx()
 nameEx("ecount")
 ### * ecount
 
@@ -255,17 +239,31 @@ doc
 
 (s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE))
 doc <- esummary(s)
-
-data.frame(stringsAsFactors=FALSE,
-           uids = names(doc$documentSummary), 
-           titles = sapply(doc$documentSummary, "[[", "Title"))
+doc["Title"]
 
 # Get accession numbers for a list of GIs
 
 gi_list <- c(313848131,313847824,313847819,313847818,313847817)
 prot <- esummary(gi_list, "protein")
-# use docsum() to access the Document Summary information
-accn <- docsum(prot)$caption
+names(prot$docsum)
+prot[,c("Id","Caption","Length","TaxId")]
+
+
+
+cleanEx()
+nameEx("flatten")
+### * flatten
+
+flush(stderr()); flush(stdout())
+
+### Name: flatten
+### Title: Flatten (Nested) Lists.
+### Aliases: flatten
+### Keywords: internal
+
+### ** Examples
+
+##
 
 
 
@@ -295,8 +293,7 @@ n <- ecount(query, db="pubmed")
 pmids <- esearch(query, db="pubmed", retmax=n)
 
 # Have a quick look at the titles
-titles <- docsum(esummary(pmids))$title
-titles
+# doc <- esummary(pmids)
 
 # Fetch the abstracts and write them to file
 abstracts <- efetch(pmids, rettype="abstract")
@@ -312,8 +309,8 @@ id_list <- c(194680922,50978626,28558982,9507199,6678417)
 p <- epost(id_list, "protein")
 
 # retrieve docsums with esummary
-docsums <- docsum(esummary(p))
-docsums
+# docsums <- docsum(esummary(p))
+# docsums
 
 # get FASTAs with efetch and write them to file
 prot <- efetch(p, rettype="fasta")
