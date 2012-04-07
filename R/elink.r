@@ -57,6 +57,8 @@ setMethod("show",
           function (object) {
             if (object@command == "acheck")
               .show.acheck(object)
+            else if (object@command == "ncheck")
+              .show.ncheck(object)
             else {
               cat(sprintf("ELink from database %s to database %s.\n",
                           sQuote(object@databaseFrom), sQuote(object@databaseTo)))
@@ -83,6 +85,12 @@ setMethod("show",
 
 .show.acheck <- function (object) {
   cat("ELink list of possible links for a set of UIDs:\n")
+  print(object@linkList)
+  return(invisible(NULL))
+}
+
+.show.ncheck <- function (object) {
+  cat("Existence of links within the same database for a set of UIDs\n")
   print(object@linkList)
   return(invisible(NULL))
 }
@@ -224,9 +232,14 @@ elink <- function (id,
     else
       NA_character_
   
+  
   if (cmd == "acheck") {
     idList <- xpathSApply(xmlRoot(o@data), "//Id", xmlValue)
     linkList <- .parseIdLinkSet(o@data)
+  }
+  else if (cmd == "ncheck") {
+    idList <- NA_character_
+    linkList <- .parseIdCheckList(o@data)
   }
   else {
     idList <- sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue)

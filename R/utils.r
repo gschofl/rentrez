@@ -118,6 +118,17 @@
   }
 }
 
+# Parse IdCheckList returned from cmd=ncheck
+.parseIdCheckList <- function (data=o@data) {
+  data <- xmlRoot(data)
+  dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
+  id <- xpathSApply(data, "//Id", xmlValue)
+  has_neighbor <- xpathSApply(data, "//Id", xmlGetAttr, "HasNeighbor")
+  
+  chklst <- data.frame(stringsAsFactors=FALSE, Id=id,
+                       HasNeighbor=ifelse(has_neighbor == "Y", TRUE, FALSE))
+  chklst
+}
 
 # Parse a LinkSet and return it as a data.frame
 .parseIdLinkSet <- function (data) {
