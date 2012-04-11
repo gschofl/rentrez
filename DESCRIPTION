@@ -1,5 +1,5 @@
 Package: rentrez
-Version: 0.1-0
+Version: 0.1-1
 Date: 2012-01-20
 Title: An R interface to the NCBI EUtilities
 Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),
@@ -13,7 +13,9 @@ Depends:
     methods
 Imports:
     XML,
-    RCurl
+    RCurl,
+    stringr,
+    Biostrings
 Collate:
     'eutil.r'
     'utils.r'
@@ -25,3 +27,4 @@ Collate:
     'epost.r'
     'elink.r'
     'egquery.r'
+    'blast.r'

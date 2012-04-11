@@ -3,7 +3,8 @@
 #' @importFrom RCurl curlUnescape
 #' @importFrom RCurl getURL
 #' @keywords internal
-.query <- function (eutil, ...) {
+.query <- function (eutil, ...)
+{
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   #query_string <- .query_string(...)
   query_string <- .query_string(..., tool="Rentrez", email="gschofl@yahoo.de")
@@ -23,7 +24,8 @@
         data=xmlTreeParse(getURL(url), useInternalNodes=TRUE))
 }
 
-.query_string <- function (...) {
+.query_string <- function (...)
+{
   args <- list(...)
   params <- names(args)
   empty <- sapply(args, is.null)
@@ -31,7 +33,8 @@
   .escape(paste("?", paste(fields, collapse="&"), sep=""))
 }
 
-.escape <- function (s, httpPOST=FALSE) {
+.escape <- function (s, httpPOST=FALSE)
+{
   if (httpPOST) {
     s <- gsub(" +", " ", s)
     s <- gsub("+", " ", s, fixed=TRUE)
@@ -40,6 +43,9 @@
     s <- gsub(" +", "\\+", s)
   }
   s <- paste(strsplit(s, '\"', fixed=TRUE)[[1L]], collapse="%22")
+  s <- gsub(">", "%3E", s)
+  s <- gsub("\\n", "%0D%0A", s)
+  s <- gsub("\\|", "%7C", s)
   s <- gsub("\\#", "%23", s)
   s <- gsub("\\+(and)\\+|\\+(or)\\+|\\+(not)\\+","\\+\\U\\1\\U\\2\\U\\3\\+", s, perl=TRUE)
   s
@@ -50,7 +56,8 @@
 #' @importFrom RCurl postForm
 #' @importFrom RCurl curlOptions
 #' @keywords internal
-.httpPOST <- function (eutil, ...) {
+.httpPOST <- function (eutil, ...)
+{
   
   user_agent <- switch(eutil,
                        elink='elink/1.0',
@@ -82,7 +89,8 @@
 }
 
 # Parse a DocSum recursively and return it as a named list
-.parseDocSum <- function (ds) {
+.parseDocSum <- function (ds)
+{
   if (xmlName(ds) == "DocSum") {
     .docsum <- function (ds) {
       items <- 
@@ -119,7 +127,8 @@
 }
 
 # Parse IdCheckList returned from cmd=ncheck
-.parseIdCheckList <- function (data=o@data) {
+.parseIdCheckList <- function (data=o@data)
+{
   data <- xmlRoot(data)
   dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
   id <- xpathSApply(data, "//Id", xmlValue)
@@ -131,7 +140,8 @@
 }
 
 # Parse a LinkSet and return it as a data.frame
-.parseIdLinkSet <- function (data) {
+.parseIdLinkSet <- function (data)
+{
   data <- xmlRoot(data)
   dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
   idLinkSet <- getNodeSet(xmlRoot(data), "//IdLinkSet")
@@ -161,7 +171,8 @@
 }
 
 # Parse a LinkSet and return it as a named list
-.parseLinkSet <- function (data) {
+.parseLinkSet <- function (data)
+{
   linkSetDb <- getNodeSet(xmlRoot(data), "//LinkSetDb")
   
   if (length(linkSetDb) < 1L)
@@ -180,8 +191,8 @@
   ll
 }
 
-
-checkErrors <- function (obj) {
+checkErrors <- function (obj)
+{
   error <- NULL
   err_msgs <- NULL
   wrn_msgs <- NULL
@@ -212,9 +223,8 @@ checkErrors <- function (obj) {
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
-
-
-.getDb <- function (object) {
+.getDb <- function (object)
+{
   if (is(object, "esearch") || is(object, "epost") || is(object, "idlist"))
     db <- object@database
   else if (is(object, "elink"))
@@ -224,7 +234,8 @@ checkErrors <- function (obj) {
   db
 }
 
-.getId <- function (object) {
+.getId <- function (object)
+{
   # we need the count basically for efetch.batch
   if (is(object, "epost")) {
     WebEnv <- object@webEnv
@@ -297,7 +308,6 @@ isEmpty <- function (x) length(x) == 0L
 #' @author Janko Thyson \email{janko.thyson.rstuff@@googlemail.com}
 #' @examples
 #'  ##
-#'
 flatten <- function (x, 
                      start_after=NULL, 
                      stop_at=NULL, 
@@ -475,5 +485,14 @@ flatten <- function (x,
   return(out)    
 }
 
-
+displayHTML <- function (html, browser="google-chrome", unlink=TRUE)
+{
+  f_tmp <- tempfile(fileext=".html")
+  writeLines(html, f_tmp)
+  browseURL(url=f_tmp, browser=browser)
+  if (unlink) {
+    Sys.sleep(2)
+    unlink(f_tmp)
+  }
+}
 
