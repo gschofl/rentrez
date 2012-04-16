@@ -1,6 +1,7 @@
 ### Einfo ##################################################################
-##' @include eutil.r
 ##' @include utils.r
+##' @include blast-classes.r
+##' @include eutil-classes.r
 NULL
 
 ##' einfo class

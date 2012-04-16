@@ -1,6 +1,7 @@
 ### Esummary ###############################################################
-##' @include eutil.r
 ##' @include utils.r
+##' @include blast-classes.r
+##' @include eutil-classes.r
 NULL
 
 ##' esummary class
@@ -28,16 +29,15 @@ NULL
 ##' @aliases show,esummary-method
 ##' @aliases $,esummary-method
 ##' @aliases [,esummary-method
-##' @aliases length,esummary-method
-##' @aliases docsum,esummary-method
 ##' @aliases esummary,esummary-method
 ##' @keywords internal
-.esummary <- setClass("esummary",
-                      representation(database = "character",
-                                     docsum = "ListOrFrame"),
-                      prototype(database = NA_character_,
-                                docsum = list()),
-                      contains = "eutil")
+`.esummary` <- 
+  setClass("esummary",
+           representation(database = "character",
+                          docsum = "ListOrFrame"),
+           prototype(database = NA_character_,
+                     docsum = list()),
+           contains = "eutil")
 
 ##' @export
 setMethod("show",

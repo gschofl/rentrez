@@ -15,10 +15,12 @@ Imports:
     XML,
     RCurl,
     stringr,
-    Biostrings
+    Biostrings,
+    ape
 Collate:
-    'eutil.r'
+    'eutil-classes.r'
     'utils.r'
+    'blast-classes.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'
@@ -27,4 +29,5 @@ Collate:
     'epost.r'
     'elink.r'
     'egquery.r'
+    'blast-parser.r'
     'blast.r'

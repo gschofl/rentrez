@@ -37,7 +37,6 @@
 ##' @name rentrez-package
 ##' @author Gerhard \enc{Schöfl}{Schofl} \email{gschofl@@yahoo.de}
 ##' @docType package
-##' @import XML
 ##' @keywords package
 NA
 ####

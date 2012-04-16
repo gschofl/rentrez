@@ -4,6 +4,9 @@
 \alias{eutil,eutil-method}
 \alias{names,eutil-method}
 \title{eutil class}
+\usage{
+  .eutil(...)
+}
 \description{
   eutil is an S4 class that is extended by the
   \code{\link{einfo-class}}, \code{\link{esearch-class}},

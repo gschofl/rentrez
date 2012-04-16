@@ -1,10 +1,13 @@
 \name{efetch-class}
 \alias{c,efetch-method}
 \alias{efetch-class}
-\alias{efetch,efetch-method}
+\alias{getSeq,efetch-method}
 \alias{show,efetch-method}
 \alias{write,efetch-method}
 \title{efetch class}
+\usage{
+  .efetch(...)
+}
 \description{
   efetch is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a

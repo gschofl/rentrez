@@ -1,8 +1,13 @@
-#### eutil class definitions ###############################################
+### Eutil Classes ##########################################################
+##' @include utils.r
+##' @include blast-classes.r
+NULL
+
+#### Old Classes ####
 setOldClass("list")
 setOldClass("data.frame")
 
-## Class Union
+#### Class Unions ####
 setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
 setClassUnion("ListOrFrame", c("data.frame", "list"))
 
@@ -34,6 +39,8 @@ setClassUnion("ListOrFrame", c("data.frame", "list"))
 ##' @aliases eutil,eutil-method
 ##' @aliases $,eutil-method
 ##' @aliases names,eutil-method
+.eutil <- 
+  #### eutil-class ####
 setClass("eutil",
          representation(url = "character",
                         error = "list",
@@ -57,8 +64,12 @@ setMethod("names",
             return(slotNames(x))
           })
 
-# An internal class that contains UID and the name of their database 
-.idlist <- setClass("idlist",
+##' Container for UIDs and the name of their database
+##' 
+##' @keywords internal
+.idlist <-
+  #### idlist-class ####
+  setClass("idlist",
                     representation(database = "character",
                                    queryKey = "integer",
                                    webEnv = "character",

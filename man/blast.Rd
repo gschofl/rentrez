@@ -1,51 +1,48 @@
 \name{blast}
 \alias{blast}
-\title{NCBI BLAST sequence search}
+\title{Wrapper for the new NCBI BLAST+ tools}
 \usage{
-  blast(query,
-    program = c("megablast", "blastn", "blastp", "rpsblast", "blastx", "tblastn", "tblastx"),
-    database = c("nr"), format = c("view", "table"),
-    entrez_query = "", n_hits = 20,
-    .params = list(expect = 0.001, filter = "L"),
-    display = FALSE, update_time = 4)
+  blast(program = c("blastn", "blastp", "blastx", "tblastn", "tblastx"),
+    query, db, outfmt, max_hits,
+    strand = c("both", "plus", "minus"), ...,
+    intern = FALSE, input = NULL, show_cmd = FALSE)
 }
 \arguments{
-  \item{query}{An accession number, a gi, or a fasta
-  sequence provided either as an
+  \item{program}{One of blastn, blastp, blastx, tblastn, or
+  tblastx}
+
+  \item{query}{Query provided as an input file name, an
   \code{\link[Biostrings]{XString}} or
   \code{\link[Biostrings]{XStringSet}} object, or as a
-  named character vector.}
+  character vector.}
 
-  \item{program}{Specifies the blast program to use. One of
-  'megablast' (default), 'blastn', 'blastp', 'rpsblast',
-  blastx', 'tblastn', 'tblastx'.}
+  \item{db}{Blast database name (defaults to 'nt' for
+  blastn and 'nr' for the rest).}
 
-  \item{database}{The database against which to search.}
+  \item{outfmt}{Output format (defaults to XML output).}
 
-  \item{format}{Output format. 'view' shows the blast
-  results in a browser and returns the html response from
-  the NCBI web server; 'table' returns a
-  \code{\link{blast-class}} object.}
+  \item{max_hits}{Maximum number of hits to return.
+  Defaults to 20. Sets the '-max_target_seqs' parameter
+  internally.}
 
-  \item{entrez_query}{An Entrez query.}
+  \item{strand}{Query strand(s) to seach against database.}
 
-  \item{n_hits}{The maximum number of hits to return.}
+  \item{...}{Arguments passed on to the blast commmand line
+  tools.}
 
-  \item{.params}{Additional parameters passed on to blast.}
+  \item{intern}{Set \code{TRUE} if no '-out' argument is
+  specified. Captures the blast output in an R character
+  vector.}
 
-  \item{display}{Display the result in a web browser}
+  \item{input}{Used to pass a character vector to the
+  standard input.}
 
-  \item{update_time}{How often to poll the blast server for
-  results}
-}
-\value{
-  A \code{\link{blast-class}} object.
+  \item{show_cmd}{If \code{TRUE} print the constructed
+  command line instead of passing it to
+  \code{\link{system}}.}
 }
 \description{
-  Run blast against the NCBI sequence databases using the
-  BLAST URLAPI
+  Wrapper for the new NCBI BLAST+ tools
 }
-\examples{
-##
-}
+\keyword{internal}
 

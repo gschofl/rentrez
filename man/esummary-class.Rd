@@ -1,10 +1,8 @@
 \name{esummary-class}
 \alias{[,esummary-method}
 \alias{$,esummary-method}
-\alias{docsum,esummary-method}
 \alias{esummary-class}
 \alias{esummary,esummary-method}
-\alias{length,esummary-method}
 \alias{show,esummary-method}
 \title{esummary class}
 \usage{

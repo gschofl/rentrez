@@ -1,6 +1,7 @@
 ### Efetch #################################################################
-##' @include eutil.r
 ##' @include utils.r
+##' @include blast-classes.r
+##' @include eutil-classes.r
 NULL
 
 ##' efetch class
@@ -29,18 +30,21 @@ NULL
 ##' @aliases show,efetch-method
 ##' @aliases write,efetch-method
 ##' @aliases c,efetch-method
-##' @aliases efetch,efetch-method
-setClass("efetch", 
-         representation(database = "character",
-                        type = "character",
-                        mode = "character"),
-         prototype(database = NA_character_,
-                   type = NA_character_,
-                   mode = NA_character_),
-         contains = "eutil")
+##' @aliases getSeq,efetch-method
+.efetch <-
+  #### efetch-class ####
+  setClass("efetch", 
+           representation(database = "character",
+                          type = "character",
+                          mode = "character"),
+           prototype(database = NA_character_,
+                     type = NA_character_,
+                     mode = NA_character_),
+           contains = "eutil")
 
 ##' @export
 setMethod("show",
+          #### show-method ####
           signature(object = "efetch"),
           function (object) {
             cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
@@ -51,6 +55,7 @@ setMethod("show",
 
 ##' @export
 setMethod("write",
+          #### write-method ####
           signature(x = "efetch"),
           function (x, file = "data", append = FALSE, sep = "") {
             write(x = x@data, file = file, append = append, sep = sep)
@@ -58,6 +63,7 @@ setMethod("write",
 
 ##' @export
 setMethod("c",
+          #### c-method ####
           signature(x = "efetch"),
           function (x, ..., recursive = FALSE) {
             
@@ -77,8 +83,44 @@ setMethod("c",
             url <- c(x@url, unlist(lapply(list(...), slot, "url")))
             data <- c(x@data, unlist(lapply(list(...), slot, "data")))
             
-            new("efetch", url=url, data=data, database=db,
-                mode=mode, type=type)
+            .efetch(url=url, data=data, database=db,
+                    mode=mode, type=type)
+          })
+
+
+##' Extract sequence information from \code{\link{efetch-class}} objects.
+##' 
+##' @usage getSeq(x, seqtype=c('DNA','RNA','AA'),
+##'   outfmt=c('Biostring', 'DNAbin', 'String'))
+##' 
+##' @param x an \code{\link{efetch-class}} object.
+##' @param seqtype sequence type. One of 'DNA' (default), 'RNA', or 'AA'.
+##' @param outfmt Output format. One of 'Biostring' (default),
+##' \code{\link[ape]{DNAbin}}, or a character vector ('String').
+##' 
+##' @return An object specified by \code{outfmt} is created.
+##' 
+##' @export
+##' @docType methods
+##' @rdname efetch-methods
+##' 
+##' @examples
+##'  ##
+setGeneric("getSeq",
+           #### getSeg-generic ####
+           function(x, ...) {
+             standardGeneric("getSeq")
+           })
+
+##' @export
+setMethod("getSeq",
+          #### getSeq-method ####
+          signature="efetch",
+          function(x, seqtype, outfmt, ...) {
+            if (x@type == "fasta")
+              return(.getFasta(x=x, seqtype=seqtype, outfmt=outfmt))
+            else
+              stop("Only rettype='fasta' is supported at the moment")
           })
 
 ##' Retrieve data records in the requested format from NCBI
@@ -227,8 +269,7 @@ efetch <- function (id,
                 complexity=complexity)
   }
 
-  new("efetch", url=o@url, data=o@data, database=db,
-      mode=retmode, type=rettype)
+  .efetch(url=o@url, data=o@data, database=db, mode=retmode, type=rettype)
 }
 
 ##' Retrieve batches of data records in the requested format from NCBI
@@ -304,6 +345,47 @@ efetch.batch <- function (id,
   res
 }
 
+#' Extract fasta from efetch
+#' 
+#' @importFrom Biostrings read.DNAStringSet
+#' @importFrom Biostrings read.RNAStringSet
+#' @importFrom Biostrings read.AAStringSet
+#' @importFrom ape read.dna
+.getFasta <- function (x,
+                       seqtype=c("DNA","RNA","AA"),
+                       outfmt=c("Biostring", "DNAbin", "String"))
+{
+  seqtype <- match.arg(seqtype)
+  format <- match.arg(outfmt)
+
+  if (!grepl(pattern="^>", x@data))
+    stop("Does not appear to contain a valid fasta file")
+  
+  if (format == "Biostring") {
+    # stopifnot(require("Biostrings"))
+    f_tmp <- tempfile(fileext=".fa")
+    write(x, file=f_tmp)
+    fasta <- switch(seqtype,
+                    DNA=read.DNAStringSet(f_tmp, use.names=TRUE),
+                    RNA=read.RNAStringSet(f_tmp, use.names=TRUE),
+                    AA=read.AAStringSet(f_tmp, use.names=TRUE)) 
+    unlink(f_tmp)
+    return(fasta)
+  }
+  else if (format == "DNAbin") {
+    # stopifnot(require("ape"))
+    fasta <- ape::read.dna(file=textConnection(x@data), format="fasta")
+    return(fasta)  
+  }
+  else if (format == "String") {
+    fasta_split <- strsplit(x@data, "\n")[[1]]
+    desc_idx <- which(grepl(pattern="^>", fasta_split))
+    desc <- sub(">", "", fasta_split[desc_idx])
+    fasta <- paste0(fasta_split[-desc_idx], collapse="")
+    names(fasta) <- desc
+    return(fasta)
+  }
+}
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
 #       vim:fdm=marker:fmr={{{,}}}:fdl=0

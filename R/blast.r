@@ -1,127 +1,516 @@
-### Blast ##################################################################
-##' @include eutil.r
+### NCBI Blast #############################################################
 ##' @include utils.r
+##' @include blast-classes.r
+##' @include eutil-classes.r
 NULL
 
-##' blast class
+SysCall <- function (exec,
+                     ...,
+                     args = list(),
+                     stdin = NULL,
+                     stdout = NULL,
+                     redirection = TRUE,
+                     style = c("unix", "gnu"),
+                     show_cmd = FALSE,
+                     intern = FALSE,
+                     input = NULL)
+{  
+  isFALSE <- function (x) identical(FALSE, x)
+  
+  args <- merge(list(...), args)
+  style <- match.arg(style)
+  
+  if (is.null(stdin)) {
+    stdin <- ""
+  }
+  else if (!is.null(stdin) && redirection) {
+    stdin <- paste("<", stdin)
+  }
+  
+  if (is.null(stdout)) {
+    stdout <- ""
+  }
+  else {
+    stdout <- paste(">", stdout)
+  }
+   
+  args[vapply(args, isTRUE, logical(1))] <- ""
+  args[vapply(args, isFALSE, logical(1))] <- NULL
+  args[vapply(args, is.null, logical(1))] <- NULL
+  args <- switch(style,
+                 unix=paste(str_trim(sprintf("-%s %s", names(args), args)),
+                            collapse=" "),
+                 gnu=paste(str_trim(sprintf("--%s %s", names(args), args)),
+                           collapse=" ")
+                 )
+  if (show_cmd)
+    print(str_trim(paste(exec, args, stdin, stdout)))
+  else
+    return(system(str_trim(paste(exec, args, stdin, stdout)),
+                  intern = intern, input = input))
+}
+
+Curry <- function (FUN, ...)
+{
+  args <- match.call(expand.dots=FALSE)$...
+  args$... <- as.name("...")
+  
+  env <- new.env(parent=parent.frame())
+  
+  if (is.name(FUN)) {
+    fname <- FUN
+  } else if (is.character(FUN)) {
+    fname <- as.name(FUN)
+  } else if (is.function(FUN)) {
+    fname <- as.name("FUN")
+    env$FUN <- FUN
+  } else {
+    stop("FUN not function or name of function")
+  }
+  
+  curry_call <- as.call(c(list(fname), args))
+  
+  f <- eval(call("function", as.pairlist(alist(... = )), curry_call))
+  environment(f) <- env
+  f
+}
+
+##' Wrapper for NCBI makeblastdb
 ##' 
-##' blast is an S4 class that provides a container for data retrived by 
-##' calls to the NCBI Blast utility.
+##' @param input_file Input file/database name.
+##' @param input_type Type of data specified in input file.
+##' @param dbtype Molecule type of target db.
+##' @param ... further arguments passed to makeblastdb.
+##' @param show_log print log file.
+##' @param show_cmd print the command line instead of executing it.
 ##' 
-##' blast objects have nine slots:
-##' \describe{
-##'   \item{bitscore}{}
-##'   \item{evalue}{}
-##'   \item{mlog.evalue}{}
-##'   \item{gi}{}
-##'   \item{accession}{}
-##'   \item{query}{}
-##'   \item{params}{}
-##'   \item{hit_table}{}
-##'   \item{hsp_list}{}
+##' @family blast applications
+##' 
+##' @export
+makeblasttdb <- function(input_file,
+                         input_type=c("fasta","blastdb","asn1_bin","asn1_txt"),
+                         dbtype=c("nucl","prot"),
+                         ...,
+                         show_log=TRUE,
+                         show_cmd=FALSE)
+{
+  if (missing(input_file))
+    return(SysCall("makeblastdb", help=TRUE, redirection=FALSE))
+  
+  if (!file.exists(input_file))
+    stop(sprintf("File %s does not exist", sQuote(input_file)))
+
+  input_type <- match.arg(input_type)
+  dbtype <- match.arg(dbtype)
+  
+  o <- list(...)
+  if (!is.null(o$logfile)) logfile <- o$logfile else logfile <- FALSE
+  
+  SysCall(exec="makeblastdb", infile=NULL, outfile=NULL,
+          `in`=input_file, input_type=input_type,
+          dbtype=dbtype, ..., style="unix", show_cmd=show_cmd)
+  
+  if (exists("logfile") && isTRUE(show_log))
+    cat(paste(readLines(logfile), collapse="\n"))
+}
+
+##' Wrapper for the new NCBI BLAST+ tools
+##' 
+##' @param program One of blastn, blastp, blastx, tblastn, or tblastx
+##' @param query Query provided as an input file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param db Blast database name (defaults to 'nt' for blastn and 'nr' for
+##' the rest).
+##' @param outfmt Output format (defaults to XML output).
+##' @param max_hits Maximum number of hits  to return. Defaults to 20.
+##' Sets the '-max_target_seqs' parameter internally.
+##' @param strand Query strand(s) to seach against database.
+##' @param ... Arguments passed on to the blast commmand line tools.
+##' @param intern Set \code{TRUE} if no '-out' argument is specified.
+##' Captures the blast output in an R character vector.
+##' @param input Used to pass a character vector to the standard input.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @keywords internal
+blast <- function (program = c("blastn", "blastp", "blastx", "tblastn", "tblastx"),
+                   query,
+                   db,
+                   outfmt,
+                   max_hits,
+                   strand = c("both", "plus", "minus"),
+                   ...,
+                   intern = FALSE,
+                   input = NULL,
+                   show_cmd = FALSE)
+{  
+  program <- match.arg(program)
+  strand <- match.arg(strand)
+  
+  ### dealing with query
+  if (missing(query))
+    return(SysCall(program, help=TRUE, intern=FALSE))
+  
+  if (is(query, "XStringSet")) {
+    input <- toString(query[[1L]])
+    query <- NULL
+  }
+  else if (is(query, "XString")) {
+    input <- toString(query)
+    query <- NULL
+  }
+  else if (is.vector(query)) {
+    if (!file.exists(query)) {
+      input <- as.character(query)
+      query <- NULL
+    }
+    else {
+      input <- NULL
+      query <- query
+    }
+  } 
+  else {
+    stop(sprintf("Objects of class %s are not supported for query",
+                 sQuote(class(query))))
+  }
+  
+  ## set a number of defaults different from the internal defaults of
+  ## the blast applications
+  if (missing(db)) {
+    if (program == "blastn")
+      db <- "nt"
+    else
+      db <- "nr"
+  }
+  
+  if (missing(outfmt))
+    outfmt <- 5
+  
+  # always use tables with headers
+  if (outfmt == 6)
+    outfmt <- 7
+  
+  if (missing(max_hits))
+    max_hits <- 20
+  
+  ## max_target_seqs is incompatible with output options 0 - 4
+  if (as.integer(outfmt) <= 4) {
+    num_descriptions <- max_hits
+    num_alignments <- max_hits
+    max_target_seqs <- NULL
+  }
+  else if (as.integer(outfmt) >= 5) {
+    num_descriptions <- NULL
+    num_alignments <- NULL
+    max_target_seqs <- max_hits
+  }
+  
+  args <- merge(list(...),
+                list(query=query,
+                     db=db,
+                     outfmt=outfmt,
+                     num_descriptions=num_descriptions,
+                     num_alignments=num_alignments,
+                     max_target_seqs=max_target_seqs,
+                     strand=strand)
+                )
+  
+  # remove stdin', 'stdout' from the arguments list
+  stdin <- args[["stdin"]]
+  args[["stdin"]] <- NULL
+  stdout <- args[["stdout"]]
+  args[["stdout"]] <- NULL
+  
+  # check if 'out' is specified, otherwise return results internally
+  intern <- if (is.null(args[["out"]])) TRUE else FALSE
+  
+  res <- SysCall(exec=program, args=args,
+                 stdin=stdin, stdout=stdout,
+                 redirection=if (is.null(stdin) && is.null(stdout)) FALSE else TRUE,
+                 style="unix", show_cmd=show_cmd,
+                 intern=intern, input=input)
+  
+  res <- paste(res, collapse="\n")
+  return(res)
+}
+
+##' Wrapper for the NCBI Nucleotide-Nucleotide BLAST
+##' 
+##' \itemize{
+##' \item{\code{blastn}} is the traditional BLASTN requiring an exact
+##' match of 11.
+##' \item{\code{blastn_short}} is BLASTN optimised for sequences shorter
+##' than 50 bases.
+##' \item{\code{megablast}} is the traditional megablast used to find
+##' very similar sequences.
+##' \item{\code{dc_megablast}} is discontiguous megablast used to find
+##' more distant (e.g. interspecies) sequences.
 ##' }
 ##' 
-##' @name blast-class
-##' @rdname blast-class
-##' @exportClass blast
-##' @aliases show,blast-method
-##' @aliases blast,blast-method
-.blast <- setClass("blast",
-                   representation(bitscore = "numeric",
-                                  evalue = "numeric",
-                                  mlog.evalue = "numeric",
-                                  gi = "character",
-                                  accession = "character",
-                                  query = "character",
-                                  params = "character",
-                                  hit_table = "data.frame",
-                                  hsp_list = "list"),
-                   prototype(bitscore = NA_real_,
-                             evalue = NA_real_,
-                             mlog.evalue = NA_real_,
-                             gi = NA_character_,
-                             accession = NA_character_,
-                             query = NA_character_,
-                             params = NA_character_,
-                             hit_table = data.frame(),
-                             hsp_list = list()))
+##' Run \code{blastn()} without arguments to print usage and
+##' arguments description.
+##' 
+##' @usage blastn(query, db="nt", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, html=FALSE, remote=FALSE, ..., show_cmd=FALSE)
+##'
+##' @param query The sequence to search with provided as a file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param db The database to BLAST against.
+##' @param out Output file for alignment. If \code{NULL} the BLAST result
+##' is returned as an R character vector.
+##' @param outfmt Output format, Integer 1-11. Default is 5 for XML output.
+##' Other options include 6 or 7 for tabular output and 0 for the
+##' traditional pairwise alignment view.
+##' @param max_hits How many hits to return.
+##' @param evalue Expectation value cutoff.
+##' @param html Produce HTML output.
+##' @param remote Execute search remotely.
+##' @param ... Additional parameters passed on to the BLAST commmand line
+##' tools.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @family blast applications
+##' @export blastn blastn_short megablast dc_megablast
+##' @aliases blastn blastn_short megablast dc_megablast
+##' @examples
+##' ##
+blastn <-
+  #### blastn ####
+  Curry(FUN = blast, program = "blastn", task = "blastn")
 
+##' @usage blastn_short(query, db="nt", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, html=FALSE, remote=FALSE, ..., show_cmd=FALSE)
 ##' @export
-setMethod("show",
-          signature(object = "blast"),
-          function (object) {
-            cat(sprintf("Blast search using %s on the %s database.\nQuery name: %s\n\n",
-                        sQuote(object@params["program"]),
-                        sQuote(object@params["db"]),
-                        object@query))
-            print(format(data.frame(
-                definition = substr(tbl@hit_table$sdef, 0, getOption("width")/3),
-                gi = object@gi,
-                evalue=object@evalue,
-                mlog.evalue=object@mlog.evalue,
-                bitscore=object@bitscore),
-              digits=2))
-            return(invisible(NULL))
-          })
+##' @rdname blastn
+blastn_short <- Curry(FUN = blast, program = "blastn", task = "blastn-short")
 
-##' Do a BLAST search using the qblast API
+##' @usage megablast(query, db="nt", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, html=FALSE, remote=FALSE, ..., show_cmd=FALSE)
+##' @export
+##' @rdname blastn
+megablast <- Curry(FUN = blast, program = "blastn", task = "megablast")
+
+##' @usage dc_megablast(query, db="nt", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, html=FALSE, remote=FALSE, ..., show_cmd=FALSE)
+##' @export
+##' @rdname blastn
+dc_megablast <- Curry(FUN = blast, program = "blastn", task = "dc-megablast")
+
+##' Wrapper for the NCBI Protein-Protein BLAST
 ##' 
-##' Run blast against the NCBI sequence databases using the qblast URLAPI.
+##' \code{blastp} is the traditional BLASTP.
+##' \code{blastp_short} is BLASTP optimised for residues shorter than 30.
 ##' 
-##' @param query  An accession number, a gi, or a fasta sequence provided
+##' Run \code{blastp()} without arguments to print usage and
+##' arguments description.
+##' 
+##' @usage blastp(query, db="nr", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, matrix="BLOSUM62", html=FALSE, remote=FALSE, ...,
+##'  show_cmd=FALSE)
+##'
+##' @param query The sequence to search with provided as a file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param db The database to BLAST against.
+##' @param out Output file for alignment. If \code{NULL} the BLAST result
+##' is returned as an R character vector.
+##' @param outfmt Output format, Integer 1-11. Default is 5 for XML output.
+##' Other options include 6 or 7 for tabular output and 0 for the
+##' traditional pairwise alignment view.
+##' @param max_hits How many hits to return.
+##' @param evalue Expectation value cutoff.
+##' @param matrix Scoring matrix name (Default: BLOSUM62).
+##' @param html Produce HTML output.
+##' @param remote Execute search remotely.
+##' @param ... Additional parameters passed on to the BLAST commmand line
+##' tools.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @family blast applications
+##' @export blastp blastp_short
+##' @aliases blastp blastp_short
+##' @examples
+##' ##
+blastp <- 
+  #### blastp ####
+  Curry(FUN = blast, program = "blastp", task = "blastp")
+
+##' @usage blastp_short(query, db="nr", out=NULL, outfmt=5, max_hits=20,
+##'  evalue=10, matrix="BLOSUM62", html=FALSE, remote=FALSE, ...,
+##'  show_cmd=FALSE)
+##' @export
+##' @rdname blastp
+##' @inheritParams blastp
+blastp_short <- Curry(FUN = blast, program = "blastp", task = "blastp-short")
+
+##' Wrapper for the NCBI Translated Query-Protein Subject BLAST
+##' 
+##' Run \code{blastx()} without arguments to print usage and
+##' arguments description.
+##' 
+##' @usage blastx(query, query_gencode=1, db="nr", out=NULL, outfmt=5,
+##'  max_hits=20, evalue=10, matrix="BLOSUM62", html=FALSE, remote=FALSE, 
+##'  ..., show_cmd=FALSE)
+##' 
+##' @param query The sequence to search with provided as a file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param query_gencode Genetic code used to translate the query
+##' (default: 1).
+##' @param db The database to BLAST against.
+##' @param out Output file for alignment. If \code{NULL} the BLAST result
+##' is returned as an R character vector.
+##' @param outfmt Output format, Integer 1-11. Default is 5 for XML output.
+##' Other options include 6 or 7 for tabular output and 0 for the
+##' traditional pairwise alignment view.
+##' @param max_hits How many hits to return.
+##' @param evalue Expectation value cutoff.
+##' @param matrix Scoring matrix name (Default: BLOSUM62).
+##' @param html Produce HTML output.
+##' @param remote Execute search remotely.
+##' @param ... Additional parameters passed on to the BLAST commmand line
+##' tools.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @family blast applications
+##' @export blastx
+##' @aliases blastx
+##' @examples
+##' ##
+blastx <- 
+  #### blastx ####
+  Curry(FUN = blast, program = "blastx")
+
+##' Wrapper for the NCBI Translated Query-Protein Subject BLAST
+##' 
+##' Run \code{tblastx()} without arguments to print usage and
+##' arguments description.
+##' 
+##' @usage tblastx(query, query_gencode=1, db="nr", out=NULL, outfmt=5,
+##'  max_hits=20, evalue=10, matrix="BLOSUM62", html=FALSE, remote=FALSE,
+##'  ..., show_cmd=FALSE)
+##' 
+##' @param query The sequence to search with provided as a file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param query_gencode Genetic code used to translate the query
+##' (default: 1).
+##' @param db The database to BLAST against.
+##' @param out Output file for alignment. If \code{NULL} the BLAST result
+##' is returned as an R character vector.
+##' @param outfmt Output format, Integer 1-11. Default is 5 for XML output.
+##' Other options include 6 or 7 for tabular output and 0 for the
+##' traditional pairwise alignment view.
+##' @param max_hits How many hits to return.
+##' @param evalue Expectation value cutoff.
+##' @param matrix Scoring matrix name (Default: BLOSUM62).
+##' @param html Produce HTML output.
+##' @param remote Execute search remotely.
+##' @param ... Additional parameters passed on to the BLAST commmand line
+##' tools.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @family blast applications
+##' @export tblastx
+##' @aliases tblastx
+##' @examples
+##' ##
+tblastx <- 
+  #### tblastx ####
+  Curry(FUN = blast, program = "tblastx")
+
+##' Wrapper for the NCBI Protein Query-Translated Subject BLAST
+##' 
+##' Run \code{tblastn()} without arguments to print usage and
+##' arguments description.
+##' 
+##' @usage tblastn(query, db="nr", out=NULL, outfmt=5, max_hits=20,
+##' evalue=10, matrix="BLOSUM62", html=FALSE, remote=FALSE, ...,
+##' show_cmd=FALSE)
+##' 
+##' @param query The sequence to search with provided as a file name, an
+##' \code{\link[Biostrings]{XString}} or \code{\link[Biostrings]{XStringSet}}
+##' object, or as a character vector.
+##' @param db The database to BLAST against.
+##' @param out Output file for alignment. If \code{NULL} the BLAST result
+##' is returned as an R character vector.
+##' @param outfmt Output format, Integer 1-11. Default is 5 for XML output.
+##' Other options include 6 or 7 for tabular output and 0 for the
+##' traditional pairwise alignment view.
+##' @param max_hits How many hits to return.
+##' @param evalue Expectation value cutoff.
+##' @param matrix Scoring matrix name (Default: BLOSUM62).
+##' @param html Produce HTML output.
+##' @param remote Execute search remotely.
+##' @param ... Additional parameters passed on to the BLAST commmand line
+##' tools.
+##' @param show_cmd If \code{TRUE} print the constructed command line
+##' instead of passing it to \code{\link{system}}.
+##' 
+##' @family blast applications
+##' @export tblastn
+##' @aliases tblastn
+##' @examples
+##' ##
+tblastn <- 
+  #### tblastn ####
+  Curry(FUN = blast, program = "tblastn")
+
+##' Do a BLAST search using the QBLAST URL API
+##' 
+##' @param query An accession number, a gi, or a fasta sequence provided
 ##' either as an \code{\link[Biostrings]{XString}} or
 ##' \code{\link[Biostrings]{XStringSet}} object, or as a named character
 ##' vector.
-##' @param program Specifies the blast program to use. One of 'megablast'
+##' @param program The blast application to use. One of 'megablast'
 ##' (default), 'blastn', 'blastp', 'rpsblast', blastx', 'tblastn', 'tblastx'.
-##' @param database Which database to search against. E.g. "nr".
-##' @param format Output format. 'view' shows the blast results in a browser
-##' and returns the html response from the NCBI web server; 'table' returns
-##' a \code{\link{blast-class}} object.
-##' @param entrez_query An Entrez query.
-##' @param n_hits The maximum number of hits to return.
-##' @param .params Additional parameters of the qblast API.
-##' @param display Display the result in a web  browser
-##' @param update_time How often to poll the blast server for results
+##' @param db Blast database name. Defaults to 'nr'.
+##' @param outfmt Output format. One of 'xml', 'tabular', or 'html'.
+##' See Details.
+##' @param max_hits The maximum number of hits to return.
+##' @param evalue Expectation value threshold for saving hits.
+##' @param entrez_query An Entrez query used to limit the results. 
+##' @param ... The name-value pairs of parameters passed on to the QBLAST
+##' URL API.
+##' @param .params A named list of parameters passed on to the QBLAST
+##' URL API.
+##' @param display Display the query result in a web browser.
+##' @param update_time How often to poll the blast server for results.
 ##' 
-##' @return A \code{\link{blast-class}} object.
+##' @return A \code{\link{blastReport-class}} object.
 ##'
 ##' @importFrom stringr str_match
-##' @importFrom RCurl getForm
-##' @importFrom Biostrings toString
 ##'
+##' @family blast applications
 ##' @export
 ##' @examples
-##'  ##
+##' ##
 qblast <- function(query,
                    program=c("megablast","blastn","blastp",
                              "rpsblast","blastx","tblastn",
                              "tblastx"),
-                   database="nr",
-                   format=c("view","table"),
+                   db="nr",
+                   outfmt=c("xml", "tabular", "html"),
+                   max_hits=20,
                    entrez_query="",
-                   n_hits=20,
-                   .params=list(expect=1e-3, filter="L"),
+                   evalue=10,
+                   ...,
+                   .params=list(),
                    display=FALSE,
                    update_time=4)
 {
+  if (missing(query))
+    stop("No query provided")
+  
   qbd <- megablast <- rpsblast <- FALSE
   program <- match.arg(program)
-  format <- match.arg(format)
-  
-  if (nchar(entrez_query) > 0L) {
-    .params <- c(.params, entrez_query=.escape(entrez_query))
-  }
-  
-  if (format == "view") {
-    format <- "HTML"
-    alignment_view <- "Pairwise"
-    display <- TRUE
-  }
-  else if (format == "table") {
-    format <- "XML"
-    alignment_view <- "Pairwise"
-  }
+  outfmt <- match.arg(outfmt)
   
   if (program == "megablast") {
     program <- "blastn"
@@ -133,34 +522,55 @@ qblast <- function(query,
     rpsblast <- TRUE
   }
   
-  if (is(query, "XStringSet") || is(query, "BString")) {
+  if (outfmt == "xml") {
+    format_type <- "XML"
+    alignment_view <- "Pairwise"
+    display <- display
+  } 
+  else if (outfmt == "tabular") {
+    format_type <- "Text"
+    alignment_view <- "Tabular"
+    display <- display
+  } 
+  else if (outfmt == "html") {
+    format_type <- "HTML"
+    alignment_view <- "Pairwise"
+    display <- TRUE
+  }
+  
+  if (is(query, "XStringSet") || is(query, "XString")) {
     query <- paste0(">", names(query)[[1L]], "\n", Biostrings::toString(query[[1L]]))
-    # query <- .escape(query)
     qbd <- TRUE
-  } else if (!is.null(names(query))) {
+  } 
+  else if (!is.null(names(query))) {
     query <- paste0(">", names(query)[[1L]], "\n", as.character(query[[1L]]))
-    # query <- .escape(query)
     qbd <- TRUE
-  } else {
+  } 
+  else {
     query <- as.character(query)
   }
   
-  # .params=list(expect=1e-3, filter="L")
-  .params <- c(QUERY=query,
-               QUERY_BELIEVE_DEFLINE=if (qbd) "true" else "false",
-               PROGRAM=program,
-               DATABASE=database,
-               HITLIST_SIZE=n_hits,
-               MEGABLAST=if (megablast) "yes" else "no",
-               SERVICE=if (rpsblast) "rpsblast" else "plain",
-               CLIENT="web",
-               CMD="Put",
-               .params)
+  if (nchar(entrez_query) > 0L) {
+    .params <- merge(.params, list(entrez_query=.escape(entrez_query)))
+  }
+  
+  .params <- merge(list(query=query,
+                        program=program,
+                        database=db,
+                        expect=evalue,
+                        hitlist_size=max_hits,
+                        query_believe_defline=if (qbd) "true" else "false",
+                        megablast=if (megablast) "yes" else "no",
+                        service=if (rpsblast) "rpsblast" else "plain",
+                        client="web",
+                        cmd="Put"),
+                   list(...),
+                   .params)
   
   names(.params) <- toupper(names(.params)) 
   base_url <- "http://www.ncbi.nlm.nih.gov/blast/Blast.cgi"   
   response <- getForm(base_url, .params=.params, style="post")
-  # displayHTML(response, unlink=F)
+  
   # parse out the request id and the estimated time to completion
   xpath <- "/descendant::comment()[contains(.,'RID =')]"
   r <- xpathSApply(htmlParse(response), xpath, xmlValue)
@@ -203,6 +613,7 @@ qblast <- function(query,
       }
       else {
         cat("No hits found\n")
+        break
       }
     }
   }
@@ -210,10 +621,10 @@ qblast <- function(query,
   # retrieve results
   response <- getForm(uri=base_url,
                       RID=rid,
-                      FORMAT_TYPE=format,
+                      FORMAT_TYPE=format_type,
                       FORMAT_OBJECT="Alignment",
-                      DESCRIPTIONS=n_hits,
-                      ALIGNMENTS=n_hits,
+                      DESCRIPTIONS=max_hits,
+                      ALIGNMENTS=max_hits,
                       ALIGNMENT_VIEW=alignment_view,
                       NEW_VIEW="true",
                       DISPLAY_SORT="2",
@@ -221,232 +632,17 @@ qblast <- function(query,
                       CMD="Get",
                       style="post")
   
-  if (format == "HTML") {
+  if (outfmt == "html") {
     displayHTML(response, unlink=TRUE)
     return(invisible(response))
   }
-  
-  #if (format == "Text") {
-  #  if (display) displayHTML(response)
-  #  response <- xpathApply(htmlParse(response), "//pre", xmlValue)[[1L]]
-  #  return(readBLAST(textConnection(strsplit(response, "\n")[[1L]])))
-  #}
-  
-  if (format == "XML") {
+  else if (outfmt == "tabular") {
+    if (display) displayHTML(response)
+    response <- xpathApply(htmlParse(response), "//pre", xmlValue)[[1L]]
+    return(response)
+  }
+  else if (outfmt == "xml") {
     if (display) displayHTML(response, unlink=FALSE)
-    return(parseBlastXml(response))
+    return(response)
   }
 }
-
-##' Parse xml blast output
-##' 
-##' @param blast_output Blast output in XML format
-##' 
-##' @importFrom Biostrings BStringSet
-##' @importFrom stringr str_split
-##' @importFrom stringr str_split_fixed
-##' @importFrom stringr str_replace_all
-##' 
-##' @keywords internal
-parseBlastXml <- function (blast_output)
-{
-  
-  gapsOpen <- function (s1, s2) {
-    length(gregexpr("-+", s1)[[1L]]) + length(gregexpr("-+", s2)[[1L]])
-  }
-  
-  #stopifnot(require(XML))
-  doc <- xmlRoot(xmlParse(blast_output))
-  ## statistics
-  program <- xpathSApply(doc, "//BlastOutput_program", xmlValue)
-  version <- xpathSApply(doc, "//BlastOutput_version", xmlValue)
-  db <- xpathSApply(doc, "//BlastOutput_db", xmlValue)
-  params <- gsub(";\\b", "", xpathApply(doc, "//Parameters/*", xmlValue))
-  names(params) <-
-    gsub("-", ".", 
-      sapply(xpathApply(doc, "//Parameters/*", xmlName), function (x) {
-        strsplit(x, "_")[[1L]][2]
-      }))
-  params <- c(program=program, version=version, db=db, params)
-  ## query
-  iter_num <- xpathApply(doc, "//Iteration_iter-num", xmlValue)[[1L]]
-  query_id <- xpathApply(doc, "//Iteration_query-ID", xmlValue)[[1L]]
-  query_def <- xpathApply(doc, "//Iteration_query-def", xmlValue)[[1L]]
-  query_len <- xpathApply(doc, "//Iteration_query-len", xmlValue)[[1L]]
-  
-  ## hit.table
-  hits <- getNodeSet(doc, "//Hit")
-  hit_table <- list()
-  hsp_list <- list()
-  # i <- 3
-  for (i in seq_along(hits)) {
-    hit <- xmlDoc(hits[[i]])
-    id <- xpathSApply(hit, "//Hit_id", xmlValue)
-    def <- xpathSApply(hit, "//Hit_def", xmlValue)
-    def <- paste(id, str_replace_all(def, " >", ";")[[1L]])
-    gi <- str_split_fixed(id, "\\|", 3)[,2]
-    accn <- xpathSApply(hit, "//Hit_accession", xmlValue)
-    len <- xpathSApply(hit, "//Hit_len", xmlValue)
-    
-    ## HSPs
-    num <- as.numeric(xpathSApply(hit, "//Hsp_num", xmlValue))
-    bit_score <- as.numeric(xpathSApply(hit, "//Hsp_bit-score", xmlValue))
-    score <- as.numeric(xpathSApply(hit, "//Hsp_score", xmlValue))
-    evalue <- as.numeric(xpathSApply(hit, "//Hsp_evalue", xmlValue))
-    query_from <- as.numeric(xpathSApply(hit, "//Hsp_query-from", xmlValue))
-    query_to <- as.numeric(xpathSApply(hit, "//Hsp_query-to", xmlValue))
-    hit_from <- as.numeric(xpathSApply(hit, "//Hsp_hit-from", xmlValue))
-    hit_to <- as.numeric(xpathSApply(hit, "//Hsp_hit-to", xmlValue))
-    query_frame <- as.numeric(xpathSApply(hit, "//Hsp_query-frame", xmlValue))
-    hit_frame <- as.numeric(xpathSApply(hit, "//Hsp_hit-frame", xmlValue))
-    identity <- as.numeric(xpathSApply(hit, "//Hsp_identity", xmlValue))
-    positive <- as.numeric(xpathSApply(hit, "//Hsp_positive", xmlValue))
-    gaps <- as.numeric(xpathSApply(hit, "//Hsp_gaps", xmlValue))
-    align_len <- as.numeric(xpathSApply(hit, "//Hsp_align-len", xmlValue))
-    qseq <- BStringSet(xpathSApply(hit, "//Hsp_qseq", xmlValue))
-    hseq <- BStringSet(xpathSApply(hit, "//Hsp_hseq", xmlValue))
-    names(qseq) <- paste0(query_id, "_Hsp_", num)
-    names(hseq) <- paste0(id, "_Hsp_", num)
-    hsp_list[[i]] <- list(qseq=qseq, hseq=hseq)
-    names(hsp_list[[i]]) <- c("query", "hit")
-    
-    hit_table[[i]] <- 
-      data.frame(stringsAsFactors=FALSE,
-                 qid = query_id,                         # Id of query sequence
-                 sid = id,                               # Id of database hit 
-                 pident = 100*(identity/align_len),      # percent identity
-                 length = align_len,                     # alignment length
-                 mismatch = align_len - identity - gaps, # number of mismatches
-                 gapopen = gapsOpen(qseq, hseq),                         # number of gap openings
-                 qstart = query_from,
-                 qend = query_to,
-                 sstart = hit_from,
-                 send = hit_to,
-                 evalue = evalue,
-                 bitscore = bit_score,
-                 #### extended table ####
-                 sdef = def,                      # subject definition line
-                 sgi = gi,                        # subject gi
-                 sacc = accn,                     # subject accession number
-                 score = score,                   # raw score
-                 nident = identity,               # number of identical matches
-                 positive = positive,             # number of positive-scoring matches
-                 gaps = gaps,                     # total number of gaps
-                 ppos = 100*(positive/align_len), # percentage positive-scoring matches
-                 qframe = query_frame,
-                 sframe = hit_frame)
-                          
-  }
-  
-  hit_table <- do.call(rbind, hit_table)
-  
-  mlog.evalue <- with(hit_table, -log(evalue))
-  mlog.evalue[is.infinite(mlog.evalue)] <- -log(1e-323)
-  
-  .blast(bitscore = hit_table$bitscore, evalue = hit_table$evalue,
-         mlog.evalue = mlog.evalue, gi = hit_table$sgi,
-         accession = hit_table$sacc, query = paste(query_id, query_def),
-         params = params, hit_table = hit_table, hsp_list = hsp_list)
-}
-
-
-##' Extract fasta sequence from \code{\link{efetch-class}} objects
-##' 
-##' @param x an \code{\link{efetch-class}} object.
-##' @param seqtype sequence type. One of 'DNA' (default), 'RNA', or 'AA'.
-##' @param format Output format. One of 'Biostring' (default),
-##' \code{\link[ape]{DNAbin}}, or a character vaector ('string').
-##' 
-##' @export
-##' @examples
-##'  ##
-getFasta <- function (x,
-                      seqtype=c("DNA","RNA","AA"),
-                      format=c("Biostring", "DNAbin", "string"))
-{
-  
-  ## default DNA
-  seqtype <- match.arg(seqtype)
-  
-  ## default Biostring
-  format <- match.arg(format)
-  
-  if (!is(x, "efetch"))
-    stop(sprintf("x is of class %s. getFasta expects 'efetch'", sQuote(class(x))))
-  
-  if (!grepl(pattern="^>", x@data))
-    stop("x does not appear to contain a valid fasta file")
-  
-  if (format == "Biostring") {
-    stopifnot(require(Biostrings))
-    f_tmp <- tempfile(fileext=".fa")
-    write(x, file=f_tmp)
-    fasta <- switch(seqtype,
-                    DNA=read.DNAStringSet(f_tmp, use.names=TRUE),
-                    RNA=read.RNAStringSet(f_tmp, use.names=TRUE),
-                    AA=read.AAStringSet(f_tmp, use.names=TRUE)) 
-    unlink(f_tmp)
-    return(fasta)
-  }
-  else if (format == "DNAbin") {
-    stopifnot(require(ape))
-    fasta <- ape::read.dna(file=textConnection(x@data), format="fasta")
-    return(fasta)  
-  }
-  else if (format == "string") {
-    fasta_split <- strsplit(x@data, "\n")[[1]]
-    desc_idx <- which(grepl(pattern="^>", fasta_split))
-    desc <- sub(">", "", fasta_split[desc_idx])
-    fasta <- paste0(fasta_split[-desc_idx], collapse="")
-    names(fasta) <- desc
-    return(fasta)
-  }
-}
-
-##' read a blast hit table
-##' 
-##' @param filepath File path.
-##' 
-##' @return A \code{\link{blast-class}} object.
-##' 
-##' @export
-readBlastTable <- function (filepath)
-{
-  hit_table <- read.table(file=filepath, header=FALSE, sep="\t", as.is=TRUE,
-                          col.names=c("qid", "sid", "pident",
-                                      "length", "mismatch", "gapopen",
-                                      "qstart", "qend", "sstart",
-                                      "send","evalue","bitscore"),
-                          colClasses=c("character", "character", "numeric",
-                                       "integer", "integer", "integer",
-                                       "integer", "integer", "integer",
-                                       "integer", "numeric", "numeric"))
-  if (dim(hit_table)[2] != 12)
-    stop(sprintf("The BLAST file has %i columns but must have 12", dim(hit_table)[2]))
-  
-  ## parse subjectIds in 'hit_table'
-  all_ids <- with(hit_table, strsplit(subjectIds, "\\|"))
-  gi  <- vapply(all_ids, '[', 2, FUN.VALUE=character(1))
-  source_tag <- vapply(all_ids, '[', 3, FUN.VALUE=character(1))
-  accn <- ifelse(grepl("pdb", source_tag),
-                 paste0(sapply(all_ids, '[', 4), "_", sapply(all_ids, '[', 5)),
-                 sapply(all_ids, '[', 4))
-  
-  neg_log_evalue <- with(hit_table, -log(as.numeric(evalue)))
-  neg_log_evalue[is.infinite(neg_log_evalue)] <- -log(1e-323)
-  
-  .blast(bitscore = as.numeric(hit_table$bitscore),
-         evalue = as.numeric(hit_table$evalue),
-         mlog.evalue = neg_log_evalue,
-         gi = gi,
-         accession = accn,
-         hit_table = hit_table)
-}
-
-
-
-
-
-
-
-

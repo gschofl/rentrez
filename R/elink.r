@@ -1,6 +1,7 @@
 ### ELink ################################################################
-##' @include eutil.r
 ##' @include utils.r
+##' @include blast-classes.r
+##' @include eutil-classes.r
 NULL
 
 ##' elink class
@@ -32,24 +33,25 @@ NULL
 ##' @aliases show,elink-method
 ##' @aliases [,elink-method
 ##' @keywords internal
-.elink <- setClass("elink",
-                   representation(databaseFrom = "character",
-                                  databaseTo = "character",
-                                  count = "numeric",
-                                  command = "character",
-                                  queryKey = "numeric",
-                                  webEnv = "character",
-                                  idList = "character",
-                                  linkList = "ListOrFrame"),
-                   prototype(databaseFrom = NA_character_,
-                             databaseTo = NA_character_,
-                             count = NA_integer_,
-                             command = NA_character_,
-                             queryKey = NA_integer_,
-                             webEnv = NA_character_,
-                             idList = NA_character_,
-                             linkList = list()),
-                   contains = "eutil")
+`.elink` <- 
+  setClass("elink",
+           representation(databaseFrom = "character",
+                          databaseTo = "character",
+                          count = "numeric",
+                          command = "character",
+                          queryKey = "numeric",
+                          webEnv = "character",
+                          idList = "character",
+                          linkList = "ListOrFrame"),
+           prototype(databaseFrom = NA_character_,
+                     databaseTo = NA_character_,
+                     count = NA_integer_,
+                     command = NA_character_,
+                     queryKey = NA_integer_,
+                     webEnv = NA_character_,
+                     idList = NA_character_,
+                     linkList = list()),
+           contains = "eutil")
 
 ##' @export
 setMethod("show",
@@ -83,13 +85,13 @@ setMethod("show",
             }
           })
 
-.show.acheck <- function (object) {
+`.show.acheck` <- function (object) {
   cat("ELink list of possible links for a set of UIDs:\n")
   print(object@linkList)
   return(invisible(NULL))
 }
 
-.show.ncheck <- function (object) {
+`.show.ncheck` <- function (object) {
   cat("Existence of links within the same database for a set of UIDs\n")
   print(object@linkList)
   return(invisible(NULL))

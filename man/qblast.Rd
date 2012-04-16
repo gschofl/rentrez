@@ -1,13 +1,12 @@
 \name{qblast}
 \alias{qblast}
-\title{Do a BLAST search using the qblast API}
+\title{Do a BLAST search using the QBLAST URL API}
 \usage{
   qblast(query,
     program = c("megablast", "blastn", "blastp", "rpsblast", "blastx", "tblastn", "tblastx"),
-    database = "nr", format = c("view", "table"),
-    entrez_query = "", n_hits = 20,
-    .params = list(expect = 0.001, filter = "L"),
-    display = FALSE, update_time = 4)
+    db = "nr", outfmt = c("xml", "tabular", "html"),
+    max_hits = 20, entrez_query = "", evalue = 10, ...,
+    .params = list(), display = FALSE, update_time = 4)
 }
 \arguments{
   \item{query}{An accession number, a gi, or a fasta
@@ -16,37 +15,50 @@
   \code{\link[Biostrings]{XStringSet}} object, or as a
   named character vector.}
 
-  \item{program}{Specifies the blast program to use. One of
+  \item{program}{The blast application to use. One of
   'megablast' (default), 'blastn', 'blastp', 'rpsblast',
   blastx', 'tblastn', 'tblastx'.}
 
-  \item{database}{Which database to search against. E.g.
-  "nr".}
+  \item{db}{Blast database name. Defaults to 'nr'.}
 
-  \item{format}{Output format. 'view' shows the blast
-  results in a browser and returns the html response from
-  the NCBI web server; 'table' returns a
-  \code{\link{blast-class}} object.}
+  \item{outfmt}{Output format. One of 'xml', 'tabular', or
+  'html'. See Details.}
 
-  \item{entrez_query}{An Entrez query.}
+  \item{max_hits}{The maximum number of hits to return.}
 
-  \item{n_hits}{The maximum number of hits to return.}
+  \item{evalue}{Expectation value threshold for saving
+  hits.}
 
-  \item{.params}{Additional parameters of the qblast API.}
+  \item{entrez_query}{An Entrez query used to limit the
+  results.}
 
-  \item{display}{Display the result in a web browser}
+  \item{...}{The name-value pairs of parameters passed on
+  to the QBLAST URL API.}
+
+  \item{.params}{A named list of parameters passed on to
+  the QBLAST URL API.}
+
+  \item{display}{Display the query result in a web
+  browser.}
 
   \item{update_time}{How often to poll the blast server for
-  results}
+  results.}
 }
 \value{
-  A \code{\link{blast-class}} object.
+  A \code{\link{blastReport-class}} object.
 }
 \description{
-  Run blast against the NCBI sequence databases using the
-  qblast URLAPI.
+  Do a BLAST search using the QBLAST URL API
 }
 \examples{
 ##
+}
+\seealso{
+  Other blast.applications: \code{\link{blastn}},
+  \code{\link{blastn_short}}, \code{\link{blastp}},
+  \code{\link{blastp_short}}, \code{\link{blastx}},
+  \code{\link{dc_megablast}}, \code{\link{makeblasttdb}},
+  \code{\link{megablast}}, \code{\link{tblastn}},
+  \code{\link{tblastx}}
 }
 

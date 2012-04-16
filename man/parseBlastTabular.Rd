@@ -1,8 +1,8 @@
-\name{parseBlastXml}
-\alias{parseBlastXml}
-\title{Parse xml blast output}
+\name{parseBlastTabular}
+\alias{parseBlastTabular}
+\title{read a blast hit table}
 \usage{
-  parseBlastXml(blast_output)
+  parseBlastTabular(blast_output)
 }
 \arguments{
   \item{blast_output}{Blast output in XML format (File or
@@ -12,6 +12,6 @@
   A \code{\link{blastReport-class}} object.
 }
 \description{
-  Parse xml blast output
+  read a blast hit table
 }
 
