@@ -129,10 +129,11 @@ setMethod("show",
           function (object) {
             
             first_line <- 
-              sprintf("%s %s",
+              sprintf("Hit = %s %s",
                       str_split_fixed(object@id, "\\|", 3)[,3],
-                      str_replace_all(object@def, ";gi\\|\\d+\\|", "\n"))
-            cat(sprintf("%s\n(Length = %s)\n\n", linebreak(first_line), object@len))
+                      str_replace_all(object@def, ";gi\\|\\d+\\|", " || "))
+            cat(sprintf("%s\n(Length = %s)\n\n", 
+                        linebreak(first_line, offset=6), object@len))
             
             second_line <- 
               sprintf("Score = %s bits (%s), Expect = %s,",
@@ -166,10 +167,10 @@ setMethod("show",
 
 # seqs <- list(toString(object@hsp@qseq), object@hsp@midline, toString(object@hsp@hseq))
 
-##' Extraxt hits from blast reports
+##' Accessor methods for blast records
 ##' 
-##' @param x A blast report
-##' @param ... Further arguments
+##' @param x A \code{\link{blastReccord-class}} object.
+##' @param ... Additional arguments
 ##' 
 ##' @rdname blastReport-method
 ##' @docType methods
@@ -186,6 +187,27 @@ setMethod("hits",
           signature="blastReport",
           function (x) {
             return(x@hits)
+          })
+
+##' Accessor methods for blast records
+##' 
+##' @inheritParams hits
+##' 
+##' @rdname blastReport-method
+##' @docType methods
+##' @export
+setGeneric("getGI",
+           function (x, ...) {
+             #### getGI-generic ####
+             standardGeneric("getGI")
+           })
+
+##' @export
+setMethod("getGI",
+          #### getGI-method ####
+          signature="blastReport",
+          function (x) {
+            vapply(x@hits, function (x) x@gi, character(1)) 
           })
 
 ##' blastTable class

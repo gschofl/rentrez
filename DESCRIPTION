@@ -18,9 +18,9 @@ Imports:
     Biostrings,
     ape
 Collate:
-    'eutil-classes.r'
-    'utils.r'
     'blast-classes.r'
+    'utils.r'
+    'eutil-classes.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'

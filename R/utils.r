@@ -507,6 +507,14 @@ flatten <- function (x,
   return(out)    
 }
 
+
+##' display a html file in a browser
+##' 
+##' @param html file path or html encoded character string
+##' @param browser browser
+##' @param unlink remove temporary file
+##' 
+##' @export 
 displayHTML <- function (html, browser=getOption("browser"), unlink=TRUE)
 {
   if (!file.exists(html)) { 
@@ -611,6 +619,16 @@ linebreak <- function (s, width=getOption("width") - 2, indent=0, offset=0,
 }
 
 
+##' create blank strings with a given number of characters
+##' @seealso Examples for \code{\link{regmatches}}
+##' @keywords internal
+blanks <- function(n) {
+  vapply(Map(rep.int, rep.int(" ", length(n)), n, USE.NAMES=FALSE),
+         paste, "", collapse="")
+}
+
+##' @importFrom stringr str_pad
+##' @keywords internal
 wrapAln <- function (seq1,
                      ..., 
                      prefix=c(""),

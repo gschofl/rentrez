@@ -116,7 +116,11 @@ setGeneric("getSeq",
 setMethod("getSeq",
           #### getSeq-method ####
           signature="efetch",
-          function(x, seqtype, outfmt, ...) {
+          function(x,
+                   seqtype=c("DNA","RNA","AA"),
+                   outfmt=c("Biostring", "DNAbin", "String"),
+                   ...)
+          {
             if (x@type == "fasta")
               return(.getFasta(x=x, seqtype=seqtype, outfmt=outfmt))
             else

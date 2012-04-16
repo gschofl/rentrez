@@ -33,7 +33,8 @@ NULL
 ##' @aliases show,elink-method
 ##' @aliases [,elink-method
 ##' @keywords internal
-`.elink` <- 
+.elink <- 
+  #### elink-class ####
   setClass("elink",
            representation(databaseFrom = "character",
                           databaseTo = "character",
@@ -55,6 +56,7 @@ NULL
 
 ##' @export
 setMethod("show",
+          #### show-method, elink ####
           signature(object = "elink"),
           function (object) {
             if (object@command == "acheck")
@@ -80,26 +82,28 @@ setMethod("show",
                 cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
                             object@queryKey, object@webEnv))
               }
-  
+              
               return(invisible(NULL))
             }
           })
 
-`.show.acheck` <- function (object) {
+#' @keywords internal
+.show.acheck <- function (object) {
   cat("ELink list of possible links for a set of UIDs:\n")
   print(object@linkList)
   return(invisible(NULL))
 }
 
-`.show.ncheck` <- function (object) {
+#' @keywords internal
+.show.ncheck <- function (object) {
   cat("Existence of links within the same database for a set of UIDs\n")
   print(object@linkList)
   return(invisible(NULL))
 }
 
-
 ##' @export
 setMethod("[",
+          #### [-method, elink ####
           signature(x = "elink", i = "ANY", j = "missing"),
           function (x, i) {
             .idlist(database=x@databaseTo,
@@ -165,8 +169,9 @@ elink <- function (id,
                    datetype=NULL,
                    reldate=NULL,
                    mindate=NULL,
-                   maxdate=NULL) {
-
+                   maxdate=NULL)
+{
+  
   if (missing(id))
     stop("No UIDs provided")
   
