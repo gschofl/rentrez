@@ -1,5 +1,6 @@
 ### Blast Classes ##########################################################
 ##' @include utils.r
+##' @include blast-utils.r
 ##' @include eutil-classes.r
 NULL
 
@@ -85,11 +86,10 @@ NULL
   setClass("hit",
            representation(
              num = "integer",         # hit number
-             id = "character",        # SeqId of subject
-             gi = "character",        # GeneInfo Identifier
-             acc = "character",       # accession number
+             id = "list",             # SeqIds
+             desc = "list",           # Description line
+             accn = "character",       # accession number
              len = "integer",         # length of subject
-             def = "character",       # definition line of subject
              hsp = "hsp"))            # hit HSPs
 
 ##' @export
@@ -98,10 +98,11 @@ setMethod("show",
           signature(object = "blastReport"),
           function (object) {
             ## Header
-            query <- linebreak(s=sprintf("%s %s (%s letters)",
-                                         object@query[["id"]],
-                                         object@query[["def"]],
-                                         object@query[["len"]]),
+            def_pos <- which(names(object@query) ==  "def")
+            def_line <- deparseDeflines(list(object@query[1:def_pos - 1]),
+                                        object@query[3])
+            query <- linebreak(sprintf("%s (%s letters)",
+                                       def_line, object@query[["len"]]),
                                offset = 10)     
             cat(sprintf("Query:    %s\nProgram:  %s\nDatabase: %s\n\n",
                         query, sQuote(object@version), sQuote(object@db)))
@@ -110,9 +111,10 @@ setMethod("show",
                        " bit score", "  evalue\n"))
             invisible(
               lapply(object@hits, function (x) {
-                cat(paste(format(x@acc, width=14),
+                cat(paste(format(x@accn, width=14),
                           format(
-                            strtrim(x@def, width=floor(getOption("width")*0.5)),
+                            strtrim(deparseDeflines(x@id, x@desc)[[1]],
+                                    width=floor(getOption("width")*0.5)),
                             width=ceiling(getOption("width")*0.5)),
                           format(x@hsp@bit_score, digits=4, width=9),
                           format(x@hsp@evalue, scientific=TRUE, digits=2, width=8),
@@ -128,36 +130,33 @@ setMethod("show",
           signature(object = "hit"),
           function (object) {
             
-            first_line <- 
-              sprintf("Hit = %s %s",
-                      str_split_fixed(object@id, "\\|", 3)[,3],
-                      str_replace_all(object@def, ";gi\\|\\d+\\|", " || "))
-            cat(sprintf("%s\n(Length = %s)\n\n", 
-                        linebreak(first_line, offset=6), object@len))
-            
+            first_line <-
+              linebreak(deparseDeflines(object@id, object@desc), offset=5)         
+
             second_line <- 
-              sprintf("Score = %s bits (%s), Expect = %s,",
+              sprintf("Score: %s bits (%s), Expect: %s,",
                       round(object@hsp@bit_score, 1),
                       object@hsp@score,
                       format(object@hsp@evalue, scientific=TRUE, digits=2))
-            cat(sprintf("%s\n", linebreak(second_line)))
-            
+
             third_line <- 
-              sprintf("Identities = %s/%s (%s%%), Positives = %s/%s (%s%%), Gaps = %s/%s (%s%%)",
+              sprintf("Identities: %s/%s (%s%%), Positives: %s/%s (%s%%), Gaps: %s/%s (%s%%)",
                       object@hsp@identity, object@hsp@align_len,
                       round(100*object@hsp@identity/object@hsp@align_len, 0),
                       object@hsp@positive, object@hsp@align_len,
                       round(100*object@hsp@positive/object@hsp@align_len, 0),
                       object@hsp@gaps, object@hsp@align_len,
                       round(100*object@hsp@gaps/object@hsp@align_len, 0))
-            cat(sprintf("%s\n\n", linebreak(third_line)))
-            
+
             q_start <- min(c(object@hsp@query_from, object@hsp@query_to))
             q_rev <- if (object@hsp@query_from > object@hsp@query_to) TRUE else FALSE
             h_start <- min(c(object@hsp@hit_from, object@hsp@hit_to))
             h_rev <- if (object@hsp@hit_from > object@hsp@hit_to) TRUE else FALSE
             
-            cat(sprintf("%s\n",
+            cat(sprintf("\nHit: %s (Length = %s)", first_line, object@len))
+            cat(sprintf("\n\n%s", linebreak(second_line)))
+            cat(sprintf("\n%s\n", linebreak(third_line)))
+            cat(sprintf("\n%s\n",
                         wrapAln(toString(object@hsp@qseq), object@hsp@midline, toString(object@hsp@hseq),
                         prefix=c("Query", "", "Spjct"),
                         start=c(q_start, NA, h_start),
@@ -191,24 +190,40 @@ setMethod("hits",
 
 ##' Accessor methods for blast records
 ##' 
-##' @inheritParams hits
+##' @usage getId(x, db="gi")
+##' 
+##' @param x A blastReport object.
+##' @param db Database tag (e.g.: 'gi', 'gb', 'emb', 'ref', ...)
+##' 
+##' @return Accession numbers as specified by \code{db} for each hit.
 ##' 
 ##' @rdname blastReport-method
 ##' @docType methods
 ##' @export
-setGeneric("getGI",
-           function (x, ...) {
-             #### getGI-generic ####
-             standardGeneric("getGI")
+setGeneric("getId",
+           function (x, db="gi", ...) {
+             #### getId-generic ####
+             standardGeneric("getId")
            })
 
 ##' @export
-setMethod("getGI",
-          #### getGI-method ####
+setMethod("getId",
+          #### getId-method ####
           signature="blastReport",
-          function (x) {
-            vapply(x@hits, function (x) x@gi, character(1)) 
+          function (x, db, ...) {
+            lapply(x@hits, function (x) getId(x, db)) 
           })
+
+##' @export
+setMethod("getId",
+          #### getId-method ####
+          signature="hit",
+          function (x, db, ...) {
+            id <- lapply(x@id, "[[", db)
+            id[vapply(id, is.null, logical(1))] <- NA_character_
+            unlist(id)
+          })
+
 
 ##' blastTable class
 ##' 

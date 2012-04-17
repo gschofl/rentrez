@@ -21,6 +21,7 @@ Collate:
     'blast-classes.r'
     'utils.r'
     'eutil-classes.r'
+    'blast-utils.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'

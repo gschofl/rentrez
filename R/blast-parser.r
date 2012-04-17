@@ -1,5 +1,6 @@
 ### Blast parser ###########################################################
 ##' @include utils.r
+##' @include blast-utils.r
 ##' @include blast-classes.r
 ##' @include eutil-classes.r
 NULL
@@ -30,16 +31,15 @@ parseBlastXml <- function (blast_output)
   message <- as.character(xpathSApply(doc, "//BlastOutput_message", xmlValue))
   
   ## BlastOutput_query
-  qid <- xpathSApply(doc, "//Iteration_query-ID", xmlValue)
+  qid <- parseDeflines(xpathSApply(doc, "//Iteration_query-ID", xmlValue))$id
   qdef <- xpathSApply(doc, "//Iteration_query-def", xmlValue)
   qlen <- xpathSApply(doc, "//Iteration_query-len", xmlValue)
   qseq <- xpathSApply(doc, "//Iteration_query-seq", xmlValue) # optional
-  query <- list(id=qid,
-                gi=str_split_fixed(qid, "\\|", 3)[,2],
-                acc=str_split_fixed(str_split_fixed(qid, "\\|", 5)[,4], "\\.", 2)[,1],
-                def=qdef,
-                len=as.integer(qlen),
-                seq=if (length(qseq) > 0L) {BString(qseq)} else {NULL})
+  query <- merge(qid[[1L]], list(
+    def=qdef,
+    len=as.integer(qlen),
+    seq=if (length(qseq) > 0L) {BString(qseq)} else {NULL}
+    ))
   
   ## BlastOutput/BlastOutput_param/Parameters
   params <- xpathApply(doc, "//Parameters/*", xmlValue)
@@ -97,13 +97,14 @@ parseBlastXml <- function (blast_output)
                     mismatch_count=as.integer(xpathSApply(hit, "//Hsp_mismatch-count", xmlValue)))
     
     ## parse hits
-    id <- as.character(xpathSApply(hit, "//Hit_id", xmlValue))
+    id <- paste(xpathSApply(hit, "//Hit_id", xmlValue),
+                xpathSApply(hit, "//Hit_def", xmlValue))
+    id <- parseDeflines(str_split(id, " >")[[1L]])
     hit_obj <- .hit(num=as.integer(xpathSApply(hit, "//Hit_num", xmlValue)),
-                    id=id,
-                    gi=str_split_fixed(id, "\\|", 3)[,2],
-                    acc=as.character(xpathSApply(hit, "//Hit_accession", xmlValue)),
+                    id=id$id,
+                    desc=id$desc,
+                    accn=as.character(xpathSApply(hit, "//Hit_accession", xmlValue)),
                     len=as.integer(xpathSApply(hit, "//Hit_len", xmlValue)),
-                    def=str_replace_all(xpathSApply(hit, "//Hit_def", xmlValue), " >", ";")[[1L]],
                     hsp=hsp_obj)
     
     hit_list[[i]] <- hit_obj
