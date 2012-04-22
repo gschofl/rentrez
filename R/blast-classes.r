@@ -1,11 +1,13 @@
-### Blast Classes ##########################################################
+
+# Blast-Classes -------------------------------------------------------
+
 ##' @include utils.r
 ##' @include blast-utils.r
 ##' @include eutil-classes.r
 NULL
 
 ##' blastReport class
-##' 
+##'
 ##' blastReport is an S4 class that provides a container for data retrived
 ##' by calls to the NCBI Blast utility.
 ##' 
@@ -21,7 +23,7 @@ NULL
 ##'   \item{hits}{}
 ##' }
 ##' 
-##' @param ... Slots for 'blastReport' objects.
+##' @param ... Slots for \sQuote{blastReport} objects.
 ##' @name blastReport-class
 ##' @rdname blastReport-class
 ##' @exportClass blastReport
@@ -51,7 +53,11 @@ NULL
                      stats = list(),
                      message = NA_character_))
 
+##' hsp class
+##'
 ##' @keywords internal
+##' @name hsp-class
+##' @rdname hsp-class
 .hsp <- 
   #### hsp-class ####
   setClass("hsp",
@@ -80,7 +86,12 @@ NULL
              mismatch_count = "integer"    # '-m 8' format  output
              ))
 
+##' hit class
+##'
 ##' @keywords internal
+##' @name hit-class
+##' @rdname hit-class
+##' @aliases show,hit-method
 .hit <- 
   #### hit-class ####
   setClass("hit",
@@ -248,6 +259,11 @@ setMethod("getId",
 ##' @name blastTable-class
 ##' @rdname blastTable-class
 ##' @exportClass blastTable
+##' @aliases show,blastReport-method
+##' @aliases $,blastReport-method
+##' @aliases [,blastReport-method
+##' @aliases [[,blastReport-method
+##' @aliases names,blastReport-method
 .blastTable <-
   #### blastTable-class ####
   setClass("blastTable",
@@ -284,3 +300,34 @@ setMethod("show",
             return(invisible(NULL))
           })
 
+##' @export
+setMethod("$",
+          #### $-method, blastTable ####
+          signature(x = "blastTable"),
+          function(x, name) {
+            slot(x, "table")[[name]]
+          })
+
+##' @export
+setMethod("[",
+          #### [-method, blastTable ####
+          signature(x = "blastTable"),
+          function (x, i, j, ..., drop = TRUE) {
+            slot(x, "table")[i,j,...]
+          })
+
+##' @export
+setMethod("[[",
+          #### [[-method, blastTable ####
+          signature(x = "blastTable"),
+          function(x, i) {
+            slot(x, "table")[[i]]
+          })
+
+##' @export
+setMethod("names",
+          #### names-method, blastTable ####
+          signature(x = "blastTable"),
+          function(x) {
+            names(slot(x, "table"))
+          })

@@ -7,7 +7,7 @@
   .blastReport(...)
 }
 \arguments{
-  \item{...}{Slots for 'blastReport' objects.}
+  \item{...}{Slots for \sQuote{blastReport} objects.}
 }
 \description{
   blastReport is an S4 class that provides a container for

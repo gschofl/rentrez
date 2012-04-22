@@ -1,4 +1,6 @@
-### Einfo ##################################################################
+
+# EInfo ---------------------------------------------------------------
+
 ##' @include utils.r
 ##' @include blast-classes.r
 ##' @include eutil-classes.r
@@ -17,15 +19,19 @@ NULL
 ##' @rdname einfo-class
 ##' @exportClass einfo
 ##' @aliases show,einfo-method
-##' @aliases einfo,einfo-method
-setClass("einfo", representation("VIRTUAL"), contains = "eutil")
-
+##' @aliases einfo,einfo-method 
+setClass("einfo",
+         #### einfo-class ####
+         representation("VIRTUAL"),
+         contains = "eutil")
 
 ##' einfoDbList class
 ##' 
-##' einfoDbList is an S4 class that extends the \code{\link{einfo-class}}.
-##' This class provides a container for data retrived by calls to the 
-##' NCBI EInfo utility.
+##' \sQuote{einfoDbList} is an S4 class that extends the
+##' \code{\link{einfo-class}}.
+##' This class provides a container for data retrived by calls to the
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI EInfo}
+##' utility.
 ##' 
 ##' einfoDbList objects have one slots in addition to the slots provided by
 ##' basic \code{\link{eutil-class}} objects:
@@ -40,17 +46,20 @@ setClass("einfo", representation("VIRTUAL"), contains = "eutil")
 ##' @rdname einfoDbList-class
 ##' @exportClass einfoDbList
 ##' @aliases [,einfoDbList-method
-setClass("einfoDbList",
-         representation(dbList = "character"),
-         prototype(dbList = NA_character_),
-         contains = "einfo")
-
+.einfoDbList <-
+  #### einfoDbList-class ####
+  setClass("einfoDbList",
+           representation(dbList = "character"),
+           prototype(dbList = NA_character_),
+           contains = "einfo")
 
 ##' einfoDb class
 ##' 
-##' einfoDb is an S4 class that extends the \code{\link{einfo-class}}.
-##' This class provides a container for data retrived by calls to the 
-##' NCBI EInfo utility.
+##' \sQuote{einfoDb} is an S4 class that extends the 
+##' \code{\link{einfo-class}}.
+##' This class provides a container for data retrived by calls to the
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI EInfo}
+##' utility.
 ##' 
 ##' einfoDb objects have seven slots in addition to the slots provided by
 ##' basic \code{\link{eutil-class}} objects:
@@ -70,23 +79,25 @@ setClass("einfoDbList",
 ##' @name einfoDb-class
 ##' @rdname einfoDb-class
 ##' @exportClass einfoDb
-setClass("einfoDb",
-         representation(dbName = "character",
-                        menuName = "character",
-                        description = "character",
-                        records = "numeric",
-                        lastUpdate = "POSIXlt",
-                        fields = "data.frame",
-                        links = "data.frame"),
-         prototype(dbName = NA_character_, menuName = NA_character_,
-                   description = NA_character_, records = NA_integer_,
-                   lastUpdate = as.POSIXlt(NA), fields = data.frame(),
-                   links = data.frame()),
-         contains = "einfo")
-
+.einfoDb <- 
+  #### einfoDb-class ####
+  setClass("einfoDb",
+           representation(dbName = "character",
+                          menuName = "character",
+                          description = "character",
+                          records = "numeric",
+                          lastUpdate = "POSIXlt",
+                          fields = "data.frame",
+                          links = "data.frame"),
+           prototype(dbName = NA_character_, menuName = NA_character_,
+                     description = NA_character_, records = NA_integer_,
+                     lastUpdate = as.POSIXlt(NA), fields = data.frame(),
+                     links = data.frame()),
+           contains = "einfo")
 
 ##' @export
 setMethod("show",
+          #### show-method ####
           signature(object = "einfo"),
           function (object) {
             if (is(object, "einfoDbList")) {
@@ -118,6 +129,7 @@ setMethod("show",
 
 ##' @export
 setMethod("[",
+          #### [-method ####
           signature(x = "einfoDbList", i = "numeric", j = "missing"),
           function (x, i) {
             x@dbList[i]
@@ -145,42 +157,42 @@ setMethod("[",
 einfo <- function (db=NULL) {
   if (is.null(db)) {
     o <- .query(eutil='einfo')
-    new("einfoDbList", url=o@url, data=o@data,
-        dbList=as.character(xpathSApply(o@data, '//DbList/DbName', xmlValue)))
-  }
-  else {
+    .einfoDbList(url=o@url, data=o@data,
+                 dbList=xpathSApply(o@data, '//DbList/DbName', xmlValue))
+  } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
     o <- .query(eutil='einfo', db=db)
-
+    
     # extract FieldList elements
     fnm <- sapply(getNodeSet(o@data, '//FieldList/Field[1]/child::node( )'), xmlName)
-    if (length(fnm) > 0L)
+    if (length(fnm) > 0L) {
       field_info <- as.data.frame(stringsAsFactors = FALSE,
                                   split(sapply(getNodeSet(o@data, '//FieldList/Field/*'),
                                                xmlValue), fnm))[, fnm]
-    else
+    } else  {
       field_info <- data.frame()
-
+    }
     # extract LinkList elements
     lnm <- sapply(getNodeSet(o@data, '//LinkList/Link[1]/child::node( )'), xmlName)
-    if (length(lnm) > 0L)
+    if (length(lnm) > 0L) {
       link_info <- as.data.frame(stringsAsFactors = FALSE,
                                  split(sapply(getNodeSet(o@data, '//LinkList/Link/*'),
                                               xmlValue), lnm))[, lnm]
-    else
+    } else {
       link_info <- data.frame()
-
-    new("einfoDb", url=o@url, data=o@data,
-        error=checkErrors(o),
-        dbName=xmlValue(xmlRoot(o@data)[[1L]][['DbName']]),
-        menuName=xmlValue(xmlRoot(o@data)[[1L]][['MenuName']]),
-        description=xmlValue(xmlRoot(o@data)[[1L]][['Description']]),
-        records=as.numeric(xmlValue(xmlRoot(o@data)[[1L]][['Count']])),
-        lastUpdate=as.POSIXlt(xmlValue(xmlRoot(o@data)[[1L]][['LastUpdate']])),
-        fields=field_info,
-        links=link_info)
+    }
+    
+    .einfoDb(url=o@url, data=o@data,
+             error=checkErrors(o),
+             dbName=xmlValue(xmlRoot(o@data)[[1L]][['DbName']]),
+             menuName=xmlValue(xmlRoot(o@data)[[1L]][['MenuName']]),
+             description=xmlValue(xmlRoot(o@data)[[1L]][['Description']]),
+             records=as.numeric(xmlValue(xmlRoot(o@data)[[1L]][['Count']])),
+             lastUpdate=as.POSIXlt(xmlValue(xmlRoot(o@data)[[1L]][['LastUpdate']])),
+             fields=field_info,
+             links=link_info)
   }
 }

@@ -1,7 +1,7 @@
 \docType{methods}
-\name{getSeq}
-\alias{getSeq}
-\title{Extract sequence information from \code{\link{efetch-class}} objects.}
+\name{parse}
+\alias{parse}
+\title{Parse \code{\link{efetch}} retrived records into R data structures}
 \arguments{
   \item{x}{an \code{\link{efetch-class}} object.}
 
@@ -16,10 +16,7 @@
   An object specified by \code{outfmt} is created.
 }
 \description{
-  Extract sequence information from
-  \code{\link{efetch-class}} objects.
-}
-\examples{
-##
+  Parse \code{\link{efetch}} retrived records into R data
+  structures
 }
 

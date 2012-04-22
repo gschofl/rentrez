@@ -2,11 +2,15 @@
 \alias{[,einfoDbList-method}
 \alias{einfoDbList-class}
 \title{einfoDbList class}
+\usage{
+  .einfoDbList(...)
+}
 \description{
-  einfoDbList is an S4 class that extends the
+  \sQuote{einfoDbList} is an S4 class that extends the
   \code{\link{einfo-class}}. This class provides a
-  container for data retrived by calls to the NCBI EInfo
-  utility.
+  container for data retrived by calls to the
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI
+  EInfo} utility.
 }
 \details{
   einfoDbList objects have one slots in addition to the

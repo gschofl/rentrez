@@ -88,9 +88,9 @@ setMethod("c",
           })
 
 
-##' Extract sequence information from \code{\link{efetch-class}} objects.
+##' Parse \code{\link{efetch}} retrived records into R data structures 
 ##' 
-##' @usage getSeq(x, seqtype=c('DNA','RNA','AA'),
+##' @usage parse(x, seqtype=c('DNA','RNA','AA'),
 ##'   outfmt=c('Biostring', 'DNAbin', 'String'))
 ##' 
 ##' @param x an \code{\link{efetch-class}} object.
@@ -103,28 +103,31 @@ setMethod("c",
 ##' @export
 ##' @docType methods
 ##' @rdname efetch-methods
-##' 
-##' @examples
-##'  ##
-setGeneric("getSeq",
-           #### getSeg-generic ####
+setGeneric("parse",
+           #### parse-generic ####
            function(x, ...) {
-             standardGeneric("getSeq")
+             standardGeneric("parse")
            })
 
 ##' @export
-setMethod("getSeq",
-          #### getSeq-method ####
-          signature="efetch",
-          function(x,
-                   seqtype=c("DNA","RNA","AA"),
-                   outfmt=c("Biostring", "DNAbin", "String"),
-                   ...)
-          {
-            if (x@type == "fasta")
-              return(.getFasta(x=x, seqtype=seqtype, outfmt=outfmt))
-            else
-              stop("Only rettype='fasta' is supported at the moment")
+setMethod("parse",
+          #### parse-method ####
+          signature(x="efetch"),
+          function(x, ...) {
+            if (grepl("^fasta", x@type) && x@mode == "text") {
+              return(.getFasta(x=x, seqtype=c("DNA","RNA","AA"), 
+                               outfmt=c("Biostring", "DNAbin", "String")))
+            } else if (grepl("^gb|^gp", x@type) && x@mode == "text") {
+              dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
+              records <- list()
+              for (db in dbs) {
+                records <- c(records, list(biofiles::initGB(db)))
+              }
+              names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
+              return(records)
+            } else {
+              stop("Only fasta and GenBank flat files are supported at the moment")
+            }
           })
 
 ##' Retrieve data records in the requested format from NCBI

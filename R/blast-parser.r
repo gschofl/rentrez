@@ -126,7 +126,8 @@ parseBlastXml <- function (blast_output)
 parseBlastTabular <- function (blast_output)
 {
   if (is.character(blast_output) && file.exists(blast_output)) {
-    file_path <- blast_output
+    cf <- count.fields(blast_output, sep="\t", comment.char="#")
+    file_path <- file(blast_output, open="r")
   } else {
     cf <- count.fields(textConnection(as.character(blast_output)),
                        sep="\t", comment.char="#")
@@ -181,6 +182,8 @@ parseBlastTabular <- function (blast_output)
     program <- query <- db <- NA_character_
   }
   
+  close(file_path)
+  
   .blastTable(program = program, db = db, query = query,
               bitscore = as.numeric(hit_table[["bitscore"]]),
               evalue = as.numeric(hit_table[["evalue"]]),
@@ -189,6 +192,7 @@ parseBlastTabular <- function (blast_output)
               accession = accn,
               table = hit_table)
 }
+
 
 # gapsOpen <- function (s1, s2)
 # {

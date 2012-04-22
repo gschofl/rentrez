@@ -1,11 +1,16 @@
 \name{parseDeflines}
 \alias{parseDeflines}
-\title{parse fasta definition lines}
+\title{Parse fasta definition lines}
 \usage{
-  parseDeflines(defline)
+  parseDeflines(defline, species = FALSE)
+}
+\arguments{
+  \item{defline}{List or character vector of NCBI fasta
+  deflines.}
+
+  \item{species}{Parse out species designations.}
 }
 \description{
-  parse fasta definition lines
+  Parse fasta definition lines
 }
-\keyword{internal}
 
