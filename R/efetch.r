@@ -119,12 +119,16 @@ setMethod("parse",
                                outfmt=c("Biostring", "DNAbin", "String")))
             } else if (grepl("^gb|^gp", x@type) && x@mode == "text") {
               dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
-              records <- list()
-              for (db in dbs) {
-                records <- c(records, list(biofiles::initGB(db)))
+              if (length(dbs) == 1) {
+                return(biofiles::initGB(dbs))
+              } else {
+                records <- list()
+                for (db in dbs) {
+                  records <- c(records, list(biofiles::initGB(db)))
+                }
+                names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
+                return(records)
               }
-              names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
-              return(records)
             } else {
               stop("Only fasta and GenBank flat files are supported at the moment")
             }
