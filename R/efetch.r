@@ -358,11 +358,10 @@ efetch.batch <- function (id,
 #' Extract fasta from efetch
 #' 
 #' @importFrom Biostrings readDNAStringSet
-#' @importFrom Biostrings readRNAStringSet
 #' @importFrom Biostrings readAAStringSet
 #' @importFrom ape read.dna
 .getFasta <- function (x,
-                       seqtype=c("DNA","RNA","AA"),
+                       seqtype=c("DNA","AA"),
                        outfmt=c("Biostring", "DNAbin", "String"))
 {
   seqtype <- match.arg(seqtype)
@@ -377,7 +376,6 @@ efetch.batch <- function (id,
     write(x, file=f_tmp)
     fasta <- switch(seqtype,
                     DNA=readDNAStringSet(f_tmp, use.names=TRUE),
-                    RNA=readRNAStringSet(f_tmp, use.names=TRUE),
                     AA=readAAStringSet(f_tmp, use.names=TRUE)) 
     unlink(f_tmp)
     return(fasta)
