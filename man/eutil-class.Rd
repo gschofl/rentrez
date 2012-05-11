@@ -1,7 +1,7 @@
 \name{eutil-class}
-\alias{$,eutil-method}
 \alias{eutil-class}
 \alias{eutil,eutil-method}
+\alias{$,eutil-method}
 \alias{names,eutil-method}
 \title{eutil class}
 \usage{

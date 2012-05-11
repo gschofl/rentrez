@@ -30,7 +30,7 @@ NULL
 ##' @aliases show,efetch-method
 ##' @aliases write,efetch-method
 ##' @aliases c,efetch-method
-##' @aliases getSeq,efetch-method
+##' @aliases parse,efetch-method
 .efetch <-
   #### efetch-class ####
   setClass("efetch", 
@@ -115,8 +115,7 @@ setMethod("parse",
           signature(x="efetch"),
           function(x, ...) {
             if (grepl("^fasta", x@type) && x@mode == "text") {
-              return(.getFasta(x=x, seqtype=c("DNA","RNA","AA"), 
-                               outfmt=c("Biostring", "DNAbin", "String")))
+              return(.getFasta(x, ...))
             } else if (grepl("^gb|^gp", x@type) && x@mode == "text") {
               dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
               if (length(dbs) == 1) {
@@ -358,9 +357,9 @@ efetch.batch <- function (id,
 
 #' Extract fasta from efetch
 #' 
-#' @importFrom Biostrings read.DNAStringSet
-#' @importFrom Biostrings read.RNAStringSet
-#' @importFrom Biostrings read.AAStringSet
+#' @importFrom Biostrings readDNAStringSet
+#' @importFrom Biostrings readRNAStringSet
+#' @importFrom Biostrings readAAStringSet
 #' @importFrom ape read.dna
 .getFasta <- function (x,
                        seqtype=c("DNA","RNA","AA"),
@@ -377,9 +376,9 @@ efetch.batch <- function (id,
     f_tmp <- tempfile(fileext=".fa")
     write(x, file=f_tmp)
     fasta <- switch(seqtype,
-                    DNA=read.DNAStringSet(f_tmp, use.names=TRUE),
-                    RNA=read.RNAStringSet(f_tmp, use.names=TRUE),
-                    AA=read.AAStringSet(f_tmp, use.names=TRUE)) 
+                    DNA=readDNAStringSet(f_tmp, use.names=TRUE),
+                    RNA=readRNAStringSet(f_tmp, use.names=TRUE),
+                    AA=readAAStringSet(f_tmp, use.names=TRUE)) 
     unlink(f_tmp)
     return(fasta)
   }

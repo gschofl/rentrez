@@ -1,7 +1,7 @@
 \name{efetch-class}
 \alias{c,efetch-method}
 \alias{efetch-class}
-\alias{getSeq,efetch-method}
+\alias{parse,efetch-method}
 \alias{show,efetch-method}
 \alias{write,efetch-method}
 \title{efetch class}

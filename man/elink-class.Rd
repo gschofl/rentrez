@@ -1,7 +1,7 @@
 \name{elink-class}
-\alias{[,elink-method}
 \alias{elink-class}
 \alias{elink,elink-method}
+\alias{[,elink-method}
 \alias{show,elink-method}
 \title{elink class}
 \usage{
