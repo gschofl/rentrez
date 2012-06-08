@@ -5,12 +5,11 @@
 \arguments{
   \item{x}{an \code{\link{efetch-class}} object.}
 
-  \item{seqtype}{sequence type. One of 'DNA' (default),
-  'RNA', or 'AA'.}
+  \item{seqtype}{sequence type. 'DNA' (default) or 'AA'.}
 
-  \item{outfmt}{Output format. One of 'Biostring'
-  (default), \code{\link[ape]{DNAbin}}, or a character
-  vector ('String').}
+  \item{outfmt}{Output format. 'Biostring' (default),
+  \code{\link[ape]{DNAbin}}, or character vector
+  ('String').}
 }
 \value{
   An object specified by \code{outfmt} is created.

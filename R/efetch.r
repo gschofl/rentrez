@@ -90,13 +90,13 @@ setMethod("c",
 
 ##' Parse \code{\link{efetch}} retrived records into R data structures 
 ##' 
-##' @usage parse(x, seqtype=c('DNA','RNA','AA'),
+##' @usage parse(x, seqtype=c('DNA', 'AA'),
 ##'   outfmt=c('Biostring', 'DNAbin', 'String'))
 ##' 
 ##' @param x an \code{\link{efetch-class}} object.
-##' @param seqtype sequence type. One of 'DNA' (default), 'RNA', or 'AA'.
-##' @param outfmt Output format. One of 'Biostring' (default),
-##' \code{\link[ape]{DNAbin}}, or a character vector ('String').
+##' @param seqtype sequence type. 'DNA' (default) or 'AA'.
+##' @param outfmt Output format. 'Biostring' (default),
+##' \code{\link[ape]{DNAbin}}, or character vector ('String').
 ##' 
 ##' @return An object specified by \code{outfmt} is created.
 ##' 
@@ -115,7 +115,7 @@ setMethod("parse",
           signature(x="efetch"),
           function(x, ...) {
             if (grepl("^fasta", x@type) && x@mode == "text") {
-              return(.getFasta(x, ...))
+              return( .getFasta(x, ...) )
             } else if (grepl("^gb|^gp", x@type) && x@mode == "text") {
               dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
               if (length(dbs) == 1) {
@@ -126,7 +126,7 @@ setMethod("parse",
                   records <- c(records, list(biofiles::initGB(db)))
                 }
                 names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
-                return(records)
+                return( records )
               }
             } else {
               stop("Only fasta and GenBank flat files are supported at the moment")
@@ -357,9 +357,10 @@ efetch.batch <- function (id,
 
 #' Extract fasta from efetch
 #' 
-#' @importFrom Biostrings readDNAStringSet
-#' @importFrom Biostrings readAAStringSet
+#' @importFrom Biostrings read.DNAStringSet
+#' @importFrom Biostrings read.AAStringSet
 #' @importFrom ape read.dna
+#' @importFrom phangorn read.aa
 .getFasta <- function (x,
                        seqtype=c("DNA","AA"),
                        outfmt=c("Biostring", "DNAbin", "String"))
@@ -375,15 +376,16 @@ efetch.batch <- function (id,
     f_tmp <- tempfile(fileext=".fa")
     write(x, file=f_tmp)
     fasta <- switch(seqtype,
-                    DNA=readDNAStringSet(f_tmp, use.names=TRUE),
-                    AA=readAAStringSet(f_tmp, use.names=TRUE)) 
+                    DNA=read.DNAStringSet(f_tmp, use.names=TRUE),
+                    AA=read.AAStringSet(f_tmp, use.names=TRUE)) 
     unlink(f_tmp)
-    return(fasta)
+    return( fasta )
   }
   else if (format == "DNAbin") {
-    # stopifnot(require("ape"))
-    fasta <- ape::read.dna(file=textConnection(x@data), format="fasta")
-    return(fasta)  
+    fasta <- switch(seqtype,
+                    DNA=ape::read.dna(file=textConnection(x@data), format="fasta"),
+                    AA=phangorn::read.aa(file=textConnection(x@data), format="fasta"))
+    return( fasta )  
   }
   else if (format == "String") {
     fasta_split <- strsplit(x@data, "\n")[[1]]
@@ -391,7 +393,7 @@ efetch.batch <- function (id,
     desc <- sub(">", "", fasta_split[desc_idx])
     fasta <- paste0(fasta_split[-desc_idx], collapse="")
     names(fasta) <- desc
-    return(fasta)
+    return( fasta )
   }
 }
 
