@@ -1,24 +1,99 @@
 \docType{methods}
 \name{hits}
+\alias{getAccn}
+\alias{getBitscore}
+\alias{getDesc}
+\alias{getEvalue}
+\alias{getHitFrame}
+\alias{getHitRange}
+\alias{getHitSeq}
 \alias{getId}
+\alias{getQueryRange}
+\alias{getQuerySeq}
 \alias{hits}
-\title{Accessor methods for blast records}
+\title{Getter methods for blast records}
 \arguments{
-  \item{x}{A \code{\link{blastReccord-class}} object.}
+  \item{x}{A \code{\link{blastRecord-class}} object.}
 
   \item{...}{Additional arguments}
 
-  \item{x}{A blastReport object.}
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
 
   \item{db}{Database tag (e.g.: 'gi', 'gb', 'emb', 'ref',
-  ...)}
+  'gnl', ...)}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
+
+  \item{x}{A \code{\link{blastReport-class}} or
+  \code{\link{hit-class}} object.}
 }
 \value{
   Accession numbers as specified by \code{db} for each hit.
+
+  Description for each hit.
+
+  Accession number for each hit.
+
+  Bitscores for each hit.
+
+  Evalue for each hit.
+
+  Start and end position for each query.
+
+  Start and end position for each hit.
+
+  Frame for each hit (1 or -1)
+
+  Query sequence(s) as a
+  \code{\link[Biostrings]{DNAStringSet}}
+
+  Hit sequence(s) as a
+  \code{\link[Biostrings]{DNAStringSet}}
 }
 \description{
-  Accessor methods for blast records
+  Getter methods for blast records
 
-  Accessor methods for blast records
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
+
+  Getter methods for blast records
 }
 

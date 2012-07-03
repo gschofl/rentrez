@@ -1,6 +1,6 @@
 \name{einfo-class}
-\alias{einfo-class}
 \alias{einfo,einfo-method}
+\alias{einfo-class}
 \alias{show,einfo-method}
 \title{einfo class}
 \description{

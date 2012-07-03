@@ -1,6 +1,6 @@
 \name{epost-class}
-\alias{epost-class}
 \alias{epost,epost-method}
+\alias{epost-class}
 \alias{show,epost-method}
 \title{epost class}
 \description{

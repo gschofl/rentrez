@@ -105,13 +105,15 @@ makeblasttdb <- function(input_file,
   dbtype <- match.arg(dbtype)
   
   o <- list(...)
-  if (!is.null(o$logfile)) logfile <- o$logfile else logfile <- FALSE
+  if (!is.null(o$logfile)) logfile <- o$logfile else logfile <- ""
+  
+  logfile <- "logfile"
   
   SysCall(exec="makeblastdb", infile=NULL, outfile=NULL,
           `in`=input_file, input_type=input_type,
           dbtype=dbtype, ..., style="unix", show_cmd=show_cmd)
   
-  if (exists("logfile") && isTRUE(show_log))
+  if (nzchar(logfile) && isTRUE(show_log))
     cat(paste(readLines(logfile), collapse="\n"))
 }
 
@@ -154,11 +156,11 @@ blast <- function (program = c("blastn", "blastp", "blastx", "tblastn", "tblastx
     return(SysCall(program, help=TRUE, intern=FALSE))
   
   if (is(query, "XStringSet")) {
-    input <- toString(query[[1L]])
+    input <- paste0(">", names(query[1L]), "\n", toString(query[[1L]]))
     query <- NULL
   }
   else if (is(query, "XString")) {
-    input <- toString(query)
+    input <- paste0(">", names(query[1L]), "\n", toString(query))
     query <- NULL
   }
   else if (is.vector(query)) {
@@ -208,14 +210,14 @@ blast <- function (program = c("blastn", "blastp", "blastx", "tblastn", "tblastx
   }
   
   args <- merge(list(...),
+               # args <-
                 list(query=query,
                      db=db,
                      outfmt=outfmt,
                      num_descriptions=num_descriptions,
                      num_alignments=num_alignments,
                      max_target_seqs=max_target_seqs,
-                     strand=strand)
-                )
+                     strand=strand))
   
   # remove stdin', 'stdout' from the arguments list
   stdin <- args[["stdin"]]
@@ -269,7 +271,9 @@ blast <- function (program = c("blastn", "blastp", "blastx", "tblastn", "tblastx
 ##' @param html Produce HTML output.
 ##' @param remote Execute search remotely.
 ##' @param ... Additional parameters passed on to the BLAST commmand line
-##' tools.
+##' tools. See
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK1763/#CmdLineAppsManual.4_User_manual}{here}
+##' for a description of common options.
 ##' @param show_cmd If \code{TRUE} print the constructed command line
 ##' instead of passing it to \code{\link{system}}.
 ##' 
@@ -374,7 +378,9 @@ blastp_short <- Curry(FUN = blast, program = "blastp", task = "blastp-short")
 ##' @param html Produce HTML output.
 ##' @param remote Execute search remotely.
 ##' @param ... Additional parameters passed on to the BLAST commmand line
-##' tools.
+##' tools. See
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK1763/#CmdLineAppsManual.4_User_manual}{here}
+##' for a description of common options.
 ##' @param show_cmd If \code{TRUE} print the constructed command line
 ##' instead of passing it to \code{\link{system}}.
 ##' 
@@ -413,7 +419,9 @@ blastx <-
 ##' @param html Produce HTML output.
 ##' @param remote Execute search remotely.
 ##' @param ... Additional parameters passed on to the BLAST commmand line
-##' tools.
+##' tools. See
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK1763/#CmdLineAppsManual.4_User_manual}{here}
+##' for a description of common options.
 ##' @param show_cmd If \code{TRUE} print the constructed command line
 ##' instead of passing it to \code{\link{system}}.
 ##' 
@@ -450,7 +458,9 @@ tblastx <-
 ##' @param html Produce HTML output.
 ##' @param remote Execute search remotely.
 ##' @param ... Additional parameters passed on to the BLAST commmand line
-##' tools.
+##' tools. See
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK1763/#CmdLineAppsManual.4_User_manual}{here}
+##' for a description of common options.
 ##' @param show_cmd If \code{TRUE} print the constructed command line
 ##' instead of passing it to \code{\link{system}}.
 ##' 

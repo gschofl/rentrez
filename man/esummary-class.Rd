@@ -1,8 +1,8 @@
 \name{esummary-class}
-\alias{esummary-class}
-\alias{esummary,esummary-method}
-\alias{[,esummary-method}
 \alias{$,esummary-method}
+\alias{[,esummary-method}
+\alias{esummary,esummary-method}
+\alias{esummary-class}
 \alias{show,esummary-method}
 \title{esummary class}
 \usage{

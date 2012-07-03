@@ -1,7 +1,7 @@
 \name{esearch-class}
-\alias{esearch-class}
-\alias{esearch,esearch-method}
 \alias{[,esearch-method}
+\alias{esearch,esearch-method}
+\alias{esearch-class}
 \alias{length,esearch-method}
 \alias{show,esearch-method}
 \title{esearch class}

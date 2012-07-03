@@ -129,11 +129,11 @@ setMethod("show",
 
 ##' @export
 setMethod("[",
-          #### [-method ####
           signature(x = "einfoDbList", i = "numeric", j = "missing"),
-          function (x, i) {
+          function (x, i, j, ..., drop = TRUE) {
             x@dbList[i]
           })
+
 
 ##' Retrieve information about each database in the NCBI Entrez system
 ##'

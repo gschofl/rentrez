@@ -142,7 +142,7 @@ setMethod("show",
           function (object) {
             
             first_line <-
-              linebreak(deparseDeflines(object@id, object@desc), offset=5)         
+              linebreak(deparseDeflines(ids=object@id, descs=object@desc), offset=5)         
 
             second_line <- 
               sprintf("Score: %s bits (%s), Expect: %s,",
@@ -159,82 +159,39 @@ setMethod("show",
                       object@hsp@gaps, object@hsp@align_len,
                       round(100*object@hsp@gaps/object@hsp@align_len, 0))
 
-            q_start <- min(c(object@hsp@query_from, object@hsp@query_to))
-            q_rev <- if (object@hsp@query_from > object@hsp@query_to) TRUE else FALSE
-            h_start <- min(c(object@hsp@hit_from, object@hsp@hit_to))
-            h_rev <- if (object@hsp@hit_from > object@hsp@hit_to) TRUE else FALSE
+            q_start <- unlist(Map(min, Map(c, object@hsp@query_from, object@hsp@query_to)))
+            q_rev <- ifelse(object@hsp@query_from > object@hsp@query_to, TRUE,  FALSE)
+            h_start <- unlist(Map(min, Map(c, object@hsp@hit_from, object@hsp@hit_to)))
+            h_rev <- ifelse(object@hsp@hit_from > object@hsp@hit_to, TRUE, FALSE)
             
             cat(sprintf("\nHit: %s (Length = %s)", first_line, object@len))
-            cat(sprintf("\n\n%s", linebreak(second_line)))
-            cat(sprintf("\n%s\n", linebreak(third_line)))
-            cat(sprintf("\n%s\n",
-                        wrapAln(toString(object@hsp@qseq), object@hsp@midline, toString(object@hsp@hseq),
-                        prefix=c("Query", "", "Spjct"),
-                        start=c(q_start, NA, h_start),
-                        reverse=c(q_rev, FALSE, h_rev))))
+            
+            x <- Map(function(snd, thrd, qseq, midline, hseq,
+                              q_start, h_start, q_rev, h_rev) {
+              cat(sprintf("\n\n%s", linebreak(snd)))
+              cat(sprintf("\n%s\n", linebreak(thrd)))
+              cat(sprintf("\n%s\n",
+                          wrapAln(qseq, midline, hseq,
+                                  prefix=c("Query", "", "Spjct"),
+                                  start=c(q_start, NA, h_start),
+                                  reverse=c(q_rev, FALSE, h_rev))))
+            }, snd=second_line, thrd=third_line,
+               qseq=strsplit(toString(object@hsp@qseq), ", ")[[1]],
+               midline=object@hsp@midline,
+               hseq=strsplit(toString(object@hsp@hseq), ", ")[[1]],
+               q_start=q_start, h_start=h_start,
+               q_rev=q_rev, h_rev=h_rev, USE.NAMES=FALSE)
           })
 
+# i <- 4
+# qseq <- strsplit(toString(object@hsp@qseq), ", ")[[1]][i]
+# midline <- object@hsp@midline[i]
+# hseq <- strsplit(toString(object@hsp@hseq), ", ")[[1]][i]
+# x <- wrapAln(seq1=qseq, seq2=midline, seq3=hseq, prefix=c("Query", "", "Spjct"),
+#              start=c(q_start[i], NA, h_start[i]), reverse=c(q_rev[i], FALSE, h_rev[i]))
+# cat(x)
 
 # seqs <- list(toString(object@hsp@qseq), object@hsp@midline, toString(object@hsp@hseq))
-
-##' Accessor methods for blast records
-##' 
-##' @param x A \code{\link{blastReccord-class}} object.
-##' @param ... Additional arguments
-##' 
-##' @rdname blastReport-method
-##' @docType methods
-##' @export
-setGeneric("hits",
-           #### hits-generic ####
-           function (x, ...) {
-             standardGeneric("hits")
-             })
-
-##' @export
-setMethod("hits",
-          #### hits-method ####
-          signature="blastReport",
-          function (x) {
-            return(x@hits)
-          })
-
-##' Accessor methods for blast records
-##' 
-##' @usage getId(x, db="gi")
-##' 
-##' @param x A blastReport object.
-##' @param db Database tag (e.g.: 'gi', 'gb', 'emb', 'ref', ...)
-##' 
-##' @return Accession numbers as specified by \code{db} for each hit.
-##' 
-##' @rdname blastReport-method
-##' @docType methods
-##' @export
-setGeneric("getId",
-           function (x, db="gi", ...) {
-             #### getId-generic ####
-             standardGeneric("getId")
-           })
-
-##' @export
-setMethod("getId",
-          #### getId-method ####
-          signature="blastReport",
-          function (x, db, ...) {
-            lapply(x@hits, function (x) getId(x, db)) 
-          })
-
-##' @export
-setMethod("getId",
-          #### getId-method ####
-          signature="hit",
-          function (x, db, ...) {
-            id <- lapply(x@id, "[[", db)
-            id[vapply(id, is.null, logical(1))] <- NA_character_
-            unlist(id)
-          })
-
 
 ##' blastTable class
 ##' 

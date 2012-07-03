@@ -1,6 +1,6 @@
 \name{egquery-class}
-\alias{egquery-class}
 \alias{egquery,egquery-method}
+\alias{egquery-class}
 \alias{show,egquery-method}
 \title{egquery class}
 \description{

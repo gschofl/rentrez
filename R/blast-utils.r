@@ -84,7 +84,10 @@ deparseDeflines <- function(ids, descs) {
   deflines <- list()
   for (i in seq_along(ids)) {
     deflines[[i]] <-
-      paste0(paste0(names(ids[[i]]), "|", ids[[i]], collapse="|"), "| ", descs[[i]])
+      paste0(
+        paste0(names(ids[[i]]), "|", paste0(ids[[i]][[1]], collapse="|") , collapse="|"),
+        "| ",
+        descs[[i]])
   }
   
   return(deflines)
@@ -194,16 +197,16 @@ wrapAln <- function (seq1,
                      reverse=c(FALSE),
                      sep=2)
 {
-  
+  # seqs <- c(seq1, list(seq2, seq3))
   seqs <- c(seq1, list(...))
-  lseqs <- sapply(seqs, nchar)
+  lseqs <- vapply(seqs, nchar, numeric(1))
   
   if (!length(unique(lseqs)) == 1L)
     stop("Sequences are of different length")
   
-  pref_width <- max(sapply(prefix, nchar))
-  aln_start_width <- aln_end_width <- nchar(as.character(unique(lseqs)))
-  suf_width <- max(sapply(suffix, nchar))
+  pref_width <- max(vapply(prefix, nchar, numeric(1))) 
+  aln_start_width <- aln_end_width <-  max(c(nchar(start), nchar(unique(lseqs))))
+  suf_width <- max(vapply(suffix, nchar, numeric(1)))
   offset <- pref_width + sep + aln_start_width + 1 + 1 + aln_end_width + sep + suf_width  
   
   # break up sequences  

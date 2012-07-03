@@ -19,7 +19,10 @@
   UIDs must be from the database specified by \code{db}.}
 
   \item{db}{(Required only when \code{id} is a character
-  vector of UIDs) Database from which to retrieve records.}
+  vector of UIDs) Database from which to retrieve records.
+  See
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/table/chapter2.chapter2_table1/?report=objectonly}{here}
+  for the supported databases.}
 
   \item{query_key}{An integer specifying which of the UID
   lists attached to a user's Web Environment will be used
@@ -35,7 +38,8 @@
 
   \item{rettype}{A character string specifying the report
   type returned, such as 'abstract' or 'medline' from
-  PubMed, or 'gp' or 'fasta' from protein. See
+  PubMed, 'gp' or 'fasta' from protein, or 'gb',
+  'gbwithparts, or 'fasta_cds_na' from nuccore. See
   \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
   for allowed values for each database.}
 
@@ -75,6 +79,12 @@
   See the official online documentation for NCBI's
   \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
   for additional information.
+
+  The default retrieval mode (\code{retmode}) for the
+  \code{pubmed}, \code{nuccore}, \code{protein}, and
+  \code{gene} databases is 'text'. Default \code{rettype}s
+  are 'medline', 'gb', 'gp', and 'gene_table',
+  respectively.
 }
 \examples{
 ## Download full records ###################################################

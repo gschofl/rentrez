@@ -33,7 +33,9 @@
   \item{remote}{Execute search remotely.}
 
   \item{...}{Additional parameters passed on to the BLAST
-  commmand line tools.}
+  commmand line tools. See
+  \href{http://www.ncbi.nlm.nih.gov/books/NBK1763/#CmdLineAppsManual.4_User_manual}{here}
+  for a description of common options.}
 
   \item{show_cmd}{If \code{TRUE} print the constructed
   command line instead of passing it to

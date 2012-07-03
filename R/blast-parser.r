@@ -99,7 +99,7 @@ parseBlastXml <- function (blast_output)
     ## parse hits
     id <- paste(xpathSApply(hit, "//Hit_id", xmlValue),
                 xpathSApply(hit, "//Hit_def", xmlValue))
-    id <- parseDeflines(str_split(id, " >")[[1L]])
+    id <- parseDeflines(defline=str_split(id, " >")[[1L]])
     hit_obj <- .hit(num=as.integer(xpathSApply(hit, "//Hit_num", xmlValue)),
                     id=id$id,
                     desc=id$desc,

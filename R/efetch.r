@@ -143,6 +143,10 @@ setMethod("parse",
 ##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
 ##' for additional information.
 ##' 
+##' The default retrieval mode (\code{retmode}) for the \code{pubmed},
+##' \code{nuccore}, \code{protein}, and \code{gene} databases is 'text'. Default
+##' \code{rettype}s are 'medline', 'gb', 'gp', and 'gene_table', respectively.
+##' 
 ##' @param id (Required)
 ##' List of UIDs provided either as a character vector, as an
 ##' \code{\link{esearch-class}} object, or by reference to a web environment
@@ -153,7 +157,9 @@ setMethod("parse",
 ##' specified explicitly, and all of the UIDs must be from the database
 ##' specified by \code{db}.
 ##' @param db (Required only when \code{id} is a character vector of UIDs)
-##' Database from which to retrieve records.
+##' Database from which to retrieve records. See
+##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/table/chapter2.chapter2_table1/?report=objectonly}{here}
+##' for the supported databases.
 ##' @param query_key An integer specifying which of the UID lists attached
 ##' to a user's Web Environment will be used as input to \code{efetch}.
 ##' (Usually obtained drectely from objects returned by previous
@@ -163,8 +169,8 @@ setMethod("parse",
 ##' by previous \code{\link{esearch}}, \code{\link{epost}} or
 ##' \code{\link{elink}} calls.)
 ##' @param rettype A character string specifying the report type returned,
-##' such as 'abstract' or 'medline' from PubMed, or 'gp' or 'fasta' from
-##' protein.
+##' such as 'abstract' or 'medline' from PubMed, 'gp' or 'fasta' from
+##' protein, or 'gb', 'gbwithparts, or 'fasta_cds_na' from nuccore.
 ##' See
 ##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
 ##' for allowed values for each database.
@@ -212,8 +218,8 @@ efetch <- function (id,
   if (is.null(rettype)) {
     rettype <- switch(db,
                       pubmed="medline",
-                      nucleotide="gbwithparts",
-                      nuccore="gbwithparts",
+                      nucleotide="gb",
+                      nuccore="gb",
                       protein="gp",
                       gene="gene_table")
   }

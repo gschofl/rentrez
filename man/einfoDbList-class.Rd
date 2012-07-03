@@ -1,6 +1,6 @@
 \name{einfoDbList-class}
-\alias{einfoDbList-class}
 \alias{[,einfoDbList-method}
+\alias{einfoDbList-class}
 \title{einfoDbList class}
 \usage{
   .einfoDbList(...)
