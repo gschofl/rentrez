@@ -1,4 +1,6 @@
-### Efetch #################################################################
+
+# efetch-class -----------------------------------------------------------
+
 ##' @include utils.r
 ##' @include blast-classes.r
 ##' @include eutil-classes.r
@@ -35,8 +37,8 @@ NULL
   #### efetch-class ####
   setClass("efetch", 
            representation(database = "character",
-                          type = "character",
-                          mode = "character"),
+                          type = "characterOrNull",
+                          mode = "characterOrNull"),
            prototype(database = NA_character_,
                      type = NA_character_,
                      mode = NA_character_),
@@ -252,8 +254,7 @@ efetch <- function (id,
               max(c(record_count, retmax))))
       retmax <- 500
       id <- id[seq_len(500)]
-    }
-    else if (is.na(record_count)) {
+    } else if (is.na(record_count)) {
       # this takes care of the case where we use elink with
       # cmd='neighbor_history' and don't actually know how many UIDs are
       # stored on the history server

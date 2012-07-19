@@ -14,10 +14,8 @@ NULL
 #' 
 #' @rdname internal
 #' @keywords internal
-.query <- function (eutil, ...)
-{
+.query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-  #query_string <- .query_string(...)
   query_string <- .query_string(..., tool="Rentrez", email="gschofl@yahoo.de")
   
   if (identical(eutil, "egquery"))
@@ -25,32 +23,29 @@ NULL
   else
     url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
   
-  if (identical(eutil, "efetch"))
-    new("eutil",
-        url=curlUnescape(url),
-        data=getURL(url))
-  else
-    new("eutil",
-        url=curlUnescape(url),
-        data=xmlTreeParse(getURL(url), useInternalNodes=TRUE))
+  if (identical(eutil, "efetch")) {
+    .eutil(url = curlUnescape(url), data = getURL(url))
+  } else {
+    .eutil(url = curlUnescape(url),
+           data = xmlTreeParse(getURL(url), useInternalNodes=TRUE))
+  }
 }
 
-.query_string <- function (...)
-{
+
+.query_string <- function (...) {
   args <- list(...)
   params <- names(args)
-  empty <- sapply(args, is.null)
+  empty <- vapply(args, is.null, logical(1))
   fields <- paste(as.character(params[!empty]), as.character(args[!empty]), sep="=")
   .escape(paste("?", paste(fields, collapse="&"), sep=""))
 }
 
-.escape <- function (s, httpPOST=FALSE)
-{
+
+.escape <- function (s, httpPOST=FALSE) {
   if (httpPOST) {
     s <- gsub(" +", " ", s)
     s <- gsub("+", " ", s, fixed=TRUE)
-  }
-  else {
+  } else {
     s <- gsub(" +", "\\+", s)
   }
   s <- paste(strsplit(s, '\"', fixed=TRUE)[[1L]], collapse="%22")
@@ -62,14 +57,14 @@ NULL
   s
 }
 
+
 #' use HTTP POST
 #' 
 #' @inheritParams .query
 #' 
 #' @rdname internal
 #' @keywords internal
-.httpPOST <- function (eutil, ...)
-{
+.httpPOST <- function (eutil, ...) {
   
   user_agent <- switch(eutil,
                        elink='elink/1.0',
@@ -86,23 +81,20 @@ NULL
                           efetch='efetch.fcgi?')
   
   doc <- postForm(paste('http://eutils.ncbi.nlm.nih.gov/entrez/eutils',
-                 http_post_url, sep="/"), ..., type='POST',
-                  .opts=curlOptions(useragent=user_agent))
+                        http_post_url, sep="/"),
+                  ..., type='POST', .opts=curlOptions(useragent=user_agent))
   
   if (identical(eutil, "efetch")) {
-    new('eutil', url='HTTP_POST', data=as.character(doc))
+    .eutil(url = 'HTTP_POST', data = as.character(doc))
+  } else {
+    .eutil(url = 'HTTP_POST',
+           data = xmlTreeParse(doc, useInternalNodes=TRUE))
   }
-  else {
-    new('eutil',
-        url='HTTP_POST',
-        data=xmlTreeParse(doc, useInternalNodes=TRUE))
-  }
-
 }
 
+
 # Parse a DocSum recursively and return it as a named list
-.parseDocSum <- function (ds)
-{
+.parseDocSum <- function (ds) {
   if (xmlName(ds) == "DocSum") {
     .docsum <- function (ds) {
       items <- 
@@ -119,8 +111,7 @@ NULL
       return(value)
     }
     return(.docsum(ds))
-  }
-  else if (xmlName(ds) == "DocumentSummary") {
+  } else if (xmlName(ds) == "DocumentSummary") {
     .docsum <- function (ds) {
       items <- 
         xmlChildren(ds, addNames=TRUE)
@@ -138,9 +129,9 @@ NULL
   }
 }
 
+
 # Parse IdCheckList returned from cmd=ncheck
-.parseIdCheckList <- function (data=o@data)
-{
+.parseIdCheckList <- function (data=o@data) {
   data <- xmlRoot(data)
   dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
   id <- xpathSApply(data, "//Id", xmlValue)
@@ -151,9 +142,9 @@ NULL
   chklst
 }
 
+
 # Parse a LinkSet and return it as a data.frame
-.parseIdLinkSet <- function (data)
-{
+.parseIdLinkSet <- function (data) {
   data <- xmlRoot(data)
   dbFrom <- xpathSApply(data, "//DbFrom", xmlValue)
   idLinkSet <- getNodeSet(xmlRoot(data), "//IdLinkSet")
@@ -182,9 +173,9 @@ NULL
   ll
 }
 
+
 # Parse a LinkSet and return it as a named list
-.parseLinkSet <- function (data)
-{
+.parseLinkSet <- function (data) {
   linkSetDb <- getNodeSet(xmlRoot(data), "//LinkSetDb")
   
   if (length(linkSetDb) < 1L)
@@ -203,8 +194,8 @@ NULL
   ll
 }
 
-checkErrors <- function (obj)
-{
+
+checkErrors <- function (obj) {
   error <- NULL
   err_msgs <- NULL
   wrn_msgs <- NULL
@@ -235,27 +226,48 @@ checkErrors <- function (obj)
   return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
 }
 
-.getDb <- function (object)
-{
-  if (is(object, "esearch") || is(object, "epost") || is(object, "idlist"))
-    db <- object@database
-  else if (is(object, "elink"))
-    db <- object@databaseTo
-  else
+
+.getDb <- function (id) {
+  if (is(id, "esearch") || is(id, "epost") || is(id, "idlist"))
+    db <- id@database
+  else if (is(id, "elink"))
+    db <- id@databaseTo
+  else if (!is.null(names(id))) {
+    db <- .convertDbXref(dbx_name=names(id))
+  } else {
     db <- NULL
+  }
+    
   db
 }
 
-.getId <- function (object)
-{
+
+.convertDbXref <- function (dbx_name) {
+  if (length(dbx_name) > 1L) {
+    stop("Multiple database names. Provide only one.")
+  }
+  match <- regexpr("[^\\.][[:alpha:]]+$", dbx_name)
+  if (match > 0L) {
+    dbx_name <- regmatches(dbx_name, match)
+  }
+  dbx_name <- switch(dbx_name,
+                     GI = "nuccore",
+                     GeneID = "gene",
+                     taxon = "taxonomy",
+                     CDD = "cdd",
+                     NULL)
+  dbx_name
+}
+
+
+.getId <- function (object) {
   # we need the count basically for efetch.batch
   if (is(object, "epost")) {
     WebEnv <- object@webEnv
     query_key <- object@queryKey
     count <- object@count
     id <- NULL
-  }
-  else if (is(object, "elink")) {
+  } else if (is(object, "elink")) {
     if (is.na(object@queryKey) && is.na(object@webEnv)) {
       WebEnv <- NULL
       query_key <- NULL
@@ -268,8 +280,7 @@ checkErrors <- function (obj)
                  # history server if we use elink with usehistory=TRUE. 
       id <- NULL
     }
-  }
-  else if (is(object, "esearch") || is(object, "idlist")) {
+  } else if (is(object, "esearch") || is(object, "idlist")) {
     if (is.na(object@queryKey) && is.na(object@webEnv)) {
       WebEnv <- NULL
       query_key <- NULL
@@ -281,12 +292,11 @@ checkErrors <- function (obj)
       count <- object@count
       id <- NULL
     }
-  }
-  else if (is.atomic(object)) {
+  } else if (is.atomic(object)) {
     WebEnv <- NULL 
     query_key <- NULL
     count <- length(object)
-    id <- object
+    id <- unname(object)
   }
   else
     stop("UIDs must be provided as a vector or as esearch objects.")
@@ -294,8 +304,7 @@ checkErrors <- function (obj)
   return(list(WebEnv=WebEnv, query_key=query_key, count=count, id=id))
 }
 
-is.empty <- isEmpty <- function (x)
-{
+is.empty <- isEmpty <- function (x) {
   if (length(x) == 0L)
     TRUE
   else if (is.character(x) && !nzchar(x))
@@ -335,8 +344,7 @@ flatten <- function (x,
                      stop_at=NULL, 
                      delim_path=".",
                      do_warn=TRUE,
-                     ... )
-{
+                     ... ) {
   # VALIDATE
   if (!is.list(x)) {
     stop("'src' must be a list.")
@@ -348,8 +356,7 @@ flatten <- function (x,
   }
 
   # INNER FUNCTIONS
-  .startAfterInner <- function(envir, nms, out.1, ...)
-  {
+  .startAfterInner <- function(envir, nms, out.1, ...) {
     idx_diff <- diff(c(envir$start_after, length(envir$counter)))
 
     # UPDATE IF DEGREE OF NESTEDNESS EXCEEDS START CRITERION
@@ -386,8 +393,7 @@ flatten <- function (x,
     return(TRUE)
   }
   
-  .updateOutInner <- function (envir, out.1, ...)
-  {
+  .updateOutInner <- function (envir, out.1, ...) {
 
     # UPDATE OUT
     envir$out <- c(get("out", envir = envir), out.1)
@@ -399,8 +405,7 @@ flatten <- function (x,
     return(TRUE)
   }
   
-  .flattenInner <- function(x, envir, ...)
-  {
+  .flattenInner <- function(x, envir, ...) {
     if ( is(x, "list") && length(x) != 0 ) {
       
       # UPDATE

@@ -8,8 +8,9 @@ setOldClass("list")
 setOldClass("data.frame")
 
 #### Class Unions ####
-setClassUnion("XMLOrChar", c("XMLInternalDocument","character"))
+setClassUnion("XMLOrChar", c("XMLInternalDocument", "character"))
 setClassUnion("ListOrFrame", c("data.frame", "list"))
+setClassUnion("characterOrNull", c("character", "NULL"))
 
 ##' eutil class
 ##'
@@ -40,48 +41,38 @@ setClassUnion("ListOrFrame", c("data.frame", "list"))
 ##' @aliases $,eutil-method
 ##' @aliases names,eutil-method
 .eutil <- 
-  #### eutil-class ####
-setClass("eutil",
-         representation(url = "character",
-                        error = "list",
-                        data = "XMLOrChar"),
-         prototype(url = NA_character_,
-                   error = list(),
-                   data = NA_character_))
+  setClass("eutil",
+           representation(url = "character",
+                          error = "list",
+                          data = "XMLOrChar"),
+           prototype(url = NA_character_,
+                     error = list(),
+                     data = NA_character_))
 
 ##' @export
-setMethod("$",
-          signature(x = "eutil"),
-          function (x, name) {
-            return(slot(x, name))
-          })
-
+setMethod("$", "eutil",
+          function (x, name) x@name)
 
 ##' @export
-setMethod("names",
-          signature(x = "eutil"),
-          function (x) {
-            return(slotNames(x))
-          })
+setMethod("names", "eutil",
+          function (x) slotNames(x))
 
 ##' Container for UIDs and the name of their database
 ##' 
 ##' @keywords internal
 .idlist <-
-  #### idlist-class ####
   setClass("idlist",
-                    representation(database = "character",
-                                   queryKey = "integer",
-                                   webEnv = "character",
-                                   idList = "character"),
-                    prototype(database = NA_character_,
-                              queryKey = NA_integer_,
-                              webEnv = NA_character_,
-                              idList = NA_character_))
+           representation(database = "character",
+                          queryKey = "integer",
+                          webEnv = "character",
+                          idList = "character"),
+           prototype(database = NA_character_,
+                     queryKey = NA_integer_,
+                     webEnv = NA_character_,
+                     idList = NA_character_))
 
 ##' @export
-setMethod("show",
-          signature(object = "idlist"),
+setMethod("show", "idlist",
           function (object) {
             cat(sprintf("List of UIDs from the %s database.\n",
                         sQuote(object@database)))
@@ -90,13 +81,12 @@ setMethod("show",
           })
 
 ##' @export
-setMethod("[",
-          signature(x = "idlist", i = "numeric", j = "missing"),
+setMethod("[", c("idlist", "numeric", "missing"),
           function (x, i) {
-            .idlist(database=x@database,
-                     queryKey=NA_integer_,
-                     webEnv=NA_character_,
-                     idList=x@idList[i])
+            .idlist(database = x@database,
+                    queryKey = NA_integer_,
+                    webEnv = NA_character_,
+                    idList = x@idList[i])
           })
 
 

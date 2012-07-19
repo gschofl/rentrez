@@ -1,5 +1,5 @@
 
-# EInfo ---------------------------------------------------------------
+# einfo-class ------------------------------------------------------------
 
 ##' @include utils.r
 ##' @include blast-classes.r
@@ -21,7 +21,6 @@ NULL
 ##' @aliases show,einfo-method
 ##' @aliases einfo,einfo-method 
 setClass("einfo",
-         #### einfo-class ####
          representation("VIRTUAL"),
          contains = "eutil")
 
@@ -47,7 +46,6 @@ setClass("einfo",
 ##' @exportClass einfoDbList
 ##' @aliases [,einfoDbList-method
 .einfoDbList <-
-  #### einfoDbList-class ####
   setClass("einfoDbList",
            representation(dbList = "character"),
            prototype(dbList = NA_character_),
@@ -80,7 +78,6 @@ setClass("einfo",
 ##' @rdname einfoDb-class
 ##' @exportClass einfoDb
 .einfoDb <- 
-  #### einfoDb-class ####
   setClass("einfoDb",
            representation(dbName = "character",
                           menuName = "character",
@@ -95,17 +92,18 @@ setClass("einfo",
                      links = data.frame()),
            contains = "einfo")
 
+
+# show-method ------------------------------------------------------------
+
+
 ##' @export
-setMethod("show",
-          #### show-method ####
-          signature(object = "einfo"),
+setMethod("show", "einfo",
           function (object) {
             if (is(object, "einfoDbList")) {
               cat("List of all valid Entrez databases\n")
               print(object@dbList)
               return(invisible(NULL))
-            }
-            else if (is(object, "einfoDb")) {
+            } else if (is(object, "einfoDb")) {
               cat(paste("Statistics for Entrez", slot(object, "menuName"), "\n"))
               n <- slotNames(object)
               cat("$", n[1], "\n", sep="")
@@ -127,12 +125,17 @@ setMethod("show",
           })
 
 
+# subsetting-methods -----------------------------------------------------
+
+
 ##' @export
-setMethod("[",
-          signature(x = "einfoDbList", i = "numeric", j = "missing"),
+setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
             x@dbList[i]
           })
+
+
+# einfo ------------------------------------------------------------------
 
 
 ##' Retrieve information about each database in the NCBI Entrez system
@@ -156,15 +159,15 @@ setMethod("[",
 ##' @example inst/examples/einfo.r
 einfo <- function (db=NULL) {
   if (is.null(db)) {
-    o <- .query(eutil='einfo')
-    .einfoDbList(url=o@url, data=o@data,
-                 dbList=xpathSApply(o@data, '//DbList/DbName', xmlValue))
+    o <- .query('einfo')
+    .einfoDbList(url = o@url, data = o@data,
+                 dbList= xpathSApply(o@data, '//DbList/DbName', xmlValue))
   } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
-    o <- .query(eutil='einfo', db=db)
+    o <- .query('einfo', db)
     
     # extract FieldList elements
     fnm <- sapply(getNodeSet(o@data, '//FieldList/Field[1]/child::node( )'), xmlName)
@@ -185,14 +188,14 @@ einfo <- function (db=NULL) {
       link_info <- data.frame()
     }
     
-    .einfoDb(url=o@url, data=o@data,
-             error=checkErrors(o),
-             dbName=xmlValue(xmlRoot(o@data)[[1L]][['DbName']]),
-             menuName=xmlValue(xmlRoot(o@data)[[1L]][['MenuName']]),
-             description=xmlValue(xmlRoot(o@data)[[1L]][['Description']]),
-             records=as.numeric(xmlValue(xmlRoot(o@data)[[1L]][['Count']])),
-             lastUpdate=as.POSIXlt(xmlValue(xmlRoot(o@data)[[1L]][['LastUpdate']])),
-             fields=field_info,
-             links=link_info)
+    .einfoDb(url = o@url, data = o@data,
+             error = checkErrors(o),
+             dbName = xmlValue(xmlRoot(o@data)[[1L]][['DbName']]),
+             menuName = xmlValue(xmlRoot(o@data)[[1L]][['MenuName']]),
+             description = xmlValue(xmlRoot(o@data)[[1L]][['Description']]),
+             records = as.numeric(xmlValue(xmlRoot(o@data)[[1L]][['Count']])),
+             lastUpdate = as.POSIXlt(xmlValue(xmlRoot(o@data)[[1L]][['LastUpdate']])),
+             fields = field_info,
+             links = link_info)
   }
 }
