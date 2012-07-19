@@ -18,10 +18,10 @@ Imports:
     Biostrings,
     ape
 Collate:
+    'blast-classes.r'
+    'utils.r'
     'eutil-classes.r'
     'blast-utils.r'
-    'utils.r'
-    'blast-classes.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'

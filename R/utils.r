@@ -255,6 +255,7 @@ checkErrors <- function (obj) {
                      GeneID = "gene",
                      taxon = "taxonomy",
                      CDD = "cdd",
+                     biosample = "biosample",
                      NULL)
   dbx_name
 }
