@@ -2,8 +2,8 @@
 # einfo-class ------------------------------------------------------------
 
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' einfo class
@@ -23,6 +23,39 @@ NULL
 setClass("einfo",
          representation("VIRTUAL"),
          contains = "eutil")
+
+
+# show-method ------------------------------------------------------------
+
+
+##' @export
+setMethod("show", "einfo",
+          function (object) {
+            if (is(object, "einfoDbList")) {
+              cat("List of all valid Entrez databases\n")
+              print(object@dbList)
+              invisible()
+            } else if (is(object, "einfoDb")) {
+              cat(sprintf("Statistics for Entrez database %s\n", sQuote(object@menuName)))
+              n <- slotNames(object)
+              cat("@", n[1], "\n", sep="")
+              print(object@dbName)
+              cat("@", n[2], "\n", sep="")
+              print(object@menuName)
+              cat("@", n[3], "\n", sep="")
+              print(object@description)
+              cat("@", n[4], "\n", sep="")
+              print(object@records)
+              cat("@", n[5], "\n", sep="")
+              print(object@lastUpdate)
+              cat(paste("@", n[6], paste("$", names(object@fields), sep=""), sep=""), "\n", sep=" ")
+              print(object@fields$Name)
+              cat(paste("@", n[7], paste("$", names(object@links), sep=""), sep=""), "\n", sep=" ")
+              print(object@links$Name)
+              invisible()
+            }
+          })
+
 
 ##' einfoDbList class
 ##' 
@@ -44,7 +77,7 @@ setClass("einfo",
 ##' @name einfoDbList-class
 ##' @rdname einfoDbList-class
 ##' @exportClass einfoDbList
-##' @aliases [,einfoDbList-method
+##' @aliases content,einfoDbList-method
 .einfoDbList <-
   setClass("einfoDbList",
            representation(dbList = "character"),
@@ -93,37 +126,33 @@ setClass("einfo",
            contains = "einfo")
 
 
-# show-method ------------------------------------------------------------
+# content-method ---------------------------------------------------------
 
 
-##' @export
-setMethod("show", "einfo",
-          function (object) {
-            if (is(object, "einfoDbList")) {
-              cat("List of all valid Entrez databases\n")
-              print(object@dbList)
-              return(invisible(NULL))
-            } else if (is(object, "einfoDb")) {
-              cat(paste("Statistics for Entrez", slot(object, "menuName"), "\n"))
-              n <- slotNames(object)
-              cat("$", n[1], "\n", sep="")
-              print(slot(object, "dbName"))
-              cat("$", n[2], "\n", sep="")
-              print(slot(object, "menuName"))
-              cat("$", n[3], "\n", sep="")
-              print(slot(object, "description"))
-              cat("$", n[4], "\n", sep="")
-              print(slot(object, "records"))
-              cat("$", n[5], "\n", sep="")
-              print(slot(object, "lastUpdate"))
-              cat(paste("$", n[6], paste("$", names(object$fields), sep=""), sep=""), "\n", sep=" ")
-              print(slot(object, "fields")$Name)
-              cat(paste("$", n[7], paste("$", names(object$links), sep=""), sep=""), "\n", sep=" ")
-              print(slot(object, "links")$Name)
-              return(invisible(NULL))
+setMethod("content", "einfoDbList",
+          function (x, parse = TRUE) {
+            if (isTRUE(parse)) {
+              x@dbList
+            } else {
+              x@content
             }
           })
 
+setMethod("content", "einfoDb",
+          function (x, parse = TRUE) {
+            if (isTRUE(parse)) {
+              list(dbName = x@dbName,
+                   menuName = x@menuName,
+                   description = x@description,
+                   records = x@records,
+                   lastUpdate = x@lastUpdate,
+                   fields = x@fields,
+                   links = x@links
+              )
+            } else {
+              x@content
+            }
+          })
 
 # subsetting-methods -----------------------------------------------------
 
@@ -160,41 +189,41 @@ setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
 einfo <- function (db=NULL) {
   if (is.null(db)) {
     o <- .query('einfo')
-    .einfoDbList(url = o@url, data = o@data,
-                 dbList= xpathSApply(o@data, '//DbList/DbName', xmlValue))
+    .einfoDbList(url = o@url, content = o@content,
+                 dbList = xpathSApply(o@content, '//DbList/DbName', xmlValue))
   } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
-    o <- .query('einfo', db)
+    o <- .query('einfo', db=db)
     
     # extract FieldList elements
-    fnm <- sapply(getNodeSet(o@data, '//FieldList/Field[1]/child::node( )'), xmlName)
+    fnm <- sapply(getNodeSet(o@content, '//FieldList/Field[1]/child::node( )'), xmlName)
     if (length(fnm) > 0L) {
       field_info <- as.data.frame(stringsAsFactors = FALSE,
-                                  split(sapply(getNodeSet(o@data, '//FieldList/Field/*'),
+                                  split(sapply(getNodeSet(o@content, '//FieldList/Field/*'),
                                                xmlValue), fnm))[, fnm]
     } else  {
       field_info <- data.frame()
     }
     # extract LinkList elements
-    lnm <- sapply(getNodeSet(o@data, '//LinkList/Link[1]/child::node( )'), xmlName)
+    lnm <- sapply(getNodeSet(o@content, '//LinkList/Link[1]/child::node( )'), xmlName)
     if (length(lnm) > 0L) {
       link_info <- as.data.frame(stringsAsFactors = FALSE,
-                                 split(sapply(getNodeSet(o@data, '//LinkList/Link/*'),
+                                 split(sapply(getNodeSet(o@content, '//LinkList/Link/*'),
                                               xmlValue), lnm))[, lnm]
     } else {
       link_info <- data.frame()
     }
     
-    .einfoDb(url = o@url, data = o@data,
+    .einfoDb(url = o@url, content = o@content,
              error = checkErrors(o),
-             dbName = xmlValue(xmlRoot(o@data)[[1L]][['DbName']]),
-             menuName = xmlValue(xmlRoot(o@data)[[1L]][['MenuName']]),
-             description = xmlValue(xmlRoot(o@data)[[1L]][['Description']]),
-             records = as.numeric(xmlValue(xmlRoot(o@data)[[1L]][['Count']])),
-             lastUpdate = as.POSIXlt(xmlValue(xmlRoot(o@data)[[1L]][['LastUpdate']])),
+             dbName = xmlValue(xmlRoot(o@content)[[1L]][['DbName']]),
+             menuName = xmlValue(xmlRoot(o@content)[[1L]][['MenuName']]),
+             description = xmlValue(xmlRoot(o@content)[[1L]][['Description']]),
+             records = as.numeric(xmlValue(xmlRoot(o@content)[[1L]][['Count']])),
+             lastUpdate = as.POSIXlt(xmlValue(xmlRoot(o@content)[[1L]][['LastUpdate']])),
              fields = field_info,
              links = link_info)
   }

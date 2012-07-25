@@ -1,7 +1,9 @@
-### ELink ################################################################
+
+# elink-class ------------------------------------------------------------
+
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' elink class
@@ -34,7 +36,6 @@ NULL
 ##' @aliases [,elink-method
 ##' @keywords internal
 .elink <- 
-  #### elink-class ####
   setClass("elink",
            representation(databaseFrom = "character",
                           databaseTo = "character",
@@ -55,9 +56,7 @@ NULL
            contains = "eutil")
 
 ##' @export
-setMethod("show",
-          #### show-method, elink ####
-          signature(object = "elink"),
+setMethod("show", "elink",
           function (object) {
             if (object@command == "acheck")
               .show.acheck(object)
@@ -102,10 +101,8 @@ setMethod("show",
 }
 
 ##' @export
-setMethod("[",
-          #### [-method, elink ####
-          signature(x = "elink", i = "ANY", j = "missing"),
-          function (x, i) {
+setMethod("[", c("elink", "ANY", "missing"),
+          function (x, i, j) {
             .idlist(database=x@databaseTo,
                     queryKey=NA_integer_,
                     webEnv=NA_character_,
@@ -213,14 +210,14 @@ elink <- function (id,
     # use HTTP POST if dealing with more than 100 user provided UIDs.
     message(gettextf("%s UIDs were provided. ELink request uses HTTP POST.",
                      count))  
-    o <- .httpPOST(eutil="elink",id=id, db=dbTo, dbFrom=dbFrom,
+    o <- .httpPOST(eutil="elink", id=id, db=dbTo, dbFrom=dbFrom,
                    cmd=cmd, query_key=as.character(query_key),
                    WebEnv=WebEnv, linkname=linkname, term=term,
                    holding=holding, datetype=datetype, reldate=reldate,
                    mindate=mindate, maxdate=maxdate)
   }
   else {
-    o <- .query(eutil="elink",id=id, db=dbTo, dbFrom=dbFrom,
+    o <- .query(eutil="elink", id=id, db=dbTo, dbFrom=dbFrom,
                 cmd=cmd, query_key=query_key, WebEnv=WebEnv,
                 linkname=linkname, term=term, holding=holding,
                 datetype=datetype, reldate=reldate, mindate=mindate,
@@ -228,33 +225,33 @@ elink <- function (id,
   }
   
   queryKey <-
-    if (length(qk <- xpathSApply(o@data, "//QueryKey")) > 0L)
+    if (length(qk <- xpathSApply(o@content, "//QueryKey")) > 0L)
       as.integer(xmlValue(qk[[1L]]))
     else
       NA_integer_
   
   webEnv <- 
-    if (length(we <- xpathSApply(o@data, "//WebEnv")) > 0L)
+    if (length(we <- xpathSApply(o@content, "//WebEnv")) > 0L)
       xmlValue(we[[1L]])
     else
       NA_character_
   
   
   if (cmd == "acheck") {
-    idList <- xpathSApply(xmlRoot(o@data), "//Id", xmlValue)
-    linkList <- .parseIdLinkSet(o@data)
+    idList <- xpathSApply(xmlRoot(o@content), "//Id", xmlValue)
+    linkList <- .parseIdLinkSet(o@content)
   }
   else if (cmd == "ncheck") {
     idList <- NA_character_
-    linkList <- .parseIdCheckList(o@data)
+    linkList <- .parseIdCheckList(o@content)
   }
   else {
-    idList <- sapply(getNodeSet(o@data, "//IdList/Id"), xmlValue)
-    linkList <- .parseLinkSet(o@data)
+    idList <- sapply(getNodeSet(o@content, "//IdList/Id"), xmlValue)
+    linkList <- .parseLinkSet(o@content)
   }
      
-  .elink(url=o@url, data=o@data, error=checkErrors(o),
-         databaseFrom=xmlValue(getNodeSet(o@data, "//DbFrom")[[1L]]),
+  .elink(url=o@url, content=o@content, error=checkErrors(o),
+         databaseFrom=xmlValue(getNodeSet(o@content, "//DbFrom")[[1L]]),
          databaseTo=if (is.null(dbTo)) "any" else dbTo, command=cmd,
          queryKey=queryKey, webEnv=webEnv,
          idList=idList, linkList=linkList)

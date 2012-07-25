@@ -24,7 +24,7 @@
   \item{url}{A character vector containing the URL
   submitted to Entrez.} \item{error}{Any error messages
   parsed from the output of the call submitted to Entrez.}
-  \item{data}{An
+  \item{content}{An
   \code{\link[XML]{XMLInternalDocument-class}} or character
   vector holding the unparsed output from the call
   submitted to Entrez.} }

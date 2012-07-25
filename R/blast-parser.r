@@ -1,8 +1,10 @@
-### Blast parser ###########################################################
+
+# blast-parser -----------------------------------------------------------
+
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-utils.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' Parse xml blast output

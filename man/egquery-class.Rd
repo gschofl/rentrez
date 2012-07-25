@@ -3,6 +3,9 @@
 \alias{egquery-class}
 \alias{show,egquery-method}
 \title{egquery class}
+\usage{
+  .equery(...)
+}
 \description{
   egquery is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a

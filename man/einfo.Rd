@@ -36,6 +36,7 @@ protein <- einfo(db="protein")
 protein
 
 # search fields for protein
-cbind(protein$fields$Name, strtrim(protein$fields$Description, 60))
+p <- content(protein)
+cbind(p$fields$Name, strtrim(p$fields$Description, 60))
 }
 

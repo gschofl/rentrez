@@ -1,8 +1,7 @@
-### NCBI Blast #############################################################
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-utils.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 SysCall <- function (exec,

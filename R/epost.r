@@ -1,7 +1,7 @@
 ### Epost ################################################################
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' epost class
@@ -29,20 +29,20 @@ NULL
 ##' @exportClass epost
 ##' @aliases epost,epost-method
 ##' @aliases show,epost-method
-setClass("epost",
-         representation(database = "character",
-                        count = "numeric",
-                        queryKey = "numeric",
-                        webEnv = "character"),
-         prototype(database = NA_character_,
-                   counr = NA_character_,
-                   queryKey = NA_integer_,
-                   webEnv = NA_character_),
-         contains = "eutil")
+.epost <- 
+  setClass("epost",
+           representation(database = "character",
+                          count = "numeric",
+                          queryKey = "numeric",
+                          webEnv = "character"),
+           prototype(database = NA_character_,
+                     counr = NA_character_,
+                     queryKey = NA_integer_,
+                     webEnv = NA_character_),
+           contains = "eutil")
 
 ##' @export
-setMethod("show",
-          signature(object = "epost"),
+setMethod("show", "epost",
           function (object) {
             cat(sprintf("EPost upload of %s UIDs for database %s.\nQuery Key: %s\nWeb Environment: %s\n",
                         object@count, sQuote(object@database),
@@ -102,8 +102,8 @@ epost <- function (id,
   else
     o <- .query("epost", id=.collapse(env_list$id), db=db, WebEnv=WebEnv)
   
-  new("epost", url=o@url, data=o@data, database=db, count=count,
-      queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
-      webEnv=as.character(xmlValue(xmlRoot(o@data)[["WebEnv"]])))
+  .epost(url=o@url, content=o@content, database=db, count=count,
+      queryKey=as.numeric(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
+      webEnv=as.character(xmlValue(xmlRoot(o@content)[["WebEnv"]])))
   
 }

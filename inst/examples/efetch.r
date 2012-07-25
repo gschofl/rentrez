@@ -2,12 +2,31 @@
 
 # Download nucleotide GIs 84785889 and 84785885 in FASTA format
 gi_list <- c("84785889","84785885")
-fasta <- efetch(id=gi_list, db="nucleotide", rettype="fasta")
+f <- efetch(gi_list, db="nucleotide", rettype="fasta")
+
+# Retrieve into a DNAStringSet
+fasta <- content(f)
 fasta
 
-# Download data from a previous search
+# Download nucleotide GIs 84785889 and 84785885 in GenBank format
+gi_list <- c("84785889","84785885")
+f <- efetch(gi_list, "nucleotide")
 
+# Write to file
+write(f, file="~/data.gbk")
+
+# or parse as gbRecords
+gb <- content(f)
+gb
+
+
+# Download data from pubmed
 query <- "Chlamydia psittaci and genome and 2011[pdat]"
-(cpsit <- esearch(term=query, db="pubmed", usehistory=TRUE))
-abstr <- efetch(cpsit, rettype="abstract")
-abstr
+(cpsit <- esearch(query, "pubmed", usehistory=TRUE))
+publ <- efetch(cpsit)
+
+# retrieve the xml data
+publ_xml <- content(publ, parse = FALSE)
+
+# retrieve the parsed date
+publ_bib <- content(publ)

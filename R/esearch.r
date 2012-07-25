@@ -1,7 +1,9 @@
-### Esearch ################################################################
+
+# esearch-class ----------------------------------------------------------
+
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' esearch class
@@ -38,28 +40,31 @@ NULL
 ##' @aliases length,esearch-method
 ##' @aliases esearch,esearch-method
 ##' @keywords internal
-.esearch <- setClass("esearch",
-                     representation(database = "character",
-                                    count = "numeric",
-                                    retMax = "numeric",
-                                    retStart = "numeric",
-                                    queryKey = "numeric",
-                                    webEnv = "character",
-                                    queryTranslation = "character",
-                                    idList = "character"),
-                     prototype(database = NA_character_, count = NA_integer_,
-                               retMax = NA_integer_, retStart = NA_integer_,
-                               queryKey = NA_integer_, webEnv = NA_character_,
-                               queryTranslation = NA_character_, idList = NA_character_),
-                     contains = "eutil")
+.esearch <- 
+  setClass("esearch",
+           representation(database = "character",
+                          count = "numeric",
+                          retMax = "numeric",
+                          retStart = "numeric",
+                          queryKey = "numeric",
+                          webEnv = "character",
+                          queryTranslation = "character",
+                          idList = "character"),
+           prototype(database = NA_character_, count = NA_integer_,
+                     retMax = NA_integer_, retStart = NA_integer_,
+                     queryKey = NA_integer_, webEnv = NA_character_,
+                     queryTranslation = NA_character_, idList = NA_character_),
+           contains = "eutil")
 
-    
+
+# show-method ------------------------------------------------------------
+
+
 ##' @export
-setMethod("show",
-          signature(object = "esearch"),
+setMethod("show", "esearch",
           function (object) {
-            if (is(object@data, "XMLInternalDocument") &&
-                !isEmpty(getNodeSet(xmlRoot(object@data), "//IdList"))) {
+            if (is(object@content, "XMLInternalDocument") &&
+                !isEmpty(getNodeSet(xmlRoot(object@content), "//IdList"))) {
               ## has IdList, hence rettype = "uilist"
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\nNumber of hits: %s\n",
                           sQuote(object@database), sQuote(object@queryTranslation),
@@ -69,14 +74,12 @@ setMethod("show",
                             object@queryKey, object@webEnv))
               if (!isEmpty(object@idList) && !is.na(object@idList))
                 print(object@idList)
-            }
-            else if (is(object@data, "XMLInternalDocument") &&
-                     isEmpty(getNodeSet(xmlRoot(object@data), "//IdList"))) {
+            } else if (is(object@content, "XMLInternalDocument") &&
+                     isEmpty(getNodeSet(xmlRoot(object@content), "//IdList"))) {
               ## show if esearch was performed with rettype = "count"
               cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
                           sQuote(object@database), object@count))
-            }
-            else if (is.na(object@data)) {
+            } else if (is.na(object@content)) {
               ## show after subsetting an esearch object
               cat(sprintf("ESearch query using the %s database.\n",
                           sQuote(object@database)))
@@ -86,26 +89,48 @@ setMethod("show",
             return(invisible(NULL))
           })
 
-    
+
+# content-method ---------------------------------------------------------
+
+
+setMethod("content", "esearch",
+          function (x, parse = TRUE) {
+            if (isTRUE(parse)) {
+              .idlist(database = as.character(x@database),
+                      queryKey = as.integer(x@queryKey),
+                      webEnv = as.character(x@webEnv),
+                      count = as.numeric(x@count),
+                      idList = as.character(x@idList))
+            } else {
+              x@content
+            }
+          })
+
+
+# subsetting-method ------------------------------------------------------
+
+
 ##' @export
 setMethod("[",
           signature(x = "esearch", i = "numeric", j = "missing"),
           function (x, i) {
-            .idlist(database=x@database,
-                    queryKey=NA_integer_,
-                    webEnv=NA_character_,
-                    idList=x@idList[i])
+            uid <- x@idList[i]
+            .idlist(database = as.character(x@database),
+                    count = length(uid),
+                    idList = as.character(uid))
           })
   
 
+# length-method ----------------------------------------------------------
+
+
 ##' @export
-setMethod("length",
-          signature(x = "esearch"),
+setMethod("length", "esearch",
           function (x) {
             return(length(x@idList))
           })
 
-    
+
 ##' Search and retrieve primary UIDs matching a text query
 ##'
 ##' The ESearch utility searches and retrieves primary UIDs for use with
@@ -192,14 +217,14 @@ esearch <- function (term,
                 retmax=retmax, rettype=rettype, field=field, datetype=datetype,
                 reldate=reldate, mindate=mindate, maxdate=maxdate)
     
-  .esearch(url=o@url, data=o@data, error=checkErrors(o), database=db,
-    count=as.numeric(xmlValue(xmlRoot(o@data)[["Count"]])),
-    retMax=as.numeric(xmlValue(xmlRoot(o@data)[["RetMax"]])),
-    retStart=as.numeric(xmlValue(xmlRoot(o@data)[["RetStart"]])),
-    queryKey=as.numeric(xmlValue(xmlRoot(o@data)[["QueryKey"]])),
-    webEnv=xmlValue(xmlRoot(o@data)[["WebEnv"]]),
-    queryTranslation=xmlValue(xmlRoot(o@data)[["QueryTranslation"]]),
-    idList=if (usehistory) NA_character_ else as.character(sapply(getNodeSet(o@data, '//Id'), xmlValue)))
+  .esearch(url=o@url, content=o@content, error=checkErrors(o), database=db,
+    count=as.numeric(xmlValue(xmlRoot(o@content)[["Count"]])),
+    retMax=as.numeric(xmlValue(xmlRoot(o@content)[["RetMax"]])),
+    retStart=as.numeric(xmlValue(xmlRoot(o@content)[["RetStart"]])),
+    queryKey=as.numeric(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
+    webEnv=xmlValue(xmlRoot(o@content)[["WebEnv"]]),
+    queryTranslation=xmlValue(xmlRoot(o@content)[["QueryTranslation"]]),
+    idList=if (usehistory) NA_character_ else as.character(sapply(getNodeSet(o@content, '//Id'), xmlValue)))
 }
 
 

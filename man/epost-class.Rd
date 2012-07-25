@@ -3,6 +3,9 @@
 \alias{epost-class}
 \alias{show,epost-method}
 \title{epost class}
+\usage{
+  .epost(...)
+}
 \description{
   epost is an S4 class that extends the
   \code{\link{eutil-class}}. This class provides a

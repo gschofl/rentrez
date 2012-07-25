@@ -1,7 +1,9 @@
-### Esummary ###############################################################
+
+# esummary-class ---------------------------------------------------------
+
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-classes.r
-##' @include eutil-classes.r
 NULL
 
 ##' esummary class
@@ -27,11 +29,10 @@ NULL
 ##' @rdname esummary-class
 ##' @exportClass esummary
 ##' @aliases show,esummary-method
-##' @aliases $,esummary-method
-##' @aliases [,esummary-method
+##' @aliases content,esummary-method
 ##' @aliases esummary,esummary-method
 ##' @keywords internal
-`.esummary` <- 
+.esummary <- 
   setClass("esummary",
            representation(database = "character",
                           docsum = "ListOrFrame"),
@@ -39,34 +40,34 @@ NULL
                      docsum = list()),
            contains = "eutil")
 
+
+# show-method ------------------------------------------------------------
+
+
 ##' @export
-setMethod("show",
-          signature(object = "esummary"),
+setMethod("show", "esummary",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
                         sQuote(object@database)))
             if (isEmpty(object@docsum))
-              print(object@data)
+              print(object@content)
             else 
               print(object@docsum)
             return(invisible(NULL))
           })
 
-##' @export
-setMethod("$",
-          signature(x = "esummary"),
-          function (x, name) {
-            if (!is.null(x@docsum) && !identical(name, "docsum"))
-              return(slot(x, "docsum")[[name, exact=FALSE]])
-            else
-              return(slot(x, name))
-          })
+
+# content-method ---------------------------------------------------------
+
 
 ##' @export
-setMethod("[",
-          signature(x = "esummary" , i = "ANY", j = "ANY"),
-          function (x, i, j) {
-            return(x@docsum[i,j])
+setMethod("content", "esummary",
+          function (x, parse = TRUE) {
+            if (isTRUE(parse)) {
+              x@docsum
+            } else {
+              x@content
+            }
           })
 
 ##' Retrieve document summaries (DocSums)
@@ -166,13 +167,13 @@ esummary <- function (id,
   }
 
   if (identical(version, "default")) {
-    nodes <- getNodeSet(o@data, '//DocSum')
+    nodes <- getNodeSet(o@content, '//DocSum')
     uids <- vapply(nodes, function (x) {
       xmlValue(xmlChildren(x)[["Id"]])
     }, character(1))
   }
   else if (identical(version, "2.0")) {
-    nodes <- getNodeSet(o@data, '//DocumentSummary')
+    nodes <- getNodeSet(o@content, '//DocumentSummary')
     uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
   }
   
@@ -193,7 +194,7 @@ esummary <- function (id,
     else
       lapply(nodes, .parseDocSum)
 
-  .esummary(database=db, error=checkErrors(o), url=o@url, data=o@data,
+  .esummary(database=db, error=checkErrors(o), url=o@url, content=o@content,
             docsum=docsum)
 }
 

@@ -1,5 +1,5 @@
 Package: rentrez
-Version: 0.1-1
+Version: 0.1-2
 Date: 2012-01-20
 Title: An R interface to the NCBI EUtilities
 Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),
@@ -18,10 +18,10 @@ Imports:
     Biostrings,
     ape
 Collate:
+    'blast-utils.r'
     'blast-classes.r'
     'utils.r'
-    'eutil-classes.r'
-    'blast-utils.r'
+    'eutil.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'

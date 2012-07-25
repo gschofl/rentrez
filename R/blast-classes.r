@@ -2,8 +2,8 @@
 # Blast-Classes -------------------------------------------------------
 
 ##' @include utils.r
+##' @include eutil.r
 ##' @include blast-utils.r
-##' @include eutil-classes.r
 NULL
 
 ##' blastReport class

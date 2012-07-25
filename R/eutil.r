@@ -1,4 +1,6 @@
-### Eutil Classes ##########################################################
+
+# eutil-class ------------------------------------------------------------
+
 ##' @include utils.r
 ##' @include blast-classes.r
 NULL
@@ -29,7 +31,7 @@ setClassUnion("characterOrNull", c("character", "NULL"))
 ##'   \item{url}{A character vector containing the URL submitted to Entrez.}
 ##'   \item{error}{Any error messages parsed from the output of the
 ##'   call submitted to Entrez.}
-##'   \item{data}{An \code{\link[XML]{XMLInternalDocument-class}} or
+##'   \item{content}{An \code{\link[XML]{XMLInternalDocument-class}} or
 ##'   character vector holding the unparsed output from the call submitted
 ##'   to Entrez.}
 ##' }
@@ -44,18 +46,57 @@ setClassUnion("characterOrNull", c("character", "NULL"))
   setClass("eutil",
            representation(url = "character",
                           error = "list",
-                          data = "XMLOrChar"),
+                          content = "XMLOrChar"),
            prototype(url = NA_character_,
                      error = list(),
-                     data = NA_character_))
+                     content = NA_character_))
+
+
+# generics and methods ---------------------------------------------------
+
+
+##' Extract content from an eutil request.
+##' 
+##' Retrieves the contents of an eutil request either as is, or attempts
+##' to return an R object.
+##' 
+##' @usage content(x, parse = TRUE, format = c('Biostrings', 'DNAbin', 'String'), ...)
+##' 
+##' @param x an \code{\link{eutil-class}} object.
+##' @param parse Parse into an R object where possible.
+##' @param format Output format of sequence data.
+##' @param ... Further arguments.
+##' @export
+##' @docType methods
+setGeneric("content", function(x, ...) standardGeneric("content"))
+
+
+##' Extract errors from an eutil request.
+##' 
+##' @usage error(x)
+##' 
+##' @param x an \code{\link{eutil-class}} object.
+##' @export
+##' @docType methods
+setGeneric("error", function(x, ...) standardGeneric("error"))
+
 
 ##' @export
-setMethod("$", "eutil",
-          function (x, name) x@name)
+setMethod("error", "eutil", function (x) x@error)
+
+
+##' Extract url from an eutil request.
+##' 
+##' @usage url(x)
+##' 
+##' @param x an \code{\link{eutil-class}} object.
+##' @export
+##' @docType methods
+setGeneric("url", function(x, ...) standardGeneric("url"))
 
 ##' @export
-setMethod("names", "eutil",
-          function (x) slotNames(x))
+setMethod("url", "eutil", function (x) x@url)
+
 
 ##' Container for UIDs and the name of their database
 ##' 
@@ -65,20 +106,36 @@ setMethod("names", "eutil",
            representation(database = "character",
                           queryKey = "integer",
                           webEnv = "character",
+                          count = "numeric",
                           idList = "character"),
            prototype(database = NA_character_,
                      queryKey = NA_integer_,
                      webEnv = NA_character_,
+                     count =  NA_integer_,
                      idList = NA_character_))
+
+
+# show-method ------------------------------------------------------------
+
 
 ##' @export
 setMethod("show", "idlist",
           function (object) {
             cat(sprintf("List of UIDs from the %s database.\n",
                         sQuote(object@database)))
-            print(object@idList)
-            return(invisible(NULL))
+            if (is.na(object@queryKey) && !is.na(object@idList)) {
+              print(object@idList)
+            } else if (!is.na(object@queryKey) && is.na(object@idList)) {
+              cat(sprintf("Number of hits: %s\nQuery Key: %s\nWebEnv: %s\n",
+                          object@count, object@queryKey, object@webEnv))
+            }
+
+            invisible()
           })
+
+
+# subsetting-method ------------------------------------------------------
+
 
 ##' @export
 setMethod("[", c("idlist", "numeric", "missing"),
