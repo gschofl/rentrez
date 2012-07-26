@@ -111,13 +111,16 @@ setMethod("content", "esearch",
 
 
 ##' @export
-setMethod("[",
-          signature(x = "esearch", i = "numeric", j = "missing"),
-          function (x, i) {
-            uid <- x@idList[i]
-            .idlist(database = as.character(x@database),
-                    count = length(uid),
-                    idList = as.character(uid))
+setMethod("[", c("esearch", "numeric", "missing"),
+          function (x, i, j) {
+            if (is.na(x@idList) && !is.na(x@queryKey)) {
+              message("Subsetting won't work if USEHISTORY = TRUE")
+            } else {
+              uid <- x@idList[i]
+              .idlist(database = as.character(x@database),
+                      count = length(uid),
+                      idList = as.character(uid))
+            }
           })
   
 

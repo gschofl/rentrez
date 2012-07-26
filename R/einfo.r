@@ -189,7 +189,7 @@ setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
 einfo <- function (db=NULL) {
   if (is.null(db)) {
     o <- .query('einfo')
-    .einfoDbList(url = o@url, content = o@content,
+    .einfoDbList(url = o@url, content = o@content, error = checkErrors(o),
                  dbList = xpathSApply(o@content, '//DbList/DbName', xmlValue))
   } else {
     if (length(db) > 1L) {
@@ -217,8 +217,7 @@ einfo <- function (db=NULL) {
       link_info <- data.frame()
     }
     
-    .einfoDb(url = o@url, content = o@content,
-             error = checkErrors(o),
+    .einfoDb(url = o@url, content = o@content, error = checkErrors(o),
              dbName = xmlValue(xmlRoot(o@content)[[1L]][['DbName']]),
              menuName = xmlValue(xmlRoot(o@content)[[1L]][['MenuName']]),
              description = xmlValue(xmlRoot(o@content)[[1L]][['Description']]),

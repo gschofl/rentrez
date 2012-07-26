@@ -82,20 +82,27 @@ setGeneric("error", function(x, ...) standardGeneric("error"))
 
 
 ##' @export
-setMethod("error", "eutil", function (x) x@error)
+setMethod("error", "eutil", function (x) {
+  e <- x@error
+  if (all(idx <- vapply(e, is.null, logical(1)))) {
+    message("No errors")
+  } else {
+    print(e[!idx])
+  }
+})
 
 
 ##' Extract url from an eutil request.
 ##' 
-##' @usage url(x)
+##' @usage query(x)
 ##' 
 ##' @param x an \code{\link{eutil-class}} object.
 ##' @export
 ##' @docType methods
-setGeneric("url", function(x, ...) standardGeneric("url"))
+setGeneric("query", function(x, ...) standardGeneric("query"))
 
 ##' @export
-setMethod("url", "eutil", function (x) x@url)
+setMethod("query", "eutil", function (x) x@url)
 
 
 ##' Container for UIDs and the name of their database
