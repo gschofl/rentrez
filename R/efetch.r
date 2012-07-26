@@ -100,13 +100,13 @@ setMethod("c", "efetch",
 
 ##' @export
 setMethod("content", "efetch",
-          function(x, parse = TRUE, format = c("Biostrings", "DNAbin", "String"), ...) {
+          function(x, parse = TRUE, ...) {
             if (isTRUE(parse)) {
               if (x@database == "pubmed") {
                 return( .parsePubmed(x) )
               }
               if (x@database %in% c("protein","nucleotide","nuccore")) {
-                return( .parseSequence(x, format = format) )
+                return( .parseSequence(x, ...) )
               }
               return( x@content )
 
@@ -151,7 +151,7 @@ abstract <- function (ref, ...) {
 
 #' @S3method abstract bibentry
 abstract.bibentry <- function (ref) {
-  ref$abstract
+  return(ref$abstract)
 }
 
 
@@ -382,59 +382,92 @@ efetch.batch <- function (id,
   res
 }
 
-#' Extract fasta from efetch
+#' Extract content from efetch
 #' 
 #' @importFrom Biostrings read.DNAStringSet
 #' @importFrom Biostrings read.AAStringSet
 #' @importFrom ape read.dna
 #' @importFrom phangorn read.aa
-.parseSequence <- function (x, format = c("Biostrings", "DNAbin", "String")) {
+#' @keywords internal
+.parseSequence <- function (x, ...) {
   
-  ## if fasta return a DNAStringSet or AAStringSet
+  ## if rettype = fasta
   if (grepl("^fasta", x@type) && x@mode == "text") {
-    
-    format <- match.arg(format)
-    
-    if (!grepl("^>", x@content)) {
-      warning("Does not appear to contain a valid fasta file")
-      return( x@content )
-    }
-    
-    if (x@database %in% c("nucleotide","nuccore")) {
-      seqtype <- "DNA"
-    } else if (x@database == "protein") {
-      seqtype <- "AA"
-    }
-    
-    if (format == "Biostrings") {
-      f_tmp <- tempfile(fileext=".fa")
-      write(x, file=f_tmp)
-      fasta <- switch(seqtype,
-                      DNA=read.DNAStringSet(f_tmp, use.names=TRUE),
-                      AA=read.AAStringSet(f_tmp, use.names=TRUE)) 
-      unlink(f_tmp)
-      return( fasta )
-    }
-    
-    if (format == "DNAbin") {
-      fasta <- switch(seqtype,
-                      DNA=ape::read.dna(file=textConnection(x@content), format="fasta"),
-                      AA=phangorn::read.aa(file=textConnection(x@content), format="fasta"))
-      return( fasta )  
-    }
-    
-    if (format == "String") {
-      fasta_split <- strsplit(x@content, "\n")[[1]]
-      desc_idx <- which(grepl(pattern="^>", fasta_split))
-      desc <- sub(">", "", fasta_split[desc_idx])
-      fasta <- paste0(fasta_split[-desc_idx], collapse="")
-      names(fasta) <- desc
-      return( fasta )
-    }
+    return( .parseFasta(x = x, ...) )
   }
   
-  ## if gp or gb return gbRecord
+  ## if rettype = gp or gb
   if (grepl("^gb|^gp", x@type) && x@mode == "text") {
+    return( .parseGb(x = x, ...) )
+  }
+    
+  ## if retmode = xml return parsed xml tree
+  if (x@mode == "xml") {
+    return( xmlParse(x@content) )
+  }
+  
+  ## otherwise return the raw content
+  return( x@content )
+}
+
+#' @keywords internal
+.parseFasta <- function (x, format = c("Biostrings", "DNAbin", "String")) {
+  
+  format <- match.arg(format)
+  
+  if (!grepl("^>", x@content)) {
+    warning("Does not appear to contain a valid fasta file")
+    return( x@content )
+  }
+  
+  if (x@database %in% c("nucleotide","nuccore")) {
+    seqtype <- "DNA"
+  } else if (x@database == "protein") {
+    seqtype <- "AA"
+  }
+  
+  if (format == "Biostrings") {
+    f_tmp <- tempfile(fileext=".fa")
+    write(x, file=f_tmp)
+    fasta <- switch(seqtype,
+                    DNA=tryCatch(read.DNAStringSet(f_tmp, use.names=TRUE),
+                                 error = function (e) {
+                                   read.AAStringSet(f_tmp, use.names=TRUE)
+                                 }),              
+                    AA=read.AAStringSet(f_tmp, use.names=TRUE))
+    unlink(f_tmp)
+    return( fasta )
+  }
+  
+  if (format == "DNAbin") {
+    fasta <- switch(seqtype,
+                    DNA=ape::read.dna(file=textConnection(x@content), format="fasta"),
+                    AA=phangorn::read.aa(file=textConnection(x@content), format="fasta"))
+    return( fasta )  
+  }
+  
+  if (format == "String") {
+    fasta_split <- strsplit(x@content, "\n\n")[[1]]
+    fasta <- lapply(fasta_split, function (fasta) {
+      x <- strsplit(fasta, "\n")[[1]]
+      desc_idx <- which(grepl(pattern="^>", x))
+      desc <- sub(">", "", x[desc_idx])
+      x <- paste0(x[-desc_idx], collapse="")
+      attr(x, "desc") <- desc
+      x
+    })
+    return( fasta )
+  }
+}
+
+
+#' @keywords internal
+.parseGb <- function (x, format = c("gbRecord")) {
+  
+  format <- match.arg(format)
+  
+  if (format == "gbRecord") {
+    
     dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
     
     if (length(dbs) == 1) {
@@ -448,16 +481,10 @@ efetch.batch <- function (id,
       return( records )
     }
   }
-  
-  ## if xml return parsed xml tree
-  if (x@mode == "xml") {
-    return( xmlParse(x@content) )
-  }
-  
-  ## otherwise return the raw content
-  return( x@content )
 }
 
+
+#' @keywords internal
 .parsePubmed <- function (x) {
   
   if (x@mode != 'xml') {
