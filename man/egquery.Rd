@@ -9,7 +9,7 @@ text query}
   \item{term}{A valid Entrez text query.}
 }
 \value{
-  An \code{\link{egquery-class}} object.
+  An \code{\linkS4class{egquery}} object.
 }
 \description{
   \code{egquery} provides Entrez database counts for a

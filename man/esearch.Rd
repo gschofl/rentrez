@@ -11,7 +11,7 @@
 \arguments{
   \item{term}{A valid Entrez text query.}
 
-  \item{db}{Database to search (default: nucleotide).}
+  \item{db}{Database to search (default: nuccore).}
 
   \item{usehistory}{If \code{TRUE} search results are
   stored directly in the user's Web environment so that
@@ -58,13 +58,13 @@
   search items are returned.}
 
   \item{mindate}{Optional. Minimum date of search range.
-  Format YYYY/MM/DD.}
+  Format YYYY/MM/DD, YYYY/MM, or YYYY.}
 
   \item{maxdate}{Optional. Maximum date of search range.
-  Format YYYY/MM/DD.}
+  Format YYYY/MM/DD, YYYY/MM, or YYYY.}
 }
 \value{
-  An \code{\link{esearch-class}} object.
+  An \code{\linkS4class{esearch}} object.
 }
 \description{
   The ESearch utility searches and retrieves primary UIDs
@@ -73,8 +73,8 @@
   \code{esearch} can also post its output set of UIDs to
   the Entrez history server if the \code{usehistory}
   parameter is set to \code{TRUE}. The resulting
-  \code{\link{esearch-class}} object from either can then
-  be passed on in place of a UID list
+  \code{\linkS4class{esearch}} object from either can then
+  be passed on instead of a UID list
   \code{\link{esummary}}, \code{\link{efetch}}, or
   \code{\link{elink}}.
 }

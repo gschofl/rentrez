@@ -1,8 +1,20 @@
 ## Find related data through ELink #########################################
 
-# find a set of pubmed IDs linked to nucleotide GIs
-gi_list <- c("84785887","84785899","84785907","84785905","84785889")
-links <- elink(id=gi_list, dbFrom="nucleotide", dbTo="pubmed")
-links
+# Example: find a set of pubmed IDs linked to nucleotide GIs
+gis <- c("84785887","84785899","84785907","84785905","84785889")
+rv <- elink(gis, "nucleotide", "pubmed")
+rv
 
-esummary(links)
+content(efetch(rv))
+
+# Example: Check whether two nucleotide sequences have any LinkOut providers.
+gis <- c("84785887","84785899")
+rv <- elink(gis, "nucleotide", cmd="lcheck")
+rv
+
+# Example: Find publication linked to a protein sequence
+a <- esearch("Chlamydia and cpaf", "protein")
+a
+l <- elink(a[1], dbTo="pubmed")
+l
+content(efetch(l))

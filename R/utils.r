@@ -1,11 +1,13 @@
-### Utility functions ######################################################
-##' @include blast-classes.r
 ##' @include eutil.r
 ##' @importClassesFrom Biostrings XString
 ##' @importClassesFrom Biostrings XStringSet
 ##' @import XML
 ##' @import RCurl
 NULL
+
+
+# utility functions ------------------------------------------------------
+
 
 #' Construct url, fetch response, construct eutil object
 #' 
@@ -91,122 +93,20 @@ NULL
 }
 
 
-# Parse a DocSum recursively and return it as a named list
-.parseDocSum <- function (ds) {
-  if (xmlName(ds) == "DocSum") {
-    .docsum <- function (ds) {
-      items <- 
-        xmlChildren(ds, addNames=FALSE)[names(xmlChildren(ds)) == "Item"]      
-      value <- 
-        lapply(items, function (item) {
-          if (all(xmlSApply(item, xmlSize) == 0L))
-            xmlValue(item)
-          else
-            .docsum(item)
-        })
-      names(value) <- 
-        lapply(items, function (item) xmlGetAttr(item, "Name"))
-      return(value)
-    }
-    return(.docsum(ds))
-  } else if (xmlName(ds) == "DocumentSummary") {
-    .docsum <- function (ds) {
-      items <- 
-        xmlChildren(ds, addNames=TRUE)
-      value <- 
-        lapply(items, function (item) {
-          if (all(xmlSApply(item, xmlSize) == 0L))
-            xmlValue(item)
-          else
-            .docsum(item)
-        })
-      names(value) <- lapply(items, xmlName)
-      return(value)
-    }
-    return(.docsum(ds))
-  }
-}
-
-
-# Parse IdCheckList returned from cmd=ncheck
-.parseIdCheckList <- function (content = o@content) {
-  content <- xmlRoot(content)
-  dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
-  id <- xpathSApply(content, "//Id", xmlValue)
-  has_neighbor <- xpathSApply(content, "//Id", xmlGetAttr, "HasNeighbor")
-  
-  chklst <- data.frame(stringsAsFactors=FALSE, Id=id,
-                       HasNeighbor=ifelse(has_neighbor == "Y", TRUE, FALSE))
-  chklst
-}
-
-
-# Parse a LinkSet and return it as a data.frame
-.parseIdLinkSet <- function (content) {
-  content <- xmlRoot(content)
-  dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
-  idLinkSet <- getNodeSet(xmlRoot(content), "//IdLinkSet")
-  
-  if (length(idLinkSet) < 1L)
-    return(list())
-  
-  ll <- lapply(idLinkSet, function (ls) {
-    ls <- xmlDoc(ls)
-    Id <- xpathSApply(ls, "(//Id)[1]", xmlValue)
-    link_info <- 
-      lapply(getNodeSet(ls, "//LinkInfo"), function (li) {
-        li <- xmlDoc(li)
-        li <- list(DbTo=xpathSApply(li, "//DbTo", xmlValue), 
-                   LinkName=xpathSApply(li, "//LinkName", xmlValue),
-                   MenuTag=xpathSApply(li, "//MenuTag", xmlValue),
-                   HtmlTag=xpathSApply(li, "//HtmlTag", xmlValue),
-                   Priority=xpathSApply(li, "//Priority", xmlValue))
-        li[vapply(li, length, integer(1)) == 0L] <- NA_character_
-        li
-      })
-    data.frame(stringsAsFactors=FALSE, Id=Id, 
-               do.call(rbind, link_info))
-  })
-  
-  ll
-}
-
-
-# Parse a LinkSet and return it as a named list
-.parseLinkSet <- function (content) {
-  linkSetDb <- getNodeSet(xmlRoot(content), "//LinkSetDb")
-  
-  if (length(linkSetDb) < 1L)
-    return(list())
-  
-  ll <- lapply(linkSetDb, function(lsd) {
-    lsd <- xmlDoc(lsd)
-    id <- xpathSApply(lsd, "//Id", xmlValue)
-    score <- xpathSApply(lsd, "//Score", xmlValue)
-    ans <- list(id=id, score=score)
-    ans[vapply(ans, length, integer(1)) == 0L]  <- NULL
-    ans
-  })
-  
-  names(ll) <- xpathSApply(xmlRoot(data), "//LinkName", xmlValue)
-  ll
-}
-
-
-checkErrors <- function (obj) {
+checkErrors <- function (o) {
   error <- NULL
   err_msgs <- NULL
   wrn_msgs <- NULL
   
-  err_node <- getNodeSet(obj@content, '//ERROR')
+  err_node <- getNodeSet(o@content, '//ERROR')
   if (length(err_node) > 0)
     error <- lapply(err_node, xmlValue)
   
-  err_list_node <- getNodeSet(obj@content, '//ErrorList')
+  err_list_node <- getNodeSet(o@content, '//ErrorList')
   if (length(err_list_node) > 0)
     err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
   
-  wrn_list_node <- getNodeSet(obj@content, '//WarningList')
+  wrn_list_node <- getNodeSet(o@content, '//WarningList')
   if (length(wrn_list_node) > 0)
     wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
   
@@ -221,22 +121,85 @@ checkErrors <- function (obj) {
     message('Warning(s):\n\t', 
             paste(paste(names(wrn_msgs), wrn_msgs, sep="\t"), collapse="\n\t"))
   
-  return(invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs)))
+  invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs))
 }
 
 
-.getDb <- function (id) {
-  if (is(id, "esearch") || is(id, "epost") || is(id, "idlist"))
-    db <- id@database
-  else if (is(id, "elink"))
-    db <- id@databaseTo
-  else if (!is.null(names(id))) {
-    db <- .convertDbXref(dbx_name=names(id))
-  } else {
-    db <- NULL
-  }
+.getId <- function (id) {
+  
+  if (isS4(id)) {
+    if (class(id) %in% c("esearch","idlist","webenv")) {
+      if (is(id, "esearch")) {
+        id <- id@id
+      }
+      if (is(id, "idlist")) {
+        WebEnv <- NULL
+        query_key <- NULL
+        count <- id@retMax # retMax is the number of UIDs included in the XML output
+        uid <- id@uid
+        db <- id@database
+      } else if (is(id, "webenv")) {
+        WebEnv <- id@webEnv
+        query_key <- id@queryKey
+        count <- id@count # the total number of UIDs stored on the history server
+        uid <- NULL
+        db <- id@database
+      }
+      return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
+    }
     
-  db
+    if (is(id, "epost")) {
+      WebEnv <- id@webEnv
+      query_key <- id@queryKey
+      count <- id@count
+      uid <- NULL
+      db <- id@database
+    } else if (is(id, "elink")) {
+      if (is.na(id@queryKey) && is.na(id@webEnv)) {
+        WebEnv <- NULL
+        query_key <- NULL
+        count <- length(unlist(id@linkset))
+        uid <- unname(unlist(id@linkset))
+        db <- id@databaseTo
+      } else {
+        WebEnv <- id@webEnv
+        query_key <- id@queryKey
+        count <- NA # we don't have any clue how many UIDs are stored at the
+        # history server if we use elink with usehistory=TRUE. 
+        uid <- NULL
+        db <- id@databaseTo
+      }
+    } else {
+      stop("UIDs must be provided as 'esearch', 'epost', or 'elink' objects.")
+    }
+    
+    return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
+    
+  }
+  
+  if (!isS4(id)) {
+    ## a vector of UIDS as returned by content(esearch_object) 
+    if (is(id, "idlist") || inherits(id, "character") || inherits(id, "numeric")) {
+      WebEnv <- NULL 
+      query_key <- NULL
+      count <- length(id)
+      uid <- as.character(unname(id))
+      db <- attr(id, "database")
+      ## a list as returned by content(epost_object)
+    } else if (is(id, "webenv")) {
+      WebEnv <- id$webEnv
+      query_key <- id$queryKey
+      count <- NA_integer_
+      uid <- NULL
+      db <- attr(id, "database")
+    } else if (!is.null(names(id))) {
+      db <- .convertDbXref(names(id))
+    } else {
+      stop("UIDs must be provided as a vector of UIDs or as a 'webenv' object")
+    } 
+    return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
+  }
+  
 }
 
 
@@ -257,52 +220,8 @@ checkErrors <- function (obj) {
                      NULL)
   dbx_name
 }
-
-
-.getId <- function (object) {
-  # we need the count basically for efetch.batch
-  if (is(object, "epost")) {
-    WebEnv <- object@webEnv
-    query_key <- object@queryKey
-    count <- object@count
-    id <- NULL
-  } else if (is(object, "elink")) {
-    if (is.na(object@queryKey) && is.na(object@webEnv)) {
-      WebEnv <- NULL
-      query_key <- NULL
-      count <- length(unlist(object@linkList))
-      id <- unlist(object@linkList)
-    } else {
-      WebEnv <- object@webEnv
-      query_key <- object@queryKey
-      count <- NA # we don't have any clue how many UIDs are stored at the
-                 # history server if we use elink with usehistory=TRUE. 
-      id <- NULL
-    }
-  } else if (is(object, "esearch") || is(object, "idlist")) {
-    if (is.na(object@queryKey) && is.na(object@webEnv)) {
-      WebEnv <- NULL
-      query_key <- NULL
-      count <- length(object@idList)
-      id <- object@idList
-    } else {
-      WebEnv <- object@webEnv
-      query_key <- object@queryKey
-      count <- object@count
-      id <- NULL
-    }
-  } else if (is.atomic(object)) {
-    WebEnv <- NULL 
-    query_key <- NULL
-    count <- length(object)
-    id <- unname(object)
-  }
-  else
-    stop("UIDs must be provided as a vector or as esearch objects.")
   
-  return(list(WebEnv=WebEnv, query_key=query_key, count=count, id=id))
-}
-
+  
 is.empty <- isEmpty <- function (x) {
   if (length(x) == 0L)
     TRUE

@@ -1,32 +1,49 @@
 \name{elink-class}
+\alias{[,elink,ANY,missing-method}
 \alias{[,elink-method}
-\alias{elink,elink-method}
+\alias{content,elink-method}
 \alias{elink-class}
-\alias{show,elink-method}
-\title{elink class}
+\title{\dQuote{elink} class}
 \usage{
   .elink(...)
+
+  \S4method{content}{elink}(x, ...)
+
+  \S4method{[}{elink,ANY,missing}(x, i, j, ...,
+    drop = TRUE)
+}
+\arguments{
+  \item{...}{arguments passed to the constructor method}
+
+  \item{x}{an \code{\link{eutil-class}} object.}
+
+  \item{drop}{For matrices and arrays.  If \code{TRUE} the
+  result is coerced to the lowest possible dimension (see
+  the examples).  This only works for extracting elements,
+  not for the replacement.  See \code{\link{drop}} for
+  further details.  }
 }
 \description{
-  elink is an S4 class that extends the
-  \code{\link{eutil-class}}. This class provides a
-  container for data retrived by calls to the NCBI ELink
-  utility.
+  \dQuote{elink} is an S4 class that provides a container
+  for data retrived by calls to the NCBI ELink utility.
 }
-\details{
-  elink objects have three slots in addition to the slots
-  provided by basic \code{\link{eutil-class}} objects:
-  \describe{ \item{databaseFrom}{The name of the database
-  containing the input UIDs.} \item{databaseTo}{The name of
-  the database from which UIDs were retrieved.}
-  \item{command}{The ELink command mode used for a query.}
-  \item{idList}{A character vector containing the UIDs
-  sent.} \item{linkList}{A list of character vectors
-  containing the UIDs returned.} }
+\section{Slots}{
+  \describe{ \item{\code{url}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{error}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{content}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{id}:}{An
+  \code{\linkS4class{idlist}} object.}
+  \item{\code{databaseTo}:}{} \item{\code{command}:}{}
+  \item{\code{queryKey}:}{} \item{\code{webEnv}:}{}
+  \item{\code{linkset}:}{A list containing the linked
+  data.} }
+}
+
+\section{Extends}{
+  Class \code{"\linkS4class{eutil}"}, directly.
 }
 \seealso{
   \code{\link{elink}} for generating calls to the NCBI
   ELink utility.
 }
-\keyword{internal}
 

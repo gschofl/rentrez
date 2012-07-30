@@ -1,8 +1,4 @@
-
-# eutil-class ------------------------------------------------------------
-
 ##' @include utils.r
-##' @include blast-classes.r
 NULL
 
 #### Old Classes ####
@@ -11,37 +7,42 @@ setOldClass("data.frame")
 
 #### Class Unions ####
 setClassUnion("XMLOrChar", c("XMLInternalDocument", "character"))
-setClassUnion("ListOrFrame", c("data.frame", "list"))
+setClassUnion("listOrFrame", c("data.frame", "list"))
 setClassUnion("characterOrNull", c("character", "NULL"))
 
-##' eutil class
+
+# eutil-class ------------------------------------------------------------
+
+
+##' \dQuote{eutil} class
 ##'
 ##' eutil is an S4 class that is extended by the 
-##' \code{\link{einfo-class}}, \code{\link{esearch-class}},
-##' \code{\link{esummary-class}}, \code{\link{efetch-class}}, and
-##' \code{\link{epost-class}} classes.
+##' \code{\linkS4class{einfo}}, \code{\linkS4class{esearch}},
+##' \code{\linkS4class{esummary}}, \code{\linkS4class{efetch}},
+##' \code{\linkS4class{elink}}, \code{\linkS4class{epost}},
+##' and \code{\linkS4class{egquery}} classes.
 ##' 
 ##' These classes provide containers for the data returned from calls to the
 ##' NCBI Entrez Utilities.
 ##' Detailed information about the EUtilities provided by NCBI is available
 ##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25501/}{here}.
-##'
-##' Eutil class objects have three slots:
+##' 
+##' @section Slots:
 ##' \describe{
-##'   \item{url}{A character vector containing the URL submitted to Entrez.}
-##'   \item{error}{Any error messages parsed from the output of the
-##'   call submitted to Entrez.}
-##'   \item{content}{An \code{\link[XML]{XMLInternalDocument-class}} or
-##'   character vector holding the unparsed output from the call submitted
-##'   to Entrez.}
+##'   \item{\code{url}:}{A character vector containing the query URL.}
+##'   \item{\code{error}:}{Any error or warning messages parsed from
+##'   the output of the call submitted to Entrez.}
+##'   \item{\code{content}:}{An \code{XMLInternalDocument} object or
+##'   a character vector holding the unparsed output from the call
+##'   submitted to Entrez.}
 ##' }
+##'   
+##' @param ... arguments passed to the constructor method
 ##' 
 ##' @name eutil-class
 ##' @rdname eutil-class
 ##' @exportClass eutil
 ##' @aliases eutil,eutil-method
-##' @aliases $,eutil-method
-##' @aliases names,eutil-method
 .eutil <- 
   setClass("eutil",
            representation(url = "character",
@@ -52,23 +53,27 @@ setClassUnion("characterOrNull", c("character", "NULL"))
                      content = NA_character_))
 
 
-# generics and methods ---------------------------------------------------
+# content-generic --------------------------------------------------------
 
 
 ##' Extract content from an eutil request.
 ##' 
-##' Retrieves the contents of an eutil request either as is, or attempts
-##' to return an R object.
+##' This function retrieves the data returned by a call to NCBI's Entrez
+##' Utilities from the resulting \code{eutil} objects. As default, the function
+##' will attempt to parse the contents into an R object.
 ##' 
-##' @usage content(x, parse = TRUE, format = c('Biostrings', 'DNAbin', 'String'), ...)
+##' @usage content(x, parse = TRUE, format = c("Biostring", "DNAbin", "String"))
 ##' 
 ##' @param x an \code{\link{eutil-class}} object.
 ##' @param parse Parse into an R object where possible.
-##' @param format Output format of sequence data.
-##' @param ... Further arguments.
+##' 
 ##' @export
 ##' @docType methods
+##' @rdname content-methods
 setGeneric("content", function(x, ...) standardGeneric("content"))
+
+
+# error-generic ----------------------------------------------------------
 
 
 ##' Extract errors from an eutil request.
@@ -76,12 +81,14 @@ setGeneric("content", function(x, ...) standardGeneric("content"))
 ##' @usage error(x)
 ##' 
 ##' @param x an \code{\link{eutil-class}} object.
+##' 
 ##' @export
 ##' @docType methods
 setGeneric("error", function(x, ...) standardGeneric("error"))
 
 
-##' @export
+##' @rdname eutil-class
+##' @rdname error
 setMethod("error", "eutil", function (x) {
   e <- x@error
   if (all(idx <- vapply(e, is.null, logical(1)))) {
@@ -90,6 +97,9 @@ setMethod("error", "eutil", function (x) {
     print(e[!idx])
   }
 })
+
+
+# query-generic -----------------------------------------------------------
 
 
 ##' Extract url from an eutil request.
@@ -101,42 +111,119 @@ setMethod("error", "eutil", function (x) {
 ##' @docType methods
 setGeneric("query", function(x, ...) standardGeneric("query"))
 
-##' @export
+
+##' @rdname eutil-class
+##' @rdname query
 setMethod("query", "eutil", function (x) x@url)
 
 
-##' Container for UIDs and the name of their database
+# idlist-class -----------------------------------------------------------
+
+
+##' \dQuote{idlist} class
+##' 
+##' A container for UIDs
+##' 
+##' @section Slots:
+##' \describe{
+##'   \item{\code{database}:}{Database from which the UIDs were retrieved}
+##'   \item{\code{retStart}:}{The index of the first UID that is returned
+##'   by an \code{esearch} call.}
+##'   \item{\code{retMax}:}{The number of UIDs out of the total number of
+##'   records that is returned by an \code{esearch} call.}
+##'   \item{\code{count}:}{The total number of records matching a query.}
+##'   \item{\code{queryTranslation}:}{The search term as translated by the
+##'   Entrez search system}
+##'   \item{\code{uid}:}{A character vector holding the retrieved UIDs.}
+##' }
 ##' 
 ##' @keywords internal
+##' @name idlist-class
+##' @rdname idlist-class
+##' @aliases show,idlist-method
+##' @aliases [,idlist-method
+##' @aliases length,idlist-method
 .idlist <-
   setClass("idlist",
            representation(database = "character",
-                          queryKey = "integer",
-                          webEnv = "character",
+                          retMax = "numeric",
+                          retStart = "numeric",
                           count = "numeric",
-                          idList = "character"),
+                          queryTranslation = "character",
+                          uid = "character"),
            prototype(database = NA_character_,
+                     retMax = NA_integer_,
+                     retStart = NA_integer_,
+                     count = NA_integer_,
+                     queryTranslation = NA_character_,
+                     uid = NA_character_))
+
+
+# webenv-class ----------------------------------------------------------
+
+
+##' \dQuote{webenv} class
+##' 
+##' A container for web environments
+##' 
+##' @section Slots:
+##' \describe{
+##'   \item{\code{database}:}{Database from which the UIDs were retrieved}
+##'   \item{\code{retStart}:}{The index of the first UID that is returned
+##'   by an \code{esearch} call.}
+##'   \item{\code{retMax}:}{The number of UIDs out of the total number of
+##'   records that is returned by an \code{esearch} call.}
+##'   \item{\code{count}:}{The total number of records matching a query.}
+##'   \item{\code{queryTranslation}:}{The search term as translated by the
+##'   Entrez search system}
+##'   \item{\code{queryKey}:}{Integer query key returned by an esearch call
+##'   when \strong{usehistory} is set \code{TRUE}}
+##'   \item{\code{webEnv}:}{Web environment string returned from an esearch
+##'   call when \strong{usehistory} is set \code{TRUE}}
+##' }
+##' 
+##' @keywords internal
+##' @name webenv-class
+##' @rdname webenv-class
+##' @aliases show,webenv-method
+.webenv <-
+  setClass("webenv",
+           representation(database = "character",
+                          retMax = "numeric",
+                          retStart = "numeric",
+                          count = "numeric",
+                          queryTranslation = "character",
+                          queryKey = "numeric",
+                          webEnv = "character"),
+           prototype(database = NA_character_,
+                     retMax = NA_integer_,
+                     retStart = NA_integer_,
+                     count = NA_integer_,
+                     queryTranslation = NA_character_,
                      queryKey = NA_integer_,
-                     webEnv = NA_character_,
-                     count =  NA_integer_,
-                     idList = NA_character_))
+                     webEnv = NA_character_))
 
 
-# show-method ------------------------------------------------------------
+##' @keywords internal
+setClassUnion("webOrId", c("webenv", "idlist"))
 
 
-##' @export
+# show-methods ------------------------------------------------------------
+
+
 setMethod("show", "idlist",
           function (object) {
-            cat(sprintf("List of UIDs from the %s database.\n",
-                        sQuote(object@database)))
-            if (is.na(object@queryKey) && !is.na(object@idList)) {
-              print(object@idList)
-            } else if (!is.na(object@queryKey) && is.na(object@idList)) {
-              cat(sprintf("Number of hits: %s\nQuery Key: %s\nWebEnv: %s\n",
-                          object@count, object@queryKey, object@webEnv))
-            }
+            cat(sprintf("List of UIDs from the %s database.\n", sQuote(object@database)))
+            print(object@uid)
+            invisible()
+          })
 
+
+setMethod("show", "webenv",
+          function (object) {
+            cat(sprintf("Web Environment for the %s database.\n", sQuote(object@database)))
+            cat(sprintf("Number of UIDs stored on the History server: %s\nQuery Key: %s\nWebEnv: %s\n",
+                        object@count, object@queryKey, object@webEnv))
             invisible()
           })
 
@@ -144,14 +231,23 @@ setMethod("show", "idlist",
 # subsetting-method ------------------------------------------------------
 
 
-##' @export
-setMethod("[", c("idlist", "numeric", "missing"),
-          function (x, i) {
-            .idlist(database = x@database,
-                    queryKey = NA_integer_,
-                    webEnv = NA_character_,
-                    idList = x@idList[i])
+##' @rdname idlist-class
+setMethod("[", c("idlist", "numeric", "missing", "ANY"),
+          function (x, i, j, ..., drop = TRUE) {
+            uids <- x@uid[i]
+            .idlist(database = x@database, retMax = length(uids),
+                    retStart = x@retStart, count = x@count,
+                    queryTranslation = x@queryTranslation, uid = uids)
           })
+
+
+# length-method ----------------------------------------------------------
+
+
+##' @rdname idlist-class
+setMethod("length", "idlist",
+          function (x) length(x@uid)
+          )
 
 
 # --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:

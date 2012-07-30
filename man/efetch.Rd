@@ -4,7 +4,7 @@
 \usage{
   efetch(id, db = NULL, query_key = NULL, WebEnv = NULL,
     rettype = NULL, retmode = NULL, retstart = NULL,
-    retmax = NULL, strand = NULL, seq_start = NULL,
+    retmax = 500, strand = NULL, seq_start = NULL,
     seq_stop = NULL, complexity = NULL)
 }
 \arguments{
@@ -67,7 +67,7 @@
   nuc-prot, 4: minimal pub-set)}
 }
 \value{
-  An \code{\link{efetch-class}} object.
+  An \code{\linkS4class{efetch}} object.
 }
 \description{
   \code{efetch} retrieves data records in the requested
@@ -141,6 +141,7 @@ abstract(publ_bib[2])
 }
 \seealso{
   \code{\link{efetch.batch}} for downloading more than
-  about 500 data records.
+  about 500 data records. \code{\link{content}} to retrieve
+  data from \code{\linkS4class{efetch}} objects.
 }
 

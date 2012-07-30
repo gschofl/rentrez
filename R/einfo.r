@@ -1,16 +1,15 @@
+##' @include utils.r
+##' @include eutil.r
+NULL
+
 
 # einfo-class ------------------------------------------------------------
 
-##' @include utils.r
-##' @include eutil.r
-##' @include blast-classes.r
-NULL
 
-##' einfo class
+##' \dQuote{einfo} class
 ##'
 ##' einfo is a virtual S4 class that is extended by the 
-##' \code{\link{einfoDbList-class}}, and
-##' \code{\link{einfoDb-class}} classes.
+##' \code{\linkS4class{einfoDbList}}, and \code{\linkS4class{einfoDb}} classes.
 ##' 
 ##' @seealso \code{\link{einfo}} for generating calls to the NCBI EInfo
 ##' utility.
@@ -18,8 +17,6 @@ NULL
 ##' @name einfo-class
 ##' @rdname einfo-class
 ##' @exportClass einfo
-##' @aliases show,einfo-method
-##' @aliases einfo,einfo-method 
 setClass("einfo",
          representation("VIRTUAL"),
          contains = "eutil")
@@ -28,7 +25,17 @@ setClass("einfo",
 # show-method ------------------------------------------------------------
 
 
+##' method extensions to show for eutil objects.
+##'
+##' See the documentation of \code{\link[methods]{show}} method for
+##' the expected behavior. 
+##'
+##' @seealso \code{\link[methods]{show}}
+##' 
 ##' @export
+##' @aliases show,einfo-method
+##' @docType methods
+##' @rdname show-methods
 setMethod("show", "einfo",
           function (object) {
             if (is(object, "einfoDbList")) {
@@ -57,19 +64,29 @@ setMethod("show", "einfo",
           })
 
 
-##' einfoDbList class
+# einfoDbList-class ------------------------------------------------------
+
+
+##' \dQuote{einfoDbList} class
 ##' 
-##' \sQuote{einfoDbList} is an S4 class that extends the
-##' \code{\link{einfo-class}}.
-##' This class provides a container for data retrived by calls to the
+##' \dQuote{einfoDbList} is an S4 class that provides a container for data
+##' retrived by calls to the 
 ##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI EInfo}
 ##' utility.
 ##' 
-##' einfoDbList objects have one slots in addition to the slots provided by
-##' basic \code{\link{eutil-class}} objects:
+##' @section Slots:
 ##' \describe{
-##'   \item{dbList}{A list of the names of all valid Entrez databases}
+##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{dbList}:}{A list of the names of all valid Entrez databases.}
 ##' }
+##' 
+##' @section Extends: 
+##'   Class \code{"\linkS4class{einfo}"}, directly.
+##'   Class \code{"\linkS4class{eutil}"}, by class \dQuote{einfo}.
+##'   
+##' @param ... arguments passed to the constructor method
 ##' 
 ##' @seealso \code{\link{einfo}} for generating calls to the NCBI EInfo
 ##' utility.
@@ -78,38 +95,77 @@ setMethod("show", "einfo",
 ##' @rdname einfoDbList-class
 ##' @exportClass einfoDbList
 ##' @aliases content,einfoDbList-method
+##' @aliases [,einfoDb-method
 .einfoDbList <-
   setClass("einfoDbList",
            representation(dbList = "character"),
            prototype(dbList = NA_character_),
            contains = "einfo")
 
-##' einfoDb class
+
+# content-method ---------------------------------------------------------
+
+
+##' @rdname einfoDbList-class
+##' @rdname content-methods
+setMethod("content", "einfoDbList",
+          function (x, parse = TRUE) {
+            if (isTRUE(parse)) {
+              x@dbList
+            } else {
+              x@content
+            }
+          })
+
+
+# subsetting-methods -----------------------------------------------------
+
+
+##' @rdname einfoDbList-class
+setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
+          function (x, i, j, ..., drop = TRUE) {
+            x@dbList[i]
+          })
+
+
+# einfoDb-class ----------------------------------------------------------
+
+
+##' \dQuote{einfoDb class}
 ##' 
-##' \sQuote{einfoDb} is an S4 class that extends the 
+##' \dQuote{einfoDb} is an S4 class that extends the 
 ##' \code{\link{einfo-class}}.
 ##' This class provides a container for data retrived by calls to the
 ##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI EInfo}
 ##' utility.
 ##' 
-##' einfoDb objects have seven slots in addition to the slots provided by
-##' basic \code{\link{eutil-class}} objects:
+##' @section Slots:
 ##' \describe{
-##'   \item{dbName}{Name of the target database}
-##'   \item{menuName}{Name of the target database}
-##'   \item{descriptiom}{Short description of the target database}
-##'   \item{records}{Count of records in the target database}
-##'   \item{lastUpdate}{Last update of the target database}
-##'   \item{fields}{Field names of the target database}
-##'   \item{links}{Available links for the target database}
+##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{dbName}:}{Name of the target database}
+##'   \item{\code{menuName}:}{Name of the target database}
+##'   \item{\code{descriptiom}:}{Short description of the target database}
+##'   \item{\code{records}:}{Count of records in the target database}
+##'   \item{\code{lastUpdate}:}{Last update of the target database}
+##'   \item{\code{fields}:}{Field names of the target database}
+##'   \item{\code{links}:}{Available links for the target database}
 ##' }
 ##' 
+##' @section Extends: 
+##'   Class \code{"\linkS4class{einfo}"}, directly.
+##'   Class \code{"\linkS4class{eutil}"}, by class \dQuote{einfo}.
+##'   
+##' @param ... arguments passed to the constructor method
+##'    
 ##' @seealso \code{\link{einfo}} for generating calls to the NCBI EInfo
 ##' utility.
 ##' 
 ##' @name einfoDb-class
 ##' @rdname einfoDb-class
 ##' @exportClass einfoDb
+##' @aliases content,einfoDb-method
 .einfoDb <- 
   setClass("einfoDb",
            representation(dbName = "character",
@@ -129,15 +185,9 @@ setMethod("show", "einfo",
 # content-method ---------------------------------------------------------
 
 
-setMethod("content", "einfoDbList",
-          function (x, parse = TRUE) {
-            if (isTRUE(parse)) {
-              x@dbList
-            } else {
-              x@content
-            }
-          })
-
+##' @return A list
+##' @rdname einfoDb-class
+##' @rdname content-methods
 setMethod("content", "einfoDb",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -153,18 +203,6 @@ setMethod("content", "einfoDb",
               x@content
             }
           })
-
-# subsetting-methods -----------------------------------------------------
-
-
-##' @export
-setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
-          function (x, i, j, ..., drop = TRUE) {
-            x@dbList[i]
-          })
-
-
-# einfo ------------------------------------------------------------------
 
 
 ##' Retrieve information about each database in the NCBI Entrez system
@@ -182,7 +220,8 @@ setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
 ##' 
 ##' @param db \code{NULL} or a valid NCBI database name
 ##'
-##' @return An \code{\link{einfo-class}} object.
+##' @return An \code{\linkS4class{einfoDbList}} or
+##' \code{\linkS4class{einfoDb}} object.
 ##'
 ##' @export
 ##' @example inst/examples/einfo.r

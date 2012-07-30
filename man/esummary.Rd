@@ -3,13 +3,12 @@
 \title{Retrieve document summaries (DocSums)}
 \usage{
   esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
-    retstart = 1, retmax = 10000, version = "default",
-    parse = TRUE)
+    retstart = 1, retmax = 10000, version = "default")
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided either as a
-  character vector, as an \code{\link{esearch-class}} or
-  \code{\link{elink-class}} object, or by reference to a
+  character vector, as an \code{\linkS4class{esearch}} or
+  \code{\linkS4class{elink}} object, or by reference to a
   Web Environment and a query key obtained directly from
   objects returned by previous calls to
   \code{\link{esearch}}, \code{\link{epost}} or
@@ -41,12 +40,9 @@
 
   \item{version}{If "2.0" \code{esummary} will retrieve
   version 2.0 ESummary XML output.}
-
-  \item{parse}{if \code{TRUE} parses XML results to a data
-  frame, otherwise a structured named list is returned}
 }
 \value{
-  An \code{\link{esummary-class}} object.
+  An \code{\linkS4class{esummary}} object.
 }
 \description{
   \code{esummary} retrieves document summaries for a list
@@ -64,8 +60,8 @@
 # Download DocSums for some protein GIs: 313848131,313847824,313847819,
 # 313847818,313847817
 
-gi_list <- c(313848131,313847824,313847819,313847818,313847817)
-doc <- esummary(id=gi_list, db="protein")
+id <- c(313848131,313847824,313847819,313847818,313847817)
+doc <- esummary(id, "protein")
 doc
 
 # Download data from a previous ESearch.
@@ -77,9 +73,13 @@ doc <- content(doc)
 doc["Title"]
 
 # Get accession numbers for a list of GIs
-gi_list <- c(313848131,313847824,313847819,313847818,313847817)
-prot <- content(esummary(gi_list, "protein"))
+id <- c(313848131,313847824,313847819,313847818,313847817)
+prot <- content(esummary(id, "protein"))
 names(prot)
 prot[,c("Id","Caption","Length","TaxId")]
+}
+\seealso{
+  \code{\link{content}} to retrieve parsed DocSums from
+  \code{\linkS4class{esummary}} objects.
 }
 

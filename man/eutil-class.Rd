@@ -1,17 +1,28 @@
 \name{eutil-class}
-\alias{$,eutil-method}
+\alias{error,eutil-method}
 \alias{eutil,eutil-method}
 \alias{eutil-class}
-\alias{names,eutil-method}
-\title{eutil class}
+\alias{query,eutil-method}
+\title{\dQuote{eutil} class}
 \usage{
   .eutil(...)
+
+  \S4method{error}{eutil}(x, ...)
+
+  \S4method{query}{eutil}(x, ...)
+}
+\arguments{
+  \item{...}{arguments passed to the constructor method}
+
+  \item{x}{an \code{\link{eutil-class}} object.}
 }
 \description{
   eutil is an S4 class that is extended by the
-  \code{\link{einfo-class}}, \code{\link{esearch-class}},
-  \code{\link{esummary-class}}, \code{\link{efetch-class}},
-  and \code{\link{epost-class}} classes.
+  \code{\linkS4class{einfo}}, \code{\linkS4class{esearch}},
+  \code{\linkS4class{esummary}},
+  \code{\linkS4class{efetch}}, \code{\linkS4class{elink}},
+  \code{\linkS4class{epost}}, and
+  \code{\linkS4class{egquery}} classes.
 }
 \details{
   These classes provide containers for the data returned
@@ -19,14 +30,14 @@
   information about the EUtilities provided by NCBI is
   available
   \href{http://www.ncbi.nlm.nih.gov/books/NBK25501/}{here}.
-
-  Eutil class objects have three slots: \describe{
-  \item{url}{A character vector containing the URL
-  submitted to Entrez.} \item{error}{Any error messages
-  parsed from the output of the call submitted to Entrez.}
-  \item{content}{An
-  \code{\link[XML]{XMLInternalDocument-class}} or character
-  vector holding the unparsed output from the call
-  submitted to Entrez.} }
+}
+\section{Slots}{
+  \describe{ \item{\code{url}:}{A character vector
+  containing the query URL.} \item{\code{error}:}{Any error
+  or warning messages parsed from the output of the call
+  submitted to Entrez.} \item{\code{content}:}{An
+  \code{XMLInternalDocument} object or a character vector
+  holding the unparsed output from the call submitted to
+  Entrez.} }
 }
 

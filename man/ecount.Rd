@@ -8,13 +8,13 @@ query}
 \arguments{
   \item{term}{A valid NCBI search term.}
 
-  \item{db}{An NCBI database (default = "pubmed").}
+  \item{db}{An NCBI database (default = "nuccore").}
 
   \item{...}{Additional parameters passed on to
   \code{\link{esearch}}.}
 }
 \value{
-  A numeric.
+  A numeric vector.
 }
 \description{
   Some additional details about this function

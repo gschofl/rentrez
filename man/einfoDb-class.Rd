@@ -1,27 +1,45 @@
 \name{einfoDb-class}
+\alias{content,einfoDb-method}
 \alias{einfoDb-class}
-\title{einfoDb class}
+\title{\dQuote{einfoDb class}}
 \usage{
   .einfoDb(...)
+
+  \S4method{content}{einfoDb}(x, ...)
+}
+\arguments{
+  \item{...}{arguments passed to the constructor method}
+
+  \item{x}{an \code{\link{eutil-class}} object.}
+}
+\value{
+  A list
 }
 \description{
-  \sQuote{einfoDb} is an S4 class that extends the
+  \dQuote{einfoDb} is an S4 class that extends the
   \code{\link{einfo-class}}. This class provides a
   container for data retrived by calls to the
   \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.The_Eight_Eutilities_in_Brief}{NCBI
   EInfo} utility.
 }
-\details{
-  einfoDb objects have seven slots in addition to the slots
-  provided by basic \code{\link{eutil-class}} objects:
-  \describe{ \item{dbName}{Name of the target database}
-  \item{menuName}{Name of the target database}
-  \item{descriptiom}{Short description of the target
-  database} \item{records}{Count of records in the target
-  database} \item{lastUpdate}{Last update of the target
-  database} \item{fields}{Field names of the target
-  database} \item{links}{Available links for the target
-  database} }
+\section{Slots}{
+  \describe{ \item{\code{url}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{error}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{content}:}{See
+  \code{\linkS4class{eutil}}.} \item{\code{dbName}:}{Name
+  of the target database} \item{\code{menuName}:}{Name of
+  the target database} \item{\code{descriptiom}:}{Short
+  description of the target database}
+  \item{\code{records}:}{Count of records in the target
+  database} \item{\code{lastUpdate}:}{Last update of the
+  target database} \item{\code{fields}:}{Field names of the
+  target database} \item{\code{links}:}{Available links for
+  the target database} }
+}
+
+\section{Extends}{
+  Class \code{"\linkS4class{einfo}"}, directly.  Class
+  \code{"\linkS4class{eutil}"}, by class \dQuote{einfo}.
 }
 \seealso{
   \code{\link{einfo}} for generating calls to the NCBI

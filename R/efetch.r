@@ -1,27 +1,33 @@
+##' @include utils.r
+##' @include eutil.r
+NULL
+
 
 # efetch-class -----------------------------------------------------------
 
-##' @include utils.r
-##' @include eutil.r
-##' @include blast-classes.r
-NULL
 
-##' efetch class
+##' \dQuote{efetch} class
 ##' 
-##' efetch is an S4 class that extends the \code{\link{eutil-class}}.
-##' This class provides a container for data retrived by calls to the 
-##' NCBI EFetch utility.
+##' efetch is an S4 class that provides a container for data retrived by calls
+##' to the NCBI EFetch utility.
 ##' 
-##' efetch objects have three slots in addition to the slots provided by
-##' basic \code{\link{eutil-class}} objects:
+##' @section Slots:
 ##' \describe{
-##'   \item{database}{The name of the queried database.}
-##'   \item{type}{A character vector specifying the record view returned,
-##'   such as Abstract or MEDLINE from PubMed, or GenPept or FASTA from 
-##'   protein}
-##'   \item{mode}{A character vector specifying the data format of the
+##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{database}:}{The name of the queried database.}
+##'   \item{\code{type}:}{A character vector specifying the record view
+##'   returned, such as Abstract or MEDLINE from \sQuote{PubMed}, or GenPept
+##'   or FASTA from \sQuote{protein}}
+##'   \item{\code{mode}:}{A character vector specifying the data format of the
 ##'   records returned, such as plain text, HMTL or XML}
 ##' }
+##' 
+##' @section Extends: 
+##'   Class \code{"\linkS4class{eutil}"}, directly.
+##'   
+##' @param ... arguments passed to the constructor method
 ##' 
 ##' @seealso \code{\link{efetch}} for generating calls to the NCBI EFetch
 ##' utility.
@@ -29,7 +35,6 @@ NULL
 ##' @name efetch-class
 ##' @rdname efetch-class
 ##' @exportClass efetch
-##' @aliases show,efetch-method
 ##' @aliases content,efetch-method
 ##' @aliases write,efetch-method
 ##' @aliases c,efetch-method
@@ -47,33 +52,54 @@ NULL
 # show-method ------------------------------------------------------------
 
 
-##' @export
+##' @aliases show,efetch-method
+##' @rdname show-methods
 setMethod("show", "efetch",
           function (object) {
             cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
                         sQuote(object@database), sQuote(object@url)))
             cat(object@content)
-            return(invisible(NULL))
+            invisible()
           })
 
 
 # write-method -----------------------------------------------------------
 
 
+##' Write efetch data to file
+##'
+##' @usage write(x, file = "data", append = FALSE)
+##' 
+##' @param x An \code{efetch} object.
+##' @param file A connection, or a character string naming the file to write to.
+##' @param append if \code{TRUE} the data \code{x} is appended to the connection
+##'
 ##' @export
+##' @docType methods
+##' @rdname write-methods
 setMethod("write", "efetch",
-          function (x, file = "data", append = FALSE, sep = "") {
-            write(x = x@content, file = file, append = append, sep = sep)
+          function (x, file = "data", append = FALSE) {
+            write(x = x@content, file = file, append = append)
           })
 
 
 # c-method ---------------------------------------------------------------
 
 
+##' Combining efetch objects
+##' 
+##' Only data retrieved from the same datebase in the same \code{retmode} and
+##' \code{rettype} can be combined.
+##'
+##' @usage c(...)
+##' 
+##' @param ... objects to be combined.
+##'
 ##' @export
+##' @docType methods
+##' @rdname c-methods
 setMethod("c", "efetch",
           function (x, ..., recursive = FALSE) {
-            
             db <- unique(c(x@database, unlist(lapply(list(...), slot, "database"))))
             db <- db[-is.na(db)]
             if (length(db) > 1L)
@@ -90,15 +116,20 @@ setMethod("c", "efetch",
             url <- c(x@url, unlist(lapply(list(...), slot, "url")))
             content <- c(x@content, unlist(lapply(list(...), slot, "content")))
             
-            .efetch(url=url, content=content, database=db,
-                    mode=mode, type=type)
+            .efetch(url = url, content = content, error = list(),
+                    database = db, mode = mode, type = type)
           })
 
 
 # content-method ---------------------------------------------------------
 
 
-##' @export
+##' @usage content(x, parse = TRUE, format = c("Biostrings", "DNAbin", "String"))
+##'
+##' @param format Output format of sequence data.
+##' 
+##' @rdname efetch-class
+##' @rdname content-methods
 setMethod("content", "efetch",
           function(x, parse = TRUE, ...) {
             if (isTRUE(parse)) {
@@ -114,45 +145,6 @@ setMethod("content", "efetch",
               x@content
             }
           })
-
-
-## convenience methods for bibentries ####
-
-##' Open a bibentry in the browser
-##' 
-##' @param ref A \code{\link[utils]{bibentry}} object
-##' @param ... Further arguments
-##' 
-##' @export
-browse <- function (ref, ...) {
-  UseMethod("browse", ref)
-}
-
-#' @S3method browse bibentry
-browse.bibentry <- function (ref, browser = getOption("browser")) {  
-  if (all(!nzchar(ref$doi))) {
-    return("No doi available")
-  }
-  l <- lapply(ref$doi[nzchar(ref$doi)], function (doi) {
-    browseURL(paste0('http://dx.doi.org/', doi), browser = browser)
-  })
-  invisible()
-}
-
-##' Access abstract from a bibentry
-##' 
-##' @param ref A \code{\link[utils]{bibentry}} object
-##' @param ... Further arguments
-##' 
-##' @export
-abstract <- function (ref, ...) {
-  UseMethod("abstract", ref)
-}
-
-#' @S3method abstract bibentry
-abstract.bibentry <- function (ref) {
-  return(ref$abstract)
-}
 
 
 ##' Retrieve data records in the requested format from NCBI
@@ -208,105 +200,86 @@ abstract.bibentry <- function (ref) {
 ##' @param complexity Data content to return. (0: entire data structure,
 ##' 1: bioseq, 2: minimal bioseq-set, 3: minimal nuc-prot, 4: minimal pub-set)
 ##' 
-##' @return An \code{\link{efetch-class}} object.
+##' @return An \code{\linkS4class{efetch}} object.
 ##' @seealso \code{\link{efetch.batch}} for downloading more than about 500
 ##' data records.
+##' \code{\link{content}} to retrieve data from \code{\linkS4class{efetch}}
+##' objects.
 ##'
 ##' @export
 ##' @example inst/examples/efetch.r
-efetch <- function (id,
-                    db=NULL,
-                    query_key=NULL,
-                    WebEnv=NULL,
-                    rettype=NULL,
-                    retmode=NULL,
-                    retstart=NULL,
-                    retmax=NULL,
-                    strand=NULL,
-                    seq_start=NULL,
-                    seq_stop=NULL,
-                    complexity=NULL) {
+efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
+                    rettype = NULL, retmode = NULL, retstart = NULL,
+                    retmax = 500, strand = NULL, seq_start = NULL,
+                    seq_stop = NULL, complexity = NULL) {
   
-  if (missing(id) && is.null(query_key) && is.null(WebEnv))
+  ## id may be missing if WebEnv and query_key are provided
+  if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
     stop("No UIDs provided")
+  }
   
-  ## get db ################################################################
-  # if no db name is provided extract the database name directly from
-  # id if it's an esearch, epost or elink object
-  if (is.null(db) && is.null(db <- .getDb(id)))
+  ## if WebEnv and query_key are provided, db must also be provided
+  if (!is.null(query_key) && !is.null(WebEnv) && is.null(db)) {
     stop("No database name provided")
+  }
   
+  ## construct list of environment variables
+  if (missing(id)) {
+    ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
+    ## retmax stays restricted to 500.
+    env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
+                    uid = NULL, db = db)
+  } else {
+    env_list <-.getId(id)
+    ## abort if no db was provided and id did not contain db 
+    if (is.null(db) && is.null(db <- env_list$db)) {
+      stop("No database name provided")
+    }
+  }
+
   ## set default rettype and retmode for some databases
   if (is.null(rettype)) {
-    rettype <- switch(db,
-                      pubmed="medline",
-                      nucleotide="gb",
-                      nuccore="gb",
-                      protein="gp",
-                      gene="gene_table")
+    rettype <- switch(db, pubmed="medline", nucleotide="gb", nuccore="gb",
+                      protein="gp", gene="gene_table")
   }
   
   if (is.null(retmode)) {
-    retmode <- switch(db,
-                      pubmed="xml",
-                      nucleotide="text",
-                      nuccore="text",
-                      protein="text",
-                      gene="text")
-  }
-  
-  ## get id, or WebEnv and query_key #######################################
-  if (is.null(query_key) && is.null(WebEnv)) {
-    # extract WebEnv and query_key from id or take the idList/linkList if an
-    # esearch/elink object with usehistory=FALSE was provided.
-    env_list <- .getId(id)
-    WebEnv <- env_list$WebEnv
-    query_key <- env_list$query_key
-    record_count <- env_list$count # number of  items to be downloaded
-    count <- length(env_list$id) # number of UIDs to be uploaded
-    id <- env_list$id
-    
-    if (!is.na(record_count) &&
-        record_count > 500 && (is.null(retmax) || retmax > 500)) {
-      # if record_count exceeds 500 issue a warning and recommend
-      # efetch.batch()
-      message(gettextf("You are attempting to download %s records.\nOnly the first 500 were downloaded. Use efetch.batch() instead.",
-              max(c(record_count, retmax))))
-      retmax <- 500
-      id <- id[seq_len(500)]
-    } else if (is.na(record_count)) {
-      # this takes care of the case where we use elink with
-      # cmd='neighbor_history' and don't actually know how many UIDs are
-      # stored on the history server
-      retmax <- 500
-    }
-  } else {
-    # if there is an explicit user provided WebEnv we simply set id=NULL
-    # count=0, and restrict retmax to 500
-    count <- 0
-    id <- NULL
-    retmax <- 500
-  }
-  
-  if (count > 100) {
-    # use HTTP POST if uploading more than 100 user provided UIDs.
-    o <- .httpPOST("efetch", db=db, id=.collapse(id),
-                   WebEnv=WebEnv, retmode=retmode, rettype=rettype,
-                   retstart=as.character(retstart), retmax=as.character(retmax),
-                   strand=as.character(strand),
-                   seq_start=as.character(seq_start),
-                   seq_stop=as.character(seq_stop),
-                   complexity=as.character(complexity))
-  }
-  else {
-    o <- .query("efetch", db=db, id=.collapse(id), query_key=query_key,
-                WebEnv=WebEnv, retmode=retmode, rettype=rettype,
-                retstart=retstart, retmax=retmax, strand=strand,
-                seq_start=seq_start, seq_stop=seq_stop,
-                complexity=complexity)
+    retmode <- switch(db, pubmed="xml", nucleotide="text", nuccore="text",
+                      protein="text", gene="text")
   }
 
-  .efetch(url=o@url, content=o@content, database=db, mode=retmode, type=rettype)
+  if (is.finite(env_list$count) && (env_list$count > 500 || retmax > 500)) {
+    # if record_count exceeds 500 issue a warning and recommend
+    # efetch.batch()
+    message(gettextf("You are attempting to download %s records.\nOnly the first 500 are downloaded. Use efetch.batch() instead.",
+                     max(c(env_list$count, retmax))))
+    retmax <- 500
+    env_list$uid <- env_list$uid[seq_len(500)]
+  } else if (is.na(env_list$count)) {
+    # this takes care of the cases where we don't actually know how many UIDs
+    # are stored on the history server
+    # message("A single download request is restricted to 500 records.\nUse efetch.batch() to download more records.")
+    retmax <- 500
+  }
+
+  o <- if (length(env_list$uid) > 100) {
+    # use HTTP POST if uploading more than 100 user provided UIDs.
+    .httpPOST('efetch', db = db, id = .collapse(env_list$uid),
+              query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+              retmode = retmode, rettype = rettype, retstart = as.character(retstart),
+              retmax = as.character(retmax), strand = as.character(strand),
+              seq_start = as.character(seq_start), seq_stop = as.character(seq_stop),
+              complexity = as.character(complexity))
+  } else {
+    .query('efetch', db = db, id = .collapse(env_list$uid),
+           query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+           retmode = retmode, rettype = rettype, retstart = retstart,
+           retmax = retmax, strand = strand, seq_start = seq_start,
+           seq_stop = seq_stop, complexity = complexity)
+  }
+
+  .efetch(url = o@url, content = o@content, error = list(),
+          database = db, mode = retmode, type = rettype)
 }
 
 ##' Retrieve batches of data records in the requested format from NCBI
@@ -319,8 +292,8 @@ efetch <- function (id,
 ##' 
 ##' @param id (Required)
 ##' List of UIDs provided (via the Entrez History server) by an
-##' \code{\link{esearch-class}}, \code{\link{epost-class}} or
-##' \code{\link{elink-class}} object.
+##' \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
+##' \code{\linkS4class{elink}} object.
 ##' @param chunk_size Number of records downloaded as a batch (default: 200;
 ##' maximum: 500).
 ##' @param rettype A character string specifying the record view returned,
@@ -340,7 +313,7 @@ efetch <- function (id,
 ##' @param complexity Data content to return. (0: entire data structure,
 ##' 1: bioseq, 2: minimal bioseq-set, 3: minimal nuc-prot, 4: minimal pub-set)
 ##' 
-##' @return An \code{\link{efetch-class}} object.
+##' @return An \code{\linkS4class{efetch}} object.
 ##'
 ##' @export
 ##' @example inst/examples/efetch.batch.r
@@ -382,183 +355,63 @@ efetch.batch <- function (id,
   res
 }
 
-#' Extract content from efetch
-#' 
-#' @importFrom Biostrings read.DNAStringSet
-#' @importFrom Biostrings read.AAStringSet
-#' @importFrom ape read.dna
-#' @importFrom phangorn read.aa
-#' @keywords internal
-.parseSequence <- function (x, ...) {
-  
-  ## if rettype = fasta
-  if (grepl("^fasta", x@type) && x@mode == "text") {
-    return( .parseFasta(x = x, ...) )
-  }
-  
-  ## if rettype = gp or gb
-  if (grepl("^gb|^gp", x@type) && x@mode == "text") {
-    return( .parseGb(x = x, ...) )
-  }
-    
-  ## if retmode = xml return parsed xml tree
-  if (x@mode == "xml") {
-    return( xmlParse(x@content) )
-  }
-  
-  ## otherwise return the raw content
-  return( x@content )
+## convenience methods for bibentries ####
+
+##' Open a bibentry in the browser
+##' 
+##' @param ref A \code{\link[utils]{bibentry}} object
+##' @param ... Further arguments
+##' 
+##' @export
+browse <- function (ref, ...) {
+  UseMethod("browse", ref)
 }
 
-#' @keywords internal
-.parseFasta <- function (x, format = c("Biostrings", "DNAbin", "String")) {
-  
-  format <- match.arg(format)
-  
-  if (!grepl("^>", x@content)) {
-    warning("Does not appear to contain a valid fasta file")
-    return( x@content )
+#' @S3method browse bibentry
+browse.bibentry <- function (ref, browser = getOption("browser")) {  
+  if (all(!nzchar(ref$doi))) {
+    return("No doi available")
   }
-  
-  if (x@database %in% c("nucleotide","nuccore")) {
-    seqtype <- "DNA"
-  } else if (x@database == "protein") {
-    seqtype <- "AA"
-  }
-  
-  if (format == "Biostrings") {
-    f_tmp <- tempfile(fileext=".fa")
-    write(x, file=f_tmp)
-    fasta <- switch(seqtype,
-                    DNA=tryCatch(read.DNAStringSet(f_tmp, use.names=TRUE),
-                                 error = function (e) {
-                                   read.AAStringSet(f_tmp, use.names=TRUE)
-                                 }),              
-                    AA=read.AAStringSet(f_tmp, use.names=TRUE))
-    unlink(f_tmp)
-    return( fasta )
-  }
-  
-  if (format == "DNAbin") {
-    fasta <- switch(seqtype,
-                    DNA=ape::read.dna(file=textConnection(x@content), format="fasta"),
-                    AA=phangorn::read.aa(file=textConnection(x@content), format="fasta"))
-    return( fasta )  
-  }
-  
-  if (format == "String") {
-    fasta_split <- strsplit(x@content, "\n\n")[[1]]
-    fasta <- lapply(fasta_split, function (fasta) {
-      x <- strsplit(fasta, "\n")[[1]]
-      desc_idx <- which(grepl(pattern="^>", x))
-      desc <- sub(">", "", x[desc_idx])
-      x <- paste0(x[-desc_idx], collapse="")
-      attr(x, "desc") <- desc
-      x
-    })
-    return( fasta )
-  }
-}
-
-
-#' @keywords internal
-.parseGb <- function (x, format = c("gbRecord")) {
-  
-  format <- match.arg(format)
-  
-  if (format == "gbRecord") {
-    
-    dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
-    
-    if (length(dbs) == 1) {
-      return(biofiles::initGB(dbs))
-    } else {
-      records <- list()
-      for (db in dbs) {
-        records <- c(records, list(biofiles::initGB(db)))
-      }
-      names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
-      return( records )
-    }
-  }
-}
-
-
-#' @keywords internal
-.parsePubmed <- function (x) {
-  
-  if (x@mode != 'xml') {
-    return( x@content )
-  }
-  
-  doc <- getNodeSet(xmlRoot(xmlParse(x@content)), '//PubmedArticle')
-  
-  reff <- lapply(doc, function (art) {
-    
-    #     art <- xmlDoc(doc[[1]])
-    art <- xmlDoc(art)
-    
-    author <- {
-      lastName <- xpathApply(art, "//AuthorList//LastName", xmlValue)
-      foreName <- xpathApply(art, "//AuthorList//ForeName", xmlValue)
-      list(author = do.call(personList,
-                            Map(person, given=foreName, family=lastName)))
-    }
-    
-    issue <- list(
-      volume = xpathSApply(art, '//JournalIssue/Volume', xmlValue),
-      number = xpathSApply(art, '//JournalIssue/Issue', xmlValue),
-      year = {
-        year <- xpathSApply(art, '//JournalIssue/PubDate/Year', xmlValue)
-        medlineDate <- xpathSApply(art, '//JournalIssue/PubDate/MedlineDate', xmlValue)
-        if (length(year) > 0) year else medlineDate
-      },
-      month = xpathSApply(art, '//JournalIssue/PubDate/Month', xmlValue),
-      pages = xpathSApply(art, '//Pagination/MedlinePgn', xmlValue)
-    )
-    
-    journal <- list(
-      issn = xpathSApply(art, '//Journal/ISSN', xmlValue),
-      journal = xpathSApply(art, '//Journal/Title', xmlValue),
-      abbrev = xpathSApply(art, '//Journal/ISOAbbreviation', xmlValue) 
-    )
-    
-    article <- list(
-      title = xpathSApply(art, '//ArticleTitle', xmlValue),
-      abstract = {
-        abs <- xpathSApply(art, '//Abstract/AbstractText', xmlValue)
-        headers <- xpathSApply(art, '//Abstract/AbstractText', xmlGetAttr, "Label")
-        if (is.null(headers[[1]])) {
-          abs
-        } else {
-          paste0(headers, ": ", abs, collapse="\n")
-        }
-      },
-      doi = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="doi"]', xmlValue),
-      pii = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pii"]', xmlValue),
-      pmid = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pubmed"]', xmlValue),
-      pmc = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pmc"]', xmlValue)
-    )
-    
-    affiliation <- list(
-      affiliation = xpathSApply(art, "//Affiliation", xmlValue)
-    )
-    
-    issue[vapply(issue, function (x) length(x) < 1L, logical(1))] <- ""
-    journal[vapply(journal, function (x) length(x) < 1L, logical(1))] <- ""
-    article[vapply(article, function (x) length(x) < 1L, logical(1))] <- ""
-    affiliation[vapply(affiliation, function (x) length(x) < 1L, logical(1))] <- ""
-    
-    free(art)
-    
-    ref <- bibentry('Article', other=c(author, article, journal, issue, affiliation))
-    ref
-    
+  l <- lapply(ref$doi[nzchar(ref$doi)], function (doi) {
+    browseURL(paste0('http://dx.doi.org/', doi), browser = browser)
   })
-  
-  reff <- do.call("c", reff)
-  reff
-  
+  invisible()
+}
+
+##' Access abstract from a bibentry
+##' 
+##' @param ref A \code{\link[utils]{bibentry}} object
+##' @param ... Further arguments
+##' 
+##' @export
+abstract <- function (ref, ...) {
+  UseMethod("abstract", ref)
+}
+
+#' @S3method abstract bibentry
+abstract.bibentry <- function (ref) {
+  return(ref$abstract)
+}
+
+
+#' @S3method print idlist
+print.idlist <- function (x) {
+  print(unclass(x))
+  invisible()
+}
+
+
+#' @S3method print webenv
+print.webenv <- function (x) {
+  print(unclass(x))
+  invisible()
+}
+
+
+#' @S3method [ idlist
+`[.idlist` <- function (x, i, j, ..., drop = TRUE) {
+  v <- NextMethod()
+  structure(v, database = attr(x, "database"), class = attr(x, "class"))
 }
 
 

@@ -8,7 +8,8 @@
   \item{db}{\code{NULL} or a valid NCBI database name}
 }
 \value{
-  An \code{\link{einfo-class}} object.
+  An \code{\linkS4class{einfoDbList}} or
+  \code{\linkS4class{einfoDb}} object.
 }
 \description{
   If no database is provided \code{einfo} will return the

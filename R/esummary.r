@@ -1,25 +1,30 @@
+##' @include utils.r
+##' @include eutil.r
+NULL
+
 
 # esummary-class ---------------------------------------------------------
 
-##' @include utils.r
-##' @include eutil.r
-##' @include blast-classes.r
-NULL
 
-##' esummary class
+##' \dQuote{esummary} class
 ##' 
-##' esummary is an S4 class that extends the \code{\link{eutil-class}}.
-##' This class provides a container for data retrived by calls to the 
-##' NCBI ESummary utility.
+##' esummary is an S4 class that provides a container for data retrived by
+##' calls to the NCBI ESummary utility.
 ##' 
-##' esummary objects have two slots in addition to the slots provided by
-##' basic \code{\link{eutil-class}} objects:
+##' @section Slots:
 ##' \describe{
-##'   \item{database}{The name of the queried database}
-##'   \item{documentSummary}{A named list holding the parsed contents of
-##'   the XML DocSums returned from a call to the NCBI ESearch utility.}
+##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{database}:}{The name of the queried database.}
+##'   \item{\code{version}:}{The version of the document summary requested.}
+##'   \item{\code{docsum}:}{The parsed document summaries for a list of input
+##'   UIDs}
 ##' }
 ##' 
+##' @section Extends: 
+##'   Class \code{"\linkS4class{eutil}"}, directly.
+##'   
 ##' @param ... arguments passed to the constructor method
 ##' 
 ##' @seealso \code{\link{esummary}} for generating calls to the NCBI
@@ -28,39 +33,37 @@ NULL
 ##' @name esummary-class
 ##' @rdname esummary-class
 ##' @exportClass esummary
-##' @aliases show,esummary-method
 ##' @aliases content,esummary-method
-##' @aliases esummary,esummary-method
-##' @keywords internal
 .esummary <- 
   setClass("esummary",
            representation(database = "character",
-                          docsum = "ListOrFrame"),
+                          version = "character",
+                          docsum = "listOrFrame"),
            prototype(database = NA_character_,
-                     docsum = list()),
+                     version = NA_character_,
+                     docsum = list),
            contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
 
 
-##' @export
+##' @aliases show,esummary-method
+##' @rdname show-methods
 setMethod("show", "esummary",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
                         sQuote(object@database)))
-            if (isEmpty(object@docsum))
-              print(object@content)
-            else 
-              print(object@docsum)
-            return(invisible(NULL))
+            print(object@docsum)
+            invisible()
           })
 
 
 # content-method ---------------------------------------------------------
 
 
-##' @export
+##' @rdname esummary-class
+##' @rdname content-methods
 setMethod("content", "esummary",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -69,6 +72,19 @@ setMethod("content", "esummary",
               x@content
             }
           })
+
+
+# subsetting-method ------------------------------------------------------
+
+
+##' @rdname esearch-class
+setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
+          function (x, i, j, ..., drop = TRUE) {
+            x <- x@docsum
+            callNextMethod()
+          })
+
+
 
 ##' Retrieve document summaries (DocSums)
 ##'
@@ -82,7 +98,7 @@ setMethod("content", "esummary",
 ##'
 ##' @param id (Required)
 ##' List of UIDs provided either as a character vector, as an
-##' \code{\link{esearch-class}} or \code{\link{elink-class}} object,
+##' \code{\linkS4class{esearch}} or \code{\linkS4class{elink}} object,
 ##' or by reference to a Web Environment and a query key obtained directly
 ##' from objects returned by previous calls to \code{\link{esearch}},
 ##' \code{\link{epost}} or \code{\link{elink}}.
@@ -105,96 +121,59 @@ setMethod("content", "esummary",
 ##' (maximum: 10,000).
 ##' @param version If "2.0" \code{esummary} will retrieve version 2.0
 ##' ESummary XML output.
-##' @param parse if \code{TRUE} parses XML results to a data frame, otherwise
-##' a structured named list is returned
 ##'
-##' @return An \code{\link{esummary-class}} object.
+##' @return An \code{\linkS4class{esummary}} object.
+##' 
+##' @seealso \code{\link{content}} to retrieve parsed DocSums from 
+##' \code{\linkS4class{esummary}} objects.
 ##'
 ##' @export
 ##'
 ##' @example inst/examples/esummary.r
-esummary <- function (id, 
-                      db = NULL,
-                      query_key = NULL,
-                      WebEnv = NULL,
-                      retstart = 1,
-                      retmax = 10000,
-                      version = "default",
-                      parse = TRUE)
-{
-  if (missing(id) && is.null(query_key) && is.null(WebEnv))
+esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
+                      retstart = 1, retmax = 10000, version = "default") {
+  
+  ## id may be missing if WebEnv and query_key are provided
+  if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
     stop("No UIDs provided")
+  }
+  
+  ## if WebEnv and query_key are provided, db must also be provided
+  if (!is.null(query_key) && !is.null(WebEnv) && is.null(db)) {
+    stop("No database name provided")
+  }
   
   if (retmax > 10000)
     stop("Number of DocSums to be downloaded must not exceed 10,000.")
   
-  ## get db ################################################################
-  # if no db name is provided extract the database name directly from
-  # id if it's an esearch, epost, elink, or idlist object.
-  if (is.null(db) && is.null(db <- .getDb(id)))
-    stop("No database name provided")
-  
-  ## get id, or WebEnv and query_key #######################################
-  if (is.null(query_key) && is.null(WebEnv)) {
-    # extract WebEnv and query_key from id or take the idList/linkList if an
-    # esearch/elink object with usehistory=FALSE was provided.
-    env_list <- .getId(id)
-    WebEnv <- env_list$WebEnv
-    query_key <- env_list$query_key
-    count <- length(env_list$id)
-    id <- env_list$id
+  ## construct list of environment variables
+  if (missing(id)) {
+    ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
+    ## retmax stays restricted to 500.
+    env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
+                    uid = NULL, db = db)
   } else {
-    # if there is an explicit user provided WebEnv we simply set id=NULL
-    # and count=0
-    count <- 0
-    id <- NULL
-  }
-  
-  if (count > 100) {
-    # use HTTP POST if dealing with more than 100 user provided UIDs.
-    message(gettextf("%s UIDs were provided. ESummary request uses HTTP POST.",
-                     count))
-    o <- .httpPOST(eutil="esummary", db=db, id=.collapse(id),
-                   query_key=as.character(query_key), WebEnv=WebEnv,
-                   retstart=as.character(retstart), retmax=as.character(retmax),
-                   version=if (identical(version, "2.0")) "2.0" else NULL)
-  }
-  else {
-    o <- .query(eutil="esummary", db=db, id=.collapse(id),
-                query_key=query_key, WebEnv=WebEnv, 
-                retstart=retstart, retmax=retmax,
-                version=if (identical(version, "2.0")) "2.0" else NULL)
-  }
-
-  if (identical(version, "default")) {
-    nodes <- getNodeSet(o@content, '//DocSum')
-    uids <- vapply(nodes, function (x) {
-      xmlValue(xmlChildren(x)[["Id"]])
-    }, character(1))
-  }
-  else if (identical(version, "2.0")) {
-    nodes <- getNodeSet(o@content, '//DocumentSummary')
-    uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
-  }
-  
-  docsum <- 
-    if (parse) {
-      docSumList <- lapply(nodes, .parseDocSum)
-      flatDocSumList <- flatten(docSumList, start_after=1, delim_path=".")
-      
-      # check if all docsums have same number of tags
-      if (length(unique(vapply(flatDocSumList, length, numeric(1)))) > 1L) {
-        warning("DocSum records have unequal numbers of tags.\nI can not return a data frame.")
-        flatDocSumList
-      }
-      else
-        data.frame(stringsAsFactors=FALSE, 
-                   cbind(Id=uids, do.call(rbind, flatDocSumList)))
+    env_list <-.getId(id)
+    ## abort if no db was provided and id did not contain db 
+    if (is.null(db) && is.null(db <- env_list$db)) {
+      stop("No database name provided")
     }
-    else
-      lapply(nodes, .parseDocSum)
-
-  .esummary(database=db, error=checkErrors(o), url=o@url, content=o@content,
-            docsum=docsum)
+  }
+  
+  o <- if (length(env_list$uid) > 100) {
+    # use HTTP POST if dealing with more than 100 user provided UIDs.
+    .httpPOST('esummary', db = db, id = .collapse(env_list$uid),
+              query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+              retstart = as.character(retstart), retmax = as.character(retmax),
+              version = if (identical(version, "2.0")) "2.0" else NULL)
+  } else {
+    .query('esummary', db = db, id = .collapse(env_list$uid),
+           query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
+           retstart = retstart, retmax = retmax,
+           version = if (identical(version, "2.0")) "2.0" else NULL)
+  }
+  
+  .esummary(database = db, version = version, error = checkErrors(o),
+            url = o@url, content = o@content, docsum = docsum(o, version))
 }
 

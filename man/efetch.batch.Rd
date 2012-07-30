@@ -8,9 +8,9 @@
 }
 \arguments{
   \item{id}{(Required) List of UIDs provided (via the
-  Entrez History server) by an \code{\link{esearch-class}},
-  \code{\link{epost-class}} or \code{\link{elink-class}}
-  object.}
+  Entrez History server) by an
+  \code{\linkS4class{esearch}}, \code{\linkS4class{epost}}
+  or \code{\linkS4class{elink}} object.}
 
   \item{chunk_size}{Number of records downloaded as a batch
   (default: 200; maximum: 500).}
@@ -39,7 +39,7 @@
   nuc-prot, 4: minimal pub-set)}
 }
 \value{
-  An \code{\link{efetch-class}} object.
+  An \code{\linkS4class{efetch}} object.
 }
 \description{
   \code{efetch.batch} retrieves large data sets from NCBI

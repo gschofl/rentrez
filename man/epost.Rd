@@ -21,13 +21,13 @@
   to query_key 1.}
 }
 \value{
-  An \code{\link{epost-class}} object.
+  An \code{\linkS4class{epost}} object.
 }
 \description{
   The EPost utility allows a list of UIDs to be uploaded to
   the Entrez History Server and returns an integer label
   called a query key and an encoded cookie string called a
-  Web environment. \code{\link{epost-class}} objects can
+  Web environment. \code{\linkS4class{epost}} objects can
   then be used in stead of a UID list in subsequent
   \code{\link{esummary}}, \code{\link{efetch}}, or
   \code{\link{elink}} calls.
@@ -40,8 +40,8 @@
 \examples{
 ## Uploading UIDs to the Entrez history server #############################
 
-id_list <- c(194680922,50978626,28558982,9507199,6678417)
-p <- epost(id=id_list, db="protein")
+id <- c(194680922,50978626,28558982,9507199,6678417)
+p <- epost(id, "protein")
 p
 }
 

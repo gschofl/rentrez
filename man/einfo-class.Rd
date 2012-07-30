@@ -1,12 +1,10 @@
 \name{einfo-class}
-\alias{einfo,einfo-method}
 \alias{einfo-class}
-\alias{show,einfo-method}
-\title{einfo class}
+\title{\dQuote{einfo} class}
 \description{
   einfo is a virtual S4 class that is extended by the
-  \code{\link{einfoDbList-class}}, and
-  \code{\link{einfoDb-class}} classes.
+  \code{\linkS4class{einfoDbList}}, and
+  \code{\linkS4class{einfoDb}} classes.
 }
 \seealso{
   \code{\link{einfo}} for generating calls to the NCBI

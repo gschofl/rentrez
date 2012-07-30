@@ -1,40 +1,55 @@
 \name{esearch-class}
+\alias{[,esearch,numeric,missing-method}
 \alias{[,esearch-method}
-\alias{esearch,esearch-method}
+\alias{[,esummary,ANY,ANY-method}
+\alias{content,esearch-method}
 \alias{esearch-class}
 \alias{length,esearch-method}
-\alias{show,esearch-method}
-\title{esearch class}
+\title{\dQuote{esearch} class}
 \usage{
   .esearch(...)
+
+  \S4method{content}{esearch}(x, ...)
+
+  \S4method{[}{esearch,numeric,missing}(x, i, j, ...,
+    drop = TRUE)
+
+  \S4method{length}{esearch}(x)
+
+  \S4method{[}{esummary,ANY,ANY}(x, i, j, ..., drop = TRUE)
+}
+\arguments{
+  \item{...}{arguments passed to the constructor method}
+
+  \item{x}{an \code{\link{eutil-class}} object.}
+
+  \item{drop}{For matrices and arrays.  If \code{TRUE} the
+  result is coerced to the lowest possible dimension (see
+  the examples).  This only works for extracting elements,
+  not for the replacement.  See \code{\link{drop}} for
+  further details.  }
+}
+\value{
+  an \code{\linkS4class{idlist}} object.
 }
 \description{
-  esearch is an S4 class that extends the
-  \code{\link{eutil-class}}. This class provides a
-  container for data retrived by calls to the NCBI ESearch
-  utility.
+  esearch is an S4 class that provides a container for data
+  retrived by calls to the NCBI ESearch utility.
 }
-\details{
-  esearch objects have eight slots in addition to the slots
-  provided by basic \code{\link{eutil-class}} objects:
-  \describe{ \item{database}{The name of the queried
-  database.} \item{count}{An integer giving the total
-  number of hits for a database query.} \item{retMax}{An
-  integer giving the number of hits retrieved.}
-  \item{retStart}{An integer giving the index of the first
-  hit retrieved.} \item{queryKey}{Parameter specifying a
-  UID list attached to a user's Web Environment on the
-  Entrez history server.} \item{webEnv}{Parameter
-  specifying the Web Environment on the Entrez history
-  server containing the list of UIDs matching an Entrez
-  query.} \item{queryTranslation}{A Character vector
-  containing the search term as translated by the Entrez
-  search system} \item{idList}{A Character vector
-  containing the UIDs returned} }
+\section{Slots}{
+  \describe{ \item{\code{id}:}{An
+  \code{\linkS4class{idlist}} or
+  \code{\linkS4class{webenv}} object.}
+  \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+  \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+  \item{\code{content}:}{See \code{\linkS4class{eutil}}.} }
+}
+
+\section{Extends}{
+  Class \code{"\linkS4class{eutil}"}, directly.
 }
 \seealso{
   \code{\link{esearch}} for generating calls to the NCBI
   ESearch utility.
 }
-\keyword{internal}
 

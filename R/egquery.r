@@ -1,31 +1,36 @@
-### EGQuery ################################################################
 ##' @include utils.r
 ##' @include eutil.r
-##' @include blast-classes.r
 NULL
 
-##' egquery class
+# egquery-class ----------------------------------------------------------
+
+
+##' \dQuote{egquery} class
 ##' 
-##' egquery is an S4 class that extends the \code{\link{eutil-class}}.
-##' This class provides a container for data retrived by calls to the 
-##' NCBI EGQuery utility.
+##' egquery is an S4 class that provides a container for data retrived by
+##' calls to the NCBI EGQuery utility.
 ##' 
-##' eqquery objects have two slots in addition to the slots provided by
-##' basic \code{\link{eutil-class}} objects:
+##' @section Slots:
 ##' \describe{
-##'   \item{term}{The search term passed on to the EGQuery Utility}
-##'   \item{count}{A data frame with the following columns: \code{dbName},
-##'   \code{menuName}, \code{count}, and \code{status}.}
+##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+##'   \item{\code{term}:}{The search term passed on to the EGQuery Utility}
+##'   \item{\code{count}:}{A data frame with the following columns:
+##'   \code{dbName}, \code{menuName}, \code{count}, and \code{status}.}
 ##' }
 ##' 
-##' @seealso \code{\link{egquery}} for generating calls to the NCBI ELink
+##' @section Extends: 
+##'   Class \code{"\linkS4class{eutil}"}, directly.
+##'   
+##' @param ... arguments passed to the constructor method
+##' 
+##' @seealso \code{\link{egquery}} for generating calls to the NCBI EGQuery
 ##' utility.
 ##' 
 ##' @name egquery-class
 ##' @rdname egquery-class
 ##' @exportClass egquery
-##' @aliases egquery,egquery-method
-##' @aliases show,egquery-method
 .equery <- 
   setClass("egquery",
            representation(term = "character",
@@ -34,7 +39,12 @@ NULL
                      count = data.frame()),
            contains = "eutil")
 
-##' @export
+
+# show-method ------------------------------------------------------------
+
+
+##' @aliases show,egquery-method
+##' @rdname show-methods
 setMethod("show", "egquery",
           function (object) {
             cat(sprintf("EGQuery for %s\n",
@@ -42,6 +52,7 @@ setMethod("show", "egquery",
             print(object@count)
             return(invisible(NULL))
           })
+
 
 ##' Retrieve the number of records in all Entrez databases for a single
 ##' text query
@@ -54,7 +65,7 @@ setMethod("show", "egquery",
 ##' 
 ##' @param term A valid Entrez text query.
 ##' 
-##' @return An \code{\link{egquery-class}} object.
+##' @return An \code{\linkS4class{egquery}} object.
 ##' 
 ##' @export
 ##' @example inst/examples/egquery.r

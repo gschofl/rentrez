@@ -1,6 +1,6 @@
 \name{elink}
 \alias{elink}
-\title{Retrieve links to records in other Entrez databases}
+\title{Retrieve UIDs linked to an input set of UIDs.}
 \usage{
   elink(id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
     cmd = "neighbor", correspondence = FALSE,
@@ -14,18 +14,19 @@
   \item{dbFrom}{Initial database containing the UIDs in the
   input list.}
 
-  \item{dbTo}{Destination database where the linked records
-  are sought.}
+  \item{dbTo}{Destination database from which to retrieve
+  linked UIDs. If not provided links will be sought in the
+  database containing the input UIDs.}
 
   \item{usehistory}{If \code{TRUE} search results are
   stored directly in the user's Web environment so that
   they can be used in subsequents calls to
   \code{\link{esummary}} or \code{\link{efetch}}.}
 
-  \item{cmd}{ELink command mode (default: 'neighbor').}
+  \item{cmd}{ELink command mode (default: 'neighbor'). See
+  Details.}
 
-  \item{correspondence}{if \code{FALSE} all destination
-  UIDs are lumped together, if \code{TRUE} correspondence
+  \item{correspondence}{if \code{TRUE} correspondence
   between query UIDs and destination UIDs is preserved.}
 
   \item{query_key}{Query key.}
@@ -36,7 +37,7 @@
   Every link in Entrez is given a name of the form
   'dbFrom_dbTo_subset'.}
 
-  \item{term}{Seqrch query to limit the output set of
+  \item{term}{Search query to limit the output set of
   linked UIDs.}
 
   \item{holding}{Name of LinkOut provider.}
@@ -55,7 +56,7 @@
   YYYY/MM/DD.}
 }
 \value{
-  An \code{\link{elink-class}} object.
+  An \code{\linkS4class{elink}} object.
 }
 \description{
   \code{elink} generates a list of UIDs in a specified
@@ -72,15 +73,51 @@
   If \code{dbTo} and \code{dbFrom} are set to the same
   database, ELink will return neighbors within that
   database.
+
+  Elink commands (cmd) specify the function that elink will
+  perform. Available commands are: \itemize{
+  \item{"\strong{neighbor}" }{(Default) ELink returns a set
+  of UIDs in dbTo linked to the input UIDs in dbFrom.}
+  \item{"\strong{neighbor_score}" }{ELink returns a set of
+  UIDs within the same database as the input UIDs along
+  with similarity scores.}
+  \item{"\strong{neighbor_history}" }{ELink posts the
+  output UIDs to the Entrez History server and returns a
+  query_key and WebEnv parameter.  Alternatively this is
+  achieved by setting \code{usehistory = TRUE}}
+  \item{"\strong{acheck}" }{ELink lists all links available
+  for a set of UIDs.} \item{"\strong{ncheck}" }{ELink
+  checks for the existence of links \emph{within the same
+  database} for a set of UIDs.} \item{"\strong{lcheck}"
+  }{Elink checks for the existence of external links
+  (LinkOuts) for a set of UIDs.} \item{"\strong{llinks}"
+  }{For each input UID, ELink lists the URLs and attributes
+  for the LinkOut providers that are not libraries.}
+  \item{"\strong{llinkslib}" }{For each input UID, ELink
+  lists the URLs and attributes for all LinkOut providers
+  including libraries.} \item{"\strong{prlinks}" }{ELink
+  lists the primary LinkOut provider for each input UID.} }
 }
 \examples{
 ## Find related data through ELink #########################################
 
-# find a set of pubmed IDs linked to nucleotide GIs
-gi_list <- c("84785887","84785899","84785907","84785905","84785889")
-links <- elink(id=gi_list, dbFrom="nucleotide", dbTo="pubmed")
-links
+# Example: find a set of pubmed IDs linked to nucleotide GIs
+gis <- c("84785887","84785899","84785907","84785905","84785889")
+rv <- elink(gis, "nucleotide", "pubmed")
+rv
 
-esummary(links)
+content(efetch(rv))
+
+# Example: Check whether two nucleotide sequences have any LinkOut providers.
+gis <- c("84785887","84785899")
+rv <- elink(gis, "nucleotide", cmd="lcheck")
+rv
+
+# Example: Find publication linked to a protein sequence
+a <- esearch("Chlamydia and cpaf", "protein")
+a
+l <- elink(a[1], dbTo="pubmed")
+l
+content(efetch(l))
 }
 
