@@ -10,16 +10,18 @@ License: MIT
 Encoding: latin1
 Depends:
     R (>= 2.15),
-    methods
 Imports:
+    methods,
+    rmisc,
+    biofiles,
     XML,
     RCurl,
-    stringr,
     Biostrings,
+    phangorn,
     ape
 Collate:
-    'eutil.r'
     'utils.r'
+    'eutil.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'

@@ -1,1 +1,6 @@
 ^\.Rproj\.user$
+^.*\.Rproj$
+data/
+dev/
+doc/
+MIT-licence

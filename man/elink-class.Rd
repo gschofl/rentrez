@@ -1,6 +1,6 @@
 \name{elink-class}
-\alias{[,elink,ANY,missing-method}
 \alias{[,elink-method}
+\alias{[,elink,ANY,missing,ANY-method}
 \alias{content,elink-method}
 \alias{elink-class}
 \title{\dQuote{elink} class}
@@ -9,13 +9,13 @@
 
   \S4method{content}{elink}(x, ...)
 
-  \S4method{[}{elink,ANY,missing}(x, i, j, ...,
+  \S4method{[}{elink,ANY,missing,ANY}(x, i, j, ...,
     drop = TRUE)
 }
 \arguments{
   \item{...}{arguments passed to the constructor method}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 
   \item{drop}{For matrices and arrays.  If \code{TRUE} the
   result is coerced to the lowest possible dimension (see
@@ -40,7 +40,7 @@
 }
 
 \section{Extends}{
-  Class \code{"\linkS4class{eutil}"}, directly.
+  Class \code{\linkS4class{eutil}}, directly.
 }
 \seealso{
   \code{\link{elink}} for generating calls to the NCBI

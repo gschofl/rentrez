@@ -1,63 +1,62 @@
-##' @include utils.r
-##' @include eutil.r
+#' @include utils.r
+#' @include eutil.r
 NULL
 
 
 # elink-class ------------------------------------------------------------
 
 
-##' \dQuote{elink} class
-##' 
-##' \dQuote{elink} is an S4 class that provides a container for data retrived
-##' by calls to the NCBI ELink utility.
-##' 
-##' @section Slots:
-##' \describe{
-##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{id}:}{An \code{\linkS4class{idlist}} object.}
-##'   \item{\code{databaseTo}:}{}
-##'   \item{\code{command}:}{}
-##'   \item{\code{queryKey}:}{}
-##'   \item{\code{webEnv}:}{}
-##'   \item{\code{linkset}:}{A list containing the linked data.}
-##' }
-##' 
-##' @section Extends: 
-##'   Class \code{"\linkS4class{eutil}"}, directly.
-##'   
-##' @param ... arguments passed to the constructor method
-##' 
-##' @seealso \code{\link{elink}} for generating calls to the NCBI ELink
-##' utility.
-##' 
-##' @name elink-class
-##' @rdname elink-class
-##' @exportClass elink
-##' @aliases [,elink-method
-.elink <- 
-  setClass("elink",
-           representation(id = "webOrId",
-                          databaseTo = "character",
-                          command = "character",
-                          queryKey = "numeric",
-                          webEnv = "character",
-                          linkset = "listOrFrame"),
-           prototype(id = .idlist(),
-                     databaseTo = NA_character_,
-                     command = NA_character_,
-                     queryKey = NA_integer_,
-                     webEnv = NA_character_,
-                     linkset = list()),
-           contains = "eutil")
+#' \dQuote{elink} class
+#' 
+#' \dQuote{elink} is an S4 class that provides a container for data retrived
+#' by calls to the NCBI ELink utility.
+#' 
+#' @section Slots:
+#' \describe{
+#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{id}:}{An \code{\linkS4class{idlist}} object.}
+#'   \item{\code{databaseTo}:}{}
+#'   \item{\code{command}:}{}
+#'   \item{\code{queryKey}:}{}
+#'   \item{\code{webEnv}:}{}
+#'   \item{\code{linkset}:}{A list containing the linked data.}
+#' }
+#' 
+#' @section Extends: 
+#'   Class \code{\linkS4class{eutil}}, directly.
+#'   
+#' @param ... arguments passed to the constructor method
+#' 
+#' @seealso \code{\link{elink}} for generating calls to the NCBI ELink
+#' utility.
+#' 
+#' @name elink-class
+#' @rdname elink-class
+#' @exportClass elink
+#' @aliases [,elink-method
+.elink <- setClass("elink",
+                   representation(id = "webOrId",
+                                  databaseTo = "character",
+                                  command = "character",
+                                  queryKey = "numeric",
+                                  webEnv = "character",
+                                  linkset = "listOrFrame"),
+                   prototype(id = .idlist(),
+                             databaseTo = NA_character_,
+                             command = NA_character_,
+                             queryKey = NA_integer_,
+                             webEnv = NA_character_,
+                             linkset = list()),
+                   contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
 
 
-##' @aliases show,elink-method
-##' @rdname show-methods
+#' @aliases show,elink-method
+#' @rdname show-methods
 setMethod("show", "elink",
           function (object) {
             if (object@command == "acheck")
@@ -67,7 +66,7 @@ setMethod("show", "elink",
             else if (object@command == "lcheck")
               .show.lcheck(object)
             else if (object@command %in% c("llinks","llinkslib","prlinks"))
-              .show.llinks(object)
+              .show.links(object)
             else {
               cat(sprintf("ELink from database %s to database %s.\n",
                           sQuote(object@id@database), sQuote(object@databaseTo)))
@@ -143,8 +142,8 @@ setMethod("show", "elink",
 # content-method ---------------------------------------------------------
 
 
-##' @rdname elink-class
-##' @rdname content-methods
+#' @rdname elink-class
+#' @rdname content-methods
 setMethod("content", "elink",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -163,7 +162,7 @@ setMethod("content", "elink",
 # subsetting-method ------------------------------------------------------
 
 
-##' @rdname elink-class
+#' @rdname elink-class
 setMethod("[", c("elink", "ANY", "missing"),
           function (x, i, j, ..., drop = TRUE) {
             if (is(x@id, "webenv")) {
@@ -177,70 +176,70 @@ setMethod("[", c("elink", "ANY", "missing"),
           })
 
 
-##' Retrieve UIDs linked to an input set of UIDs.
-##'
-##' \code{elink} generates a list of UIDs in a specified Entrez database
-##' that are linked to a set of input UIDs in either the same or another
-##' database. For instance, the ELink utility can find Entrez gene records
-##' linked to records in Entrez Protein.
-##' 
-##' See the official online documentation for NCBI's
-##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}{EUtilities}
-##' for additional information.
-##' 
-##' If \code{dbTo} and \code{dbFrom} are set to the same database, ELink will
-##' return neighbors within that database.
-##' 
-##' Elink commands (cmd) specify the function that elink will perform.
-##' Available commands are:
-##' \itemize{
-##'   \item{"\strong{neighbor}" }{(Default) ELink returns a set of UIDs in dbTo
-##'   linked to the input UIDs in dbFrom.}
-##'   \item{"\strong{neighbor_score}" }{ELink returns a set of UIDs within the
-##'   same database as the input UIDs along with similarity scores.}
-##'   \item{"\strong{neighbor_history}" }{ELink posts the output UIDs to the
-##'   Entrez History server and returns a query_key and WebEnv parameter.
-##'   Alternatively this is achieved by setting \code{usehistory = TRUE}}
-##'   \item{"\strong{acheck}" }{ELink lists all links available for a set of UIDs.}
-##'   \item{"\strong{ncheck}" }{ELink checks for the existence of links
-##'   \emph{within the same database} for a set of UIDs.}
-##'   \item{"\strong{lcheck}" }{Elink checks for the existence of external links
-##'   (LinkOuts) for a set of UIDs.}
-##'   \item{"\strong{llinks}" }{For each input UID, ELink lists the URLs and
-##'   attributes for the LinkOut providers that are not libraries.}
-##'   \item{"\strong{llinkslib}" }{For each input UID, ELink lists the URLs and
-##'   attributes for all LinkOut providers including libraries.}
-##'   \item{"\strong{prlinks}" }{ELink lists the primary LinkOut provider for
-##'   each input UID.}
-##' }
-##' 
-##' @param id (Required) A character vector of UIDs.
-##' @param dbFrom Initial database containing the UIDs in the input list.
-##' @param dbTo Destination database from which to retrieve linked UIDs. If
-##' not provided links will be sought in the database containing the input UIDs.
-##' @param usehistory If \code{TRUE} search results are stored directly in
-##' the user's Web environment so that they can be used in subsequents 
-##' calls to \code{\link{esummary}} or \code{\link{efetch}}.
-##' @param cmd ELink command mode (default: 'neighbor'). See Details.
-##' @param correspondence if \code{TRUE} correspondence between query UIDs and
-##' destination UIDs is preserved.
-##' @param query_key Query key.
-##' @param WebEnv Web Environment.
-##' @param linkname Name of the Entrez link to retrieve. Every link in
-##' Entrez is given a name of the form 'dbFrom_dbTo_subset'.
-##' @param term Search query to limit the output set of linked UIDs.
-##' @param holding Name of LinkOut provider.
-##' @param datetype Type of date to limit the search. One of 'mdat'
-##' (modification date), 'pdat' (publication date) or 'edat' (Entrez date).
-##' @param reldate umber of days back for which search items are
-##' returned.
-##' @param mindate Minimum date of search range. Format YYYY/MM/DD.
-##' @param maxdate Maximum date of search range. Format YYYY/MM/DD.
-##' 
-##' @return An \code{\linkS4class{elink}} object.
-##' 
-##' @export
-##' @example inst/examples/elink.r
+#' Retrieve UIDs linked to an input set of UIDs.
+#'
+#' \code{elink} generates a list of UIDs in a specified Entrez database
+#' that are linked to a set of input UIDs in either the same or another
+#' database. For instance, the ELink utility can find Entrez gene records
+#' linked to records in Entrez Protein.
+#' 
+#' See the official online documentation for NCBI's
+#' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}{EUtilities}
+#' for additional information.
+#' 
+#' If \code{dbTo} and \code{dbFrom} are set to the same database, ELink will
+#' return neighbors within that database.
+#' 
+#' Elink commands (cmd) specify the function that elink will perform.
+#' Available commands are:
+#' \itemize{
+#'   \item{"\strong{neighbor}" }{(Default) ELink returns a set of UIDs in dbTo
+#'   linked to the input UIDs in dbFrom.}
+#'   \item{"\strong{neighbor_score}" }{ELink returns a set of UIDs within the
+#'   same database as the input UIDs along with similarity scores.}
+#'   \item{"\strong{neighbor_history}" }{ELink posts the output UIDs to the
+#'   Entrez History server and returns a query_key and WebEnv parameter.
+#'   Alternatively this is achieved by setting \code{usehistory = TRUE}}
+#'   \item{"\strong{acheck}" }{ELink lists all links available for a set of UIDs.}
+#'   \item{"\strong{ncheck}" }{ELink checks for the existence of links
+#'   \emph{within the same database} for a set of UIDs.}
+#'   \item{"\strong{lcheck}" }{Elink checks for the existence of external links
+#'   (LinkOuts) for a set of UIDs.}
+#'   \item{"\strong{llinks}" }{For each input UID, ELink lists the URLs and
+#'   attributes for the LinkOut providers that are not libraries.}
+#'   \item{"\strong{llinkslib}" }{For each input UID, ELink lists the URLs and
+#'   attributes for all LinkOut providers including libraries.}
+#'   \item{"\strong{prlinks}" }{ELink lists the primary LinkOut provider for
+#'   each input UID.}
+#' }
+#' 
+#' @param id (Required) A character vector of UIDs.
+#' @param dbFrom Initial database containing the UIDs in the input list.
+#' @param dbTo Destination database from which to retrieve linked UIDs. If
+#' not provided links will be sought in the database containing the input UIDs.
+#' @param usehistory If \code{TRUE} search results are stored directly in
+#' the user's Web environment so that they can be used in subsequents 
+#' calls to \code{\link{esummary}} or \code{\link{efetch}}.
+#' @param cmd ELink command mode (default: 'neighbor'). See Details.
+#' @param correspondence if \code{TRUE} correspondence between query UIDs and
+#' destination UIDs is preserved.
+#' @param query_key Query key.
+#' @param WebEnv Web Environment.
+#' @param linkname Name of the Entrez link to retrieve. Every link in
+#' Entrez is given a name of the form 'dbFrom_dbTo_subset'.
+#' @param term Search query to limit the output set of linked UIDs.
+#' @param holding Name of LinkOut provider.
+#' @param datetype Type of date to limit the search. One of 'mdat'
+#' (modification date), 'pdat' (publication date) or 'edat' (Entrez date).
+#' @param reldate umber of days back for which search items are
+#' returned.
+#' @param mindate Minimum date of search range. Format YYYY/MM/DD.
+#' @param maxdate Maximum date of search range. Format YYYY/MM/DD.
+#' 
+#' @return An \code{\linkS4class{elink}} object.
+#' 
+#' @export
+#' @example inst/examples/elink.r
 elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
                    cmd = "neighbor", correspondence = FALSE,
                    query_key = NULL, WebEnv = NULL, linkname = NULL,
@@ -256,7 +255,7 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
   }
   
   ## if WebEnv and query_key are provided, dbFrom must also be provided
-  if (!is.null(query_key) && !is.null(WebEnv) && is.null(dbFrom)) {
+  if (not.null(query_key) && not.null(WebEnv) && is.null(dbFrom)) {
     stop("No database name provided")
   }
   
@@ -281,7 +280,7 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
   if (usehistory)
     cmd <- "neighbor_history"
   
-  if  (correspondence && !is.null(env_list$uid)) {
+  if  (correspondence && not.null(env_list$uid)) {
     id  <- paste0(env_list$uid, collapse="&id=")
   } else {
     id <- .collapse(env_list$uid)

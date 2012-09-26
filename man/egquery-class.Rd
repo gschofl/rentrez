@@ -2,7 +2,7 @@
 \alias{egquery-class}
 \title{\dQuote{egquery} class}
 \usage{
-  .equery(...)
+  .egquery(...)
 }
 \arguments{
   \item{...}{arguments passed to the constructor method}
@@ -23,7 +23,7 @@
 }
 
 \section{Extends}{
-  Class \code{"\linkS4class{eutil}"}, directly.
+  Class \code{\dQuote{\linkS4class{eutil}}}, directly.
 }
 \seealso{
   \code{\link{egquery}} for generating calls to the NCBI

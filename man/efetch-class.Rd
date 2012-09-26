@@ -15,7 +15,7 @@
 
   \item{format}{Output format of sequence data.}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 }
 \description{
   efetch is an S4 class that provides a container for data

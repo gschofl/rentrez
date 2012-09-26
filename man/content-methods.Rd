@@ -2,14 +2,10 @@
 \alias{content}
 \alias{content-methods}
 \title{Extract content from an eutil request.}
-\usage{
-  content(x, parse = TRUE, format = c("Biostring",
-    "DNAbin", "String"))
-}
 \arguments{
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 
-  \item{parse}{Parse into an R object where possible.}
+  \item{...}{Arguments passed on to methods.}
 }
 \description{
   This function retrieves the data returned by a call to

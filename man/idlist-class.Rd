@@ -1,6 +1,6 @@
 \name{idlist-class}
-\alias{[,idlist,numeric,missing-method}
 \alias{[,idlist-method}
+\alias{[,idlist,numeric,missing,ANY-method}
 \alias{idlist-class}
 \alias{length,idlist-method}
 \alias{show,idlist-method}
@@ -8,7 +8,7 @@
 \usage{
   .idlist(...)
 
-  \S4method{[}{idlist,numeric,missing}(x, i, j, ...,
+  \S4method{[}{idlist,numeric,missing,ANY}(x, i, j, ...,
     drop = TRUE)
 
   \S4method{length}{idlist}(x)

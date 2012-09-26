@@ -1,6 +1,6 @@
 \name{einfoDbList-class}
 \alias{[,einfoDb-method}
-\alias{[,einfoDbList,numeric,missing-method}
+\alias{[,einfoDbList,numeric,missing,ANY-method}
 \alias{content,einfoDbList-method}
 \alias{einfoDbList-class}
 \title{\dQuote{einfoDbList} class}
@@ -9,13 +9,13 @@
 
   \S4method{content}{einfoDbList}(x, ...)
 
-  \S4method{[}{einfoDbList,numeric,missing}(x, i, j, ...,
-    drop = TRUE)
+  \S4method{[}{einfoDbList,numeric,missing,ANY}(x, i, j,
+    ..., drop = TRUE)
 }
 \arguments{
   \item{...}{arguments passed to the constructor method}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 
   \item{drop}{For matrices and arrays.  If \code{TRUE} the
   result is coerced to the lowest possible dimension (see

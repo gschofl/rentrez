@@ -1,7 +1,7 @@
 \name{eutil-class}
 \alias{error,eutil-method}
-\alias{eutil,eutil-method}
 \alias{eutil-class}
+\alias{eutil,eutil-method}
 \alias{query,eutil-method}
 \title{\dQuote{eutil} class}
 \usage{
@@ -14,7 +14,7 @@
 \arguments{
   \item{...}{arguments passed to the constructor method}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{an \code{\linkS4class{eutil}} object.}
 }
 \description{
   eutil is an S4 class that is extended by the

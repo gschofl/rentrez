@@ -1,39 +1,39 @@
-##' @include utils.r
-##' @include eutil.r
+#' @include utils.r
+#' @include eutil.r
 NULL
 
 
 # esummary-class ---------------------------------------------------------
 
 
-##' \dQuote{esummary} class
-##' 
-##' esummary is an S4 class that provides a container for data retrived by
-##' calls to the NCBI ESummary utility.
-##' 
-##' @section Slots:
-##' \describe{
-##'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-##'   \item{\code{database}:}{The name of the queried database.}
-##'   \item{\code{version}:}{The version of the document summary requested.}
-##'   \item{\code{docsum}:}{The parsed document summaries for a list of input
-##'   UIDs}
-##' }
-##' 
-##' @section Extends: 
-##'   Class \code{"\linkS4class{eutil}"}, directly.
-##'   
-##' @param ... arguments passed to the constructor method
-##' 
-##' @seealso \code{\link{esummary}} for generating calls to the NCBI
-##' ESummary utility.
-##'
-##' @name esummary-class
-##' @rdname esummary-class
-##' @exportClass esummary
-##' @aliases content,esummary-method
+#' \dQuote{esummary} class
+#' 
+#' esummary is an S4 class that provides a container for data retrived by
+#' calls to the NCBI ESummary utility.
+#' 
+#' @section Slots:
+#' \describe{
+#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
+#'   \item{\code{database}:}{The name of the queried database.}
+#'   \item{\code{version}:}{The version of the document summary requested.}
+#'   \item{\code{docsum}:}{The parsed document summaries for a list of input
+#'   UIDs}
+#' }
+#' 
+#' @section Extends: 
+#'   Class \code{"\linkS4class{eutil}"}, directly.
+#'   
+#' @param ... arguments passed to the constructor method
+#' 
+#' @seealso \code{\link{esummary}} for generating calls to the NCBI
+#' ESummary utility.
+#'
+#' @name esummary-class
+#' @rdname esummary-class
+#' @exportClass esummary
+#' @aliases content,esummary-method
 .esummary <- 
   setClass("esummary",
            representation(database = "character",
@@ -48,8 +48,8 @@ NULL
 # show-method ------------------------------------------------------------
 
 
-##' @aliases show,esummary-method
-##' @rdname show-methods
+#' @aliases show,esummary-method
+#' @rdname show-methods
 setMethod("show", "esummary",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
@@ -62,8 +62,8 @@ setMethod("show", "esummary",
 # content-method ---------------------------------------------------------
 
 
-##' @rdname esummary-class
-##' @rdname content-methods
+#' @rdname esummary-class
+#' @rdname content-methods
 setMethod("content", "esummary",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -77,7 +77,7 @@ setMethod("content", "esummary",
 # subsetting-method ------------------------------------------------------
 
 
-##' @rdname esearch-class
+#' @rdname esearch-class
 setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
             x <- x@docsum
@@ -86,50 +86,50 @@ setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
 
 
 
-##' Retrieve document summaries (DocSums)
-##'
-##' \code{esummary} retrieves document summaries for a list of primary 
-##' UIDs or for a set of UIDs stored in the user's web environment
-##' (using the Entrez History server).
-##' 
-##' See the official online documentation for NCBI's
-##' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary}{EUtilities}
-##' for additional information.
-##'
-##' @param id (Required)
-##' List of UIDs provided either as a character vector, as an
-##' \code{\linkS4class{esearch}} or \code{\linkS4class{elink}} object,
-##' or by reference to a Web Environment and a query key obtained directly
-##' from objects returned by previous calls to \code{\link{esearch}},
-##' \code{\link{epost}} or \code{\link{elink}}.
-##' If UIDs are provided as a plain character vector, \code{db} must be
-##' specified explicitly, and all of the UIDs must be from the database
-##' specified by \code{db}.
-##' @param db (Required only when \code{id} is a character vector of UIDs)
-##' Database from which to retrieve DocSums.
-##' @param query_key An integer specifying which of the UID lists attached
-##' to a user's Web Environment will be used as input to \code{efetch}.
-##' (Usually obtained drectely from objects returned by previous
-##' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.)
-##' @param WebEnv A character string specifying the Web Environment that
-##' contains the UID list. (Usually obtained directely from objects returned
-##' by previous \code{\link{esearch}}, \code{\link{epost}} or
-##' \code{\link{elink}} calls.)
-##' @param retstart Numeric index of the first DocSum to be retrieved
-##' (default: 1).
-##' @param retmax Total number of DocSums from the input set to be retrieved
-##' (maximum: 10,000).
-##' @param version If "2.0" \code{esummary} will retrieve version 2.0
-##' ESummary XML output.
-##'
-##' @return An \code{\linkS4class{esummary}} object.
-##' 
-##' @seealso \code{\link{content}} to retrieve parsed DocSums from 
-##' \code{\linkS4class{esummary}} objects.
-##'
-##' @export
-##'
-##' @example inst/examples/esummary.r
+#' Retrieve document summaries (DocSums)
+#'
+#' \code{esummary} retrieves document summaries for a list of primary 
+#' UIDs or for a set of UIDs stored in the user's web environment
+#' (using the Entrez History server).
+#' 
+#' See the official online documentation for NCBI's
+#' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary}{EUtilities}
+#' for additional information.
+#'
+#' @param id (Required)
+#' List of UIDs provided either as a character vector, as an
+#' \code{\linkS4class{esearch}} or \code{\linkS4class{elink}} object,
+#' or by reference to a Web Environment and a query key obtained directly
+#' from objects returned by previous calls to \code{\link{esearch}},
+#' \code{\link{epost}} or \code{\link{elink}}.
+#' If UIDs are provided as a plain character vector, \code{db} must be
+#' specified explicitly, and all of the UIDs must be from the database
+#' specified by \code{db}.
+#' @param db (Required only when \code{id} is a character vector of UIDs)
+#' Database from which to retrieve DocSums.
+#' @param query_key An integer specifying which of the UID lists attached
+#' to a user's Web Environment will be used as input to \code{efetch}.
+#' (Usually obtained drectely from objects returned by previous
+#' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.)
+#' @param WebEnv A character string specifying the Web Environment that
+#' contains the UID list. (Usually obtained directely from objects returned
+#' by previous \code{\link{esearch}}, \code{\link{epost}} or
+#' \code{\link{elink}} calls.)
+#' @param retstart Numeric index of the first DocSum to be retrieved
+#' (default: 1).
+#' @param retmax Total number of DocSums from the input set to be retrieved
+#' (maximum: 10,000).
+#' @param version If "2.0" \code{esummary} will retrieve version 2.0
+#' ESummary XML output.
+#'
+#' @return An \code{\linkS4class{esummary}} object.
+#' 
+#' @seealso \code{\link{content}} to retrieve parsed DocSums from 
+#' \code{\linkS4class{esummary}} objects.
+#'
+#' @export
+#'
+#' @example inst/examples/esummary.r
 esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
                       retstart = 1, retmax = 10000, version = "default") {
   
@@ -139,7 +139,7 @@ esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
   }
   
   ## if WebEnv and query_key are provided, db must also be provided
-  if (!is.null(query_key) && !is.null(WebEnv) && is.null(db)) {
+  if (not.null(query_key) && not.null(WebEnv) && is.null(db)) {
     stop("No database name provided")
   }
   
@@ -150,8 +150,8 @@ esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
   if (missing(id)) {
     ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
     ## retmax stays restricted to 500.
-    env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
-                    uid = NULL, db = db)
+    env_list <- list(WebEnv = WebEnv, query_key = query_key, count = 0,
+                     uid = NULL, db = db)
   } else {
     env_list <-.getId(id)
     ## abort if no db was provided and id did not contain db 

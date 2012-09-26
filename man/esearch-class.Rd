@@ -1,7 +1,7 @@
 \name{esearch-class}
-\alias{[,esearch,numeric,missing-method}
 \alias{[,esearch-method}
-\alias{[,esummary,ANY,ANY-method}
+\alias{[,esearch,numeric,missing,ANY-method}
+\alias{[,esummary,ANY,ANY,ANY-method}
 \alias{content,esearch-method}
 \alias{esearch-class}
 \alias{length,esearch-method}
@@ -11,17 +11,18 @@
 
   \S4method{content}{esearch}(x, ...)
 
-  \S4method{[}{esearch,numeric,missing}(x, i, j, ...,
+  \S4method{[}{esearch,numeric,missing,ANY}(x, i, j, ...,
     drop = TRUE)
 
   \S4method{length}{esearch}(x)
 
-  \S4method{[}{esummary,ANY,ANY}(x, i, j, ..., drop = TRUE)
+  \S4method{[}{esummary,ANY,ANY,ANY}(x, i, j, ...,
+    drop = TRUE)
 }
 \arguments{
   \item{...}{arguments passed to the constructor method}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 
   \item{drop}{For matrices and arrays.  If \code{TRUE} the
   result is coerced to the lowest possible dimension (see

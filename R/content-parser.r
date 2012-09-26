@@ -73,10 +73,6 @@ docsum <- function (x, version) {
 #' 
 #' @param x An \code{\linkS4class{efetch}} object.
 #' 
-#' @importFrom Biostrings read.DNAStringSet
-#' @importFrom Biostrings read.AAStringSet
-#' @importFrom ape read.dna
-#' @importFrom phangorn read.aa
 #' @keywords internal
 .parseSequence <- function (x, ...) {
   
@@ -101,9 +97,9 @@ docsum <- function (x, version) {
 
 
 #' @keywords internal
-.parseFasta <- function (x, format = c("Biostrings", "DNAbin", "String")) {
+.parseFasta <- function (x, format = 'Biostrings') {
   
-  format <- match.arg(format)
+  format <- match.arg(format, c("Biostrings", "DNAbin", "String"))
   
   if (!grepl("^>", x@content)) {
     warning("Does not appear to contain a valid fasta file")
@@ -137,10 +133,10 @@ docsum <- function (x, version) {
   }
   
   if (format == "String") {
-    fasta_split <- strsplit(x@content, "\n\n")[[1]]
+    fasta_split <- unlist(strsplit(x@content, "\n\n"))
     fasta <- lapply(fasta_split, function (fasta) {
-      x <- strsplit(fasta, "\n")[[1]]
-      desc_idx <- which(grepl(pattern="^>", x))
+      x <- unlist(strsplit(fasta, "\n"))
+      desc_idx <- grep(pattern="^>", x)
       desc <- sub(">", "", x[desc_idx])
       x <- paste0(x[-desc_idx], collapse="")
       attr(x, "desc") <- desc
@@ -152,23 +148,23 @@ docsum <- function (x, version) {
 
 
 #' @keywords internal
-.parseGb <- function (x, format = c("gbRecord")) {
+.parseGb <- function (x, format = 'gbRecord') {
   
-  format <- match.arg(format)
+  format <- match.arg(format, 'gbRecord')
   
   if (format == "gbRecord") {
     
-    dbs <- biofiles::readGB(x, with_sequence=TRUE, force=FALSE)
+    dbs <- gbRecord(x, with_sequence=TRUE, force=FALSE)
     
-    if (length(dbs) == 1) {
-      return(biofiles::initGB(dbs))
+    if (length(dbs) == 1L) {
+      return(dbs)
     } else {
       records <- list()
       for (db in dbs) {
-        records <- c(records, list(biofiles::initGB(db)))
+        records <- c(records, list(db))
       }
       names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
-      return( records )
+      return(records)
     }
   }
 }
@@ -189,9 +185,7 @@ docsum <- function (x, version) {
   }
   
   doc <- getNodeSet(xmlRoot(xmlParse(x@content)), '//PubmedArticle')
-  
   reff <- lapply(doc, function (art) {
-    
     #     art <- xmlDoc(doc[[1]])
     art <- xmlDoc(art)
     
@@ -250,7 +244,7 @@ docsum <- function (x, version) {
     
     ref <- bibentry('Article', other=c(author, article, journal, issue, affiliation))
     ref
-    
+  
   })
   
   reff <- do.call("c", reff)
@@ -295,14 +289,14 @@ docsum <- function (x, version) {
 
 
 # Parse IdCheckList returned from cmd=ncheck,lcheck
-.parseIdCheckList <- function (content = o@content) {
+.parseIdCheckList <- function (content) {
   content <- xmlRoot(content)
   dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
   id <- xpathSApply(content, "//Id", xmlValue)
   has_neighbor <- unlist(xpathApply(content, "//Id", xmlGetAttr, "HasNeighbor"))
   has_linkout <- unlist(xpathApply(content, "//Id", xmlGetAttr, "HasLinkOut"))
   
-  chklst <- if (!is.null(has_neighbor)) {
+  chklst <- if (not.null(has_neighbor)) {
     data.frame(stringsAsFactors=FALSE, Id=id,
                HasNeighbor=ifelse(has_neighbor == "Y", TRUE, FALSE))
   } else if  (!is.null(has_linkout)) {

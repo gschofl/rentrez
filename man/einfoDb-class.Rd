@@ -10,7 +10,7 @@
 \arguments{
   \item{...}{arguments passed to the constructor method}
 
-  \item{x}{an \code{\link{eutil-class}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object.}
 }
 \value{
   A list
