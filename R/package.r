@@ -17,33 +17,34 @@
 #'   Important functions:
 #'   \itemize{
 #'    
-#'     \item \code{\link{efetch}}: Retrieves data records in a specified
-#'     format corresponding to a list of primary UIDs or from the user's Web
-#'     Environment.
-#'   
-#'     \item \code{\link{epost}}: Uploads primary UIDs to the users's Web 
-#'     Environment on the Entrez history server for subsequent use with
-#'     \code{esummary}, \code{elink}, or \code{efetch}.
-#'   
 #'     \item \code{\link{esearch}}: Searches and retrieves primary UIDs for use
 #'     in \code{epost}, \code{esummary}, \code{elink}, or \code{efetch}.
 #'     \code{esearch} additonally returns term translations and optionally
 #'     stores results for future use in the user's Web Environment.
+#'     
+#'     \item \code{\link{esummary}}: Retrieves document summaries from
+#'     a list of primary UIDs (Provided as a character vector or as an
+#'     \code{esearch} instance).
+#'     
+#'     \item \code{\link{efetch}}: Retrieves data records in a specified
+#'     format corresponding to a list of primary UIDs or from the user's Web
+#'     Environment.
 #'   
 #'     \item \code{\link{elink}}: Returns a list of UIDs (and relevancy
 #'     scores) from a target database that are related to a list of UIDs in
 #'     the same database or in another Entrez database.
-#'
+#'   
 #'     \item \code{\link{einfo}}: Provides field names, term counts, last
 #'     update, and available updates for each database.
-#'   
-#'     \item \code{\link{esummary}}: Retrieves document summaries from
-#'     a list of primary UIDs.
-#'   
+#'     
+#'     \item \code{\link{epost}}: Uploads primary UIDs to the users's Web 
+#'     Environment on the Entrez history server for subsequent use with
+#'     \code{esummary}, \code{elink}, or \code{efetch}.
+#'     
 #'     \item \code{\link{content}}: Retrieves the query results from the
 #'     \code{\linkS4class{eutil}} object returned by any of the above functions.
 #'     \code{content} will attempt to parse the query results into native R
-#'    objects.
+#'     objects.
 #'   
 #'     Typical usage is: 
 #'     \preformatted{
@@ -58,12 +59,6 @@
 #' @name rentrez-package
 #' @author Gerhard Schöfl \email{gschofl@@yahoo.de}
 #' @docType package
-#' @keywords package
 NA
 ####
-
-
-
-# --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
-#       vim:fdm=marker:fmr={{{,}}}:fdl=0
 

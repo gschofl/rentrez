@@ -6,50 +6,37 @@ NULL
 # esearch-class ----------------------------------------------------------
 
 
-#' \dQuote{esearch} class
+#' esearch
 #' 
-#' esearch is an S4 class that provides a container for data retrived by
-#' calls to the NCBI ESearch utility.
+#' \dQuote{esearch} is an S4 class that provides a container for data
+#' retrived by calls to the NCBI ESearch utility.
 #'
-#' @section Slots:
-#' \describe{
-#'   \item{\code{id}:}{An \code{\linkS4class{idlist}} or
-#'   \code{\linkS4class{webenv}} object.}
-#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-#' }
+#' @slot url A character vector containing the query URL.
+#' @slot error Any error or warning messages parsed from
+#' the output of the call submitted to Entrez.
+#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
+#' a character vector holding the unparsed output from the call
+#' submitted to Entrez.
+#' @slot id An \code{\linkS4class{idlist}} or \code{\linkS4class{webenv}}
+#' object.
 #' 
-#' @section Extends: 
-#'   Class \code{"\linkS4class{eutil}"}, directly.
-#'   
-#' @param ... arguments passed to the constructor method
-#' 
-#' @seealso \code{\link{esearch}} for generating calls to the NCBI ESearch
-#' utility.
-#' 
-#' @name esearch-class
-#' @rdname esearch-class
-#' @exportClass esearch
-#' @aliases content,esearch-method
-#' @aliases [,esearch-method
-#' @aliases length,esearch-method
-.esearch <- 
-  setClass("esearch",
-           representation(id = "webOrId"),
-           prototype(id = .idlist()),
-           contains = "eutil")
+#' @rdname esearch
+#' @export
+#' @classHierarchy
+#' @classMethods
+.esearch <- setClass("esearch",
+                     representation(id = "webOrId"),
+                     prototype(id = .idlist()),
+                     contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
 
 
-#' @aliases show,esearch-method
-#' @rdname show-methods
+#' @autoImports
 setMethod("show", "esearch",
           function (object) {
-            
-            ## has IdList, hence rettype = "uilist"
+            # has IdList, hence rettype = "uilist"
             if (is(object@content, "XMLInternalDocument") &&
                 not_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) { 
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\n",
@@ -66,7 +53,7 @@ setMethod("show", "esearch",
                 print(object@id@uid)
               }
 
-              ## show if esearch was performed with rettype = "count"
+              # show if esearch was performed with rettype = "count"
             } else if (is(object@content, "XMLInternalDocument") &&
               is_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) {  
               cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
@@ -80,9 +67,7 @@ setMethod("show", "esearch",
 # content-method ---------------------------------------------------------
 
 
-#' @return an \code{\linkS4class{idlist}} object.
-#' @rdname esearch-class
-#' @rdname content-methods
+#' @autoImports
 setMethod("content", "esearch",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -106,7 +91,7 @@ setMethod("content", "esearch",
 # subsetting-method ------------------------------------------------------
 
 
-#' @rdname esearch-class
+#' @autoImports
 setMethod("[", c("esearch", "numeric", "missing", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
             if (is(x@id, "webenv")) {
@@ -123,22 +108,17 @@ setMethod("[", c("esearch", "numeric", "missing", "ANY"),
 # length-method ----------------------------------------------------------
 
 
-#' @rdname esearch-class
-setMethod("length", "esearch",
-          function (x) x@id@retMax
-          )
+setMethod("length", "esearch", function (x) x@id@retMax)
 
 
-#' Search and retrieve primary UIDs matching a text query
-#'
-#' The ESearch utility searches and retrieves primary UIDs for use with
-#' \code{\link{efetch}}, \code{\link{esummary}}, and \code{\link{elink}}.
-#' \code{esearch} can also post its output set of UIDs to the Entrez history
-#' server if the \code{usehistory} parameter is set to \code{TRUE}.
-#' The resulting \code{\linkS4class{esearch}} object from either can then be
-#' passed on instead of a UID list \code{\link{esummary}},
-#' \code{\link{efetch}}, or \code{\link{elink}}.
+#' \code{esearch} searches and retrieves primary UIDs matching a text query
+#' for use with \code{\link{efetch}}, \code{\link{esummary}}, and
+#' \code{\link{elink}}. \code{esearch} can post its output set of UIDs to the
+#' Entrez history server if the \code{usehistory} parameter is set \code{TRUE}.
+#' The resulting \code{esearch} object can be passed on to
+#' \code{\link{esummary}}, \code{\link{efetch}}, or \code{\link{elink}}.
 #' 
+#' @details
 #' See the official online documentation for NCBI's
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch}{EUtilities}
 #' for additional information.
@@ -176,11 +156,11 @@ setMethod("length", "esearch",
 #' YYYY/MM/DD, YYYY/MM, or YYYY.
 #' @param maxdate Optional. Maximum date of search range. Format
 #' YYYY/MM/DD, YYYY/MM, or YYYY.
-#' 
-#' @return An \code{\linkS4class{esearch}} object.
-#'
+#' @return An \code{esearch} instance.
+#' @seealso \code{\link{esummary}}, \code{\link{efetch}}, \code{\link{elink}}
 #' @export
 #' @example inst/examples/esearch.r
+#' @autoImports
 esearch <- function (term, db = "nuccore", usehistory = FALSE,
                      WebEnv = NULL, query_key = NULL, retstart = 0,
                      retmax = 100, rettype = "uilist", field = NULL,

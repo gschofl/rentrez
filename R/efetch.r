@@ -2,58 +2,43 @@
 #' @include eutil.r
 NULL
 
-
 # efetch-class -----------------------------------------------------------
 
-
-#' \dQuote{efetch} class
+#' efetch
 #' 
-#' efetch is an S4 class that provides a container for data retrived by calls
-#' to the NCBI EFetch utility.
+#' \dQuote{efetch} is an S4 class that provides a container for data retrived
+#' by calls to the NCBI EFetch utility.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{database}:}{The name of the queried database.}
-#'   \item{\code{type}:}{A character vector specifying the record view
-#'   returned, such as Abstract or MEDLINE from \sQuote{PubMed}, or GenPept
-#'   or FASTA from \sQuote{protein}}
-#'   \item{\code{mode}:}{A character vector specifying the data format of the
-#'   records returned, such as plain text, HMTL or XML}
-#' }
+#' @slot url A character vector containing the query URL.
+#' @slot error Any error or warning messages parsed from
+#' the output of the call submitted to Entrez.
+#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
+#' a character vector holding the unparsed output from the call
+#' submitted to Entrez.
+#' @slot database A character vector giving the name of the queried database.
+#' @slot type A character vector specifying the record view returned, such as
+#' Abstract or MEDLINE from \sQuote{PubMed}, or GenPept or FASTA from
+#' \sQuote{protein}.
+#' @slot mode A character vector specifying the data format of the records
+#' returned, such as plain text, HMTL or XML.
 #' 
-#' @section Extends: 
-#'   Class \code{"\linkS4class{eutil}"}, directly.
-#'   
-#' @param ... arguments passed to the constructor method
-#' 
-#' @seealso \code{\link{efetch}} for generating calls to the NCBI EFetch
-#' utility.
-#' 
-#' @name efetch-class
-#' @rdname efetch-class
-#' @exportClass efetch
-#' @aliases content,efetch-method
-#' @aliases write,efetch-method
-#' @aliases c,efetch-method
-.efetch <-
-  setClass("efetch", 
-           representation(database = "character",
-                          type = "characterOrNull",
-                          mode = "characterOrNull"),
-           prototype(database = NA_character_,
-                     type = NA_character_,
-                     mode = NA_character_),
-           contains = "eutil")
+#' @rdname efetch
+#' @export
+#' @classHierarchy
+#' @classMethods
+.efetch <- setClass("efetch", 
+                    representation(database = "character",
+                                   type = "characterOrNull",
+                                   mode = "characterOrNull"),
+                    prototype(database = NA_character_,
+                              type = NA_character_,
+                              mode = NA_character_),
+                    contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
 
 
-#' @aliases show,efetch-method
-#' @rdname show-methods
 setMethod("show", "efetch",
           function (object) {
             cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
@@ -68,15 +53,10 @@ setMethod("show", "efetch",
 
 #' Write efetch data to file
 #'
-#' @usage write(x, file = "data", append = FALSE)
-#' 
-#' @param x An \code{efetch} object.
+#' @param x An \code{\linkS4class{efetch}} instance.
 #' @param file A connection, or a character string naming the file to write to.
-#' @param append if \code{TRUE} the data \code{x} is appended to the connection
-#'
+#' @param append Append the data \code{x} to the connection.
 #' @export
-#' @docType methods
-#' @rdname write-methods
 setMethod("write", "efetch",
           function (x, file = "data", append = FALSE) {
             write(x = x@content, file = file, append = append)
@@ -92,12 +72,9 @@ setMethod("write", "efetch",
 #' \code{rettype} can be combined.
 #'
 #' @usage c(...)
-#' 
 #' @param ... objects to be combined.
-#'
 #' @export
-#' @docType methods
-#' @rdname c-methods
+#' @autoImports
 setMethod("c", "efetch",
           function (x, ..., recursive = FALSE) {
             db <- unique(c(x@database, unlist(lapply(list(...), slot, "database"))))
@@ -124,12 +101,7 @@ setMethod("c", "efetch",
 # content-method ---------------------------------------------------------
 
 
-#' @usage content(x, parse = TRUE, format = c("Biostrings", "DNAbin", "String"))
-#'
-#' @param format Output format of sequence data.
-#' 
-#' @rdname efetch-class
-#' @rdname content-methods
+#' @autoImports
 setMethod("content", "efetch",
           function(x, parse = TRUE, ...) {
             if (isTRUE(parse)) {
@@ -147,12 +119,11 @@ setMethod("content", "efetch",
           })
 
 
-#' Retrieve data records in the requested format from NCBI
-#'
-#' \code{efetch} retrieves data records in the requested format from a 
-#' character vector of one or more primary UIDs or from a set of UIDs
-#' stored in the user's web environment.
+#' \code{efetch} retrieves data records in the requested format from a
+#' character vector of one or more primary UIDs or from a set of UIDs stored 
+#' in the user's web environment.
 #' 
+#' @details
 #' See the official online documentation for NCBI's
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
 #' for additional information.
@@ -163,10 +134,10 @@ setMethod("content", "efetch",
 #' 
 #' @param id (Required)
 #' List of UIDs provided either as a character vector, as an
-#' \code{\link{esearch-class}} object, or by reference to a web environment
+#' \code{\linkS4class{esearch}} instance, or by reference to a web environment
 #' and a query key obtained directly from previous calls to
-#' \code{\link{esearch}} (if \code{usehistory} was set \code{TRUE}),
-#' \code{\link{epost}} or \code{\link{elink}}.
+#' \code{\linkS4class{esearch}} (if \code{usehistory} was set \code{TRUE}),
+#' \code{\linkS4class{epost}} or \code{\linkS4class{elink}}.
 #' If UIDs are provided as a plain character vector, \code{db} must be
 #' specified explicitly, and all of the UIDs must be from the database
 #' specified by \code{db}.
@@ -177,11 +148,12 @@ setMethod("content", "efetch",
 #' @param query_key An integer specifying which of the UID lists attached
 #' to a user's Web Environment will be used as input to \code{efetch}.
 #' (Usually obtained drectely from objects returned by previous
-#' \code{\link{esearch}}, \code{\link{epost}} or \code{\link{elink}} calls.)
+#' \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
+#' \code{\linkS4class{elink}} calls.)
 #' @param WebEnv A character string specifying the Web Environment that
 #' contains the UID list. (Usually obtained directely from objects returned
-#' by previous \code{\link{esearch}}, \code{\link{epost}} or
-#' \code{\link{elink}} calls.)
+#' by previous \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
+#' \code{\linkS4class{elink}} calls.)
 #' @param rettype A character string specifying the report type returned,
 #' such as 'abstract' or 'medline' from PubMed, 'gp' or 'fasta' from
 #' protein, or 'gb', 'gbwithparts, or 'fasta_cds_na' from nuccore.
@@ -199,15 +171,13 @@ setMethod("content", "efetch",
 #' @param seq_stop Last sequence base to retrieve.
 #' @param complexity Data content to return. (0: entire data structure,
 #' 1: bioseq, 2: minimal bioseq-set, 3: minimal nuc-prot, 4: minimal pub-set)
-#' 
-#' @return An \code{\linkS4class{efetch}} object.
+#' @return An \code{efetch} instance.
 #' @seealso \code{\link{efetch.batch}} for downloading more than about 500
 #' data records.
 #' \code{\link{content}} to retrieve data from \code{\linkS4class{efetch}}
 #' objects.
-#'
-#' @export
 #' @example inst/examples/efetch.r
+#' @autoImports
 efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
                     rettype = NULL, retmode = NULL, retstart = NULL,
                     retmax = 500, strand = NULL, seq_start = NULL,
@@ -286,6 +256,7 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
 #'
 #' \code{efetch.batch} retrieves large data sets from NCBI in batches.
 #' 
+#' @details
 #' See the official online documentation for NCBI's
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch}{EUtilities}
 #' for additional information.
@@ -312,11 +283,10 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
 #' @param seq_stop Last sequence base to retrieve.
 #' @param complexity Data content to return. (0: entire data structure,
 #' 1: bioseq, 2: minimal bioseq-set, 3: minimal nuc-prot, 4: minimal pub-set)
-#' 
 #' @return An \code{\linkS4class{efetch}} object.
-#'
 #' @export
 #' @example inst/examples/efetch.batch.r
+#' @autoImports
 efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
                           strand=NULL, seq_start=NULL, seq_stop=NULL,
                           complexity=NULL) {
@@ -362,7 +332,8 @@ browse <- function (ref, ...) {
   UseMethod("browse", ref)
 }
 
-#' @S3method browse bibentry
+
+#' @export
 browse.bibentry <- function (ref, browser = getOption("browser")) {  
   if (all(!nzchar(ref$doi))) {
     return("No doi available")
@@ -383,34 +354,29 @@ abstract <- function (ref, ...) {
   UseMethod("abstract", ref)
 }
 
-#' @S3method abstract bibentry
+#' @export
 abstract.bibentry <- function (ref) {
   return(ref$abstract)
 }
 
 
-#' @S3method print idlist
+#' @export
 print.idlist <- function (x) {
   print(unclass(x))
   invisible()
 }
 
 
-#' @S3method print webenv
+#' @export
 print.webenv <- function (x) {
   print(unclass(x))
   invisible()
 }
 
 
-#' @S3method [ idlist
+#' @export
 `[.idlist` <- function (x, i, j, ..., drop = TRUE) {
   v <- NextMethod()
   structure(v, database = attr(x, "database"), class = attr(x, "class"))
 }
-
-
-
-# --R-- vim:ft=r:sw=2:sts=2:ts=4:tw=76:
-#       vim:fdm=marker:fmr={{{,}}}:fdl=0
 

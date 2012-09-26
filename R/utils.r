@@ -1,49 +1,4 @@
-#' @import methods
-#' @import rmisc
-#' 
-#' @importClassesFrom XML XMLInternalDocument
-#' @importClassesFrom XML HTMLInternalDocument
-#' @importClassesFrom XML XMLCodeDoc
-#' @importFrom XML xmlTreeParse
-#' @importFrom XML getNodeSet
-#' @importFrom XML xpathSApply
-#' @importFrom XML xpathApply
-#' @importFrom XML xmlSApply
-#' @importFrom XML xmlParse
-#' @importFrom XML xmlSize
-#' @importFrom XML xmlDoc
-#' @importFrom XML xmlRoot
-#' @importFrom XML xmlChildren
-#' @importFrom XML xmlValue
-#' @importFrom XML xmlName
-#' @importFrom XML xmlGetAttr
-#' @importFrom XML free
-#' 
-#' @importFrom RCurl getURL
-#' @importFrom RCurl postForm
-#' @importFrom RCurl curlUnescape
-#' @importFrom RCurl curlOptions
-#'
-#' @importClassesFrom Biostrings XString
-#' @importClassesFrom Biostrings XStringSet
-#' @importFrom Biostrings read.DNAStringSet
-#' @importFrom Biostrings read.AAStringSet
-#' 
-#' @importFrom biofiles gbRecord
-#' @importFrom ape read.dna
-#' @importFrom phangorn read.aa
-NULL
-
-
-# utility functions ------------------------------------------------------
-
-
-#' Construct url, fetch response, construct eutil object
-#' 
-#' @param eutil Which eutil?
-#' @param ... Additional args.
-#' 
-#' @keywords internal
+#' @autoImports
 .query <- function (eutil, ...) {
   eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
   query_string <- .query_string(..., tool="rentrez", email="gschofl@yahoo.de")
@@ -61,7 +16,7 @@ NULL
 }
 
 
-#' @keywords internal
+#' @autoImports
 .query_string <- function (...) {
   args <- list(...)
   params <- names(args)
@@ -71,7 +26,7 @@ NULL
 }
 
 
-#' @keywords internal
+#' @autoImports
 .escape <- function (s, httpPOST=FALSE) {
   if (httpPOST) {
     s <- gsub("\\s+", " ", s)
@@ -89,11 +44,7 @@ NULL
 }
 
 
-#' use HTTP POST
-#' 
-#' @inheritParams .query
-#' 
-#' @keywords internal
+#' @autoImports
 .httpPOST <- function (eutil, ...) {
   
   user_agent <- switch(eutil,
@@ -122,7 +73,7 @@ NULL
 }
 
 
-#' @keywords internal
+#' @autoImports
 checkErrors <- function (o) {
   error <- NULL
   err_msgs <- NULL
@@ -155,7 +106,7 @@ checkErrors <- function (o) {
 }
 
 
-#' @keywords internal
+#' @autoImports
 .getId <- function (id) {
   
   if (isS4(id)) {
@@ -234,7 +185,7 @@ checkErrors <- function (o) {
 }
 
 
-#' @keywords internal
+#' @autoImports
 .convertDbXref <- function (dbx_name) {
   if (length(dbx_name) > 1L) {
     stop("Multiple database names. Provide only one.")
@@ -254,7 +205,6 @@ checkErrors <- function (o) {
 }
 
 
-#' @keywords internal
 .collapse <- function (id) {
   if (is.null(id)) NULL else paste0(id, collapse = ",")
 }

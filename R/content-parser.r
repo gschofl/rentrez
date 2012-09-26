@@ -1,6 +1,6 @@
 ## parse docsums (esummary) ####
 
-#' @keywords internal
+#' @autoImports
 docsum <- function (x, version) {
   
   if (identical(version, "default")) {
@@ -30,6 +30,7 @@ docsum <- function (x, version) {
 }
 
 # Parse a DocSum recursively and return it as a named list
+#' @autoImports
 .parse_docsum <- function (ds) {
   if (xmlName(ds) == "DocSum") {
     .docsum <- function (ds) {
@@ -69,11 +70,7 @@ docsum <- function (x, version) {
 ## Parse Sequence data (efetch) ####
 
 
-#' Parse sequence data from efetch 
-#' 
-#' @param x An \code{\linkS4class{efetch}} object.
-#' 
-#' @keywords internal
+#' @autoImports
 .parseSequence <- function (x, ...) {
   
   ## if rettype = fasta
@@ -96,7 +93,7 @@ docsum <- function (x, version) {
 }
 
 
-#' @keywords internal
+#' @autoImports
 .parseFasta <- function (x, format = 'Biostrings') {
   
   format <- match.arg(format, c("Biostrings", "DNAbin", "String"))
@@ -147,7 +144,7 @@ docsum <- function (x, version) {
 }
 
 
-#' @keywords internal
+#' @autoImports
 .parseGb <- function (x, format = 'gbRecord') {
   
   format <- match.arg(format, 'gbRecord')
@@ -172,12 +169,7 @@ docsum <- function (x, version) {
 
 ## parse pubmed records (efetch) ####
 
-
-#' Parse XML-records retrieved from pubmed
-#' 
-#' @param x An \code{\linkS4class{efetch}} object.
-#'
-#' @keywords internal
+#' @autoImports
 .parsePubmed <- function (x) {
   
   if (x@mode != 'xml') {
@@ -256,6 +248,7 @@ docsum <- function (x, version) {
 ## Parse linksets (elink) ####
 
 
+#' @autoImports
 .parseIdUrlList <- function (content) {
   content <- xmlRoot(content)
   idUrlSet <- getNodeSet(content, "//IdUrlSet")
@@ -289,6 +282,7 @@ docsum <- function (x, version) {
 
 
 # Parse IdCheckList returned from cmd=ncheck,lcheck
+#' @autoImports
 .parseIdCheckList <- function (content) {
   content <- xmlRoot(content)
   dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
@@ -309,6 +303,7 @@ docsum <- function (x, version) {
 
 
 # Parse a LinkSet and return it as a data.frame
+#' @autoImports
 .parseIdLinkSet <- function (content) {
   content <- xmlRoot(content)
   dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
@@ -340,6 +335,7 @@ docsum <- function (x, version) {
 
 
 # Parse a LinkSet and return it as a named list
+#' @autoImports
 .parseLinkSet <- function (content) {
   linkSetDb <- getNodeSet(xmlRoot(content), "//LinkSetDb")
   

@@ -6,36 +6,28 @@ NULL
 # elink-class ------------------------------------------------------------
 
 
-#' \dQuote{elink} class
+#' elink
 #' 
 #' \dQuote{elink} is an S4 class that provides a container for data retrived
 #' by calls to the NCBI ELink utility.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{id}:}{An \code{\linkS4class{idlist}} object.}
-#'   \item{\code{databaseTo}:}{}
-#'   \item{\code{command}:}{}
-#'   \item{\code{queryKey}:}{}
-#'   \item{\code{webEnv}:}{}
-#'   \item{\code{linkset}:}{A list containing the linked data.}
-#' }
+#' @slot url A character vector containing the query URL.
+#' @slot error Any error or warning messages parsed from
+#' the output of the call submitted to Entrez.
+#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
+#' a character vector holding the unparsed output from the call
+#' submitted to Entrez.
+#' @slot id
+#' @slot databaseTo 
+#' @slot command 
+#' @slot queryKey 
+#' @slot webEnv 
+#' @slot linkset A list containing the linked data.
 #' 
-#' @section Extends: 
-#'   Class \code{\linkS4class{eutil}}, directly.
-#'   
-#' @param ... arguments passed to the constructor method
-#' 
-#' @seealso \code{\link{elink}} for generating calls to the NCBI ELink
-#' utility.
-#' 
-#' @name elink-class
-#' @rdname elink-class
-#' @exportClass elink
-#' @aliases [,elink-method
+#' @rdname elink
+#' @export
+#' @classHierarchy
+#' @classMethods
 .elink <- setClass("elink",
                    representation(id = "webOrId",
                                   databaseTo = "character",
@@ -55,8 +47,6 @@ NULL
 # show-method ------------------------------------------------------------
 
 
-#' @aliases show,elink-method
-#' @rdname show-methods
 setMethod("show", "elink",
           function (object) {
             if (object@command == "acheck")
@@ -91,7 +81,6 @@ setMethod("show", "elink",
           })
 
 
-#' @keywords internal
 .show.acheck <- function (object) {
   cat("ELink list of possible links for a set of UIDs:\n")
   print(object@linkset)
@@ -99,7 +88,6 @@ setMethod("show", "elink",
 }
 
 
-#' @keywords internal
 .show.ncheck <- function (object) {
   cat("Existence of links within the same database for a set of UIDs\n")
   print(object@linkset)
@@ -107,7 +95,6 @@ setMethod("show", "elink",
 }
 
 
-#' @keywords internal
 .show.lcheck <- function (object) {
   cat("Existence of external links for a set of UIDs\n")
   print(object@linkset)
@@ -115,7 +102,7 @@ setMethod("show", "elink",
 }
 
 
-#' @keywords internal
+#' @autoImports
 .show.links <- function (object) {
   cat("External links for UID:")
   w <- getOption("width")
@@ -142,8 +129,6 @@ setMethod("show", "elink",
 # content-method ---------------------------------------------------------
 
 
-#' @rdname elink-class
-#' @rdname content-methods
 setMethod("content", "elink",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -162,7 +147,6 @@ setMethod("content", "elink",
 # subsetting-method ------------------------------------------------------
 
 
-#' @rdname elink-class
 setMethod("[", c("elink", "ANY", "missing"),
           function (x, i, j, ..., drop = TRUE) {
             if (is(x@id, "webenv")) {
@@ -176,13 +160,13 @@ setMethod("[", c("elink", "ANY", "missing"),
           })
 
 
-#' Retrieve UIDs linked to an input set of UIDs.
-#'
-#' \code{elink} generates a list of UIDs in a specified Entrez database
-#' that are linked to a set of input UIDs in either the same or another
+
+#' \code{elink} generates a list of UIDs in a specified Entrez database that
+#' are linked to a set of input UIDs in either the same or another
 #' database. For instance, the ELink utility can find Entrez gene records
 #' linked to records in Entrez Protein.
 #' 
+#' @details
 #' See the official online documentation for NCBI's
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink}{EUtilities}
 #' for additional information.
@@ -235,11 +219,10 @@ setMethod("[", c("elink", "ANY", "missing"),
 #' returned.
 #' @param mindate Minimum date of search range. Format YYYY/MM/DD.
 #' @param maxdate Maximum date of search range. Format YYYY/MM/DD.
-#' 
-#' @return An \code{\linkS4class{elink}} object.
-#' 
+#' @return An \code{\elink} instance.
 #' @export
 #' @example inst/examples/elink.r
+#' @autoImports
 elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
                    cmd = "neighbor", correspondence = FALSE,
                    query_key = NULL, WebEnv = NULL, linkname = NULL,

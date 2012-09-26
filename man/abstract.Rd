@@ -1,3 +1,4 @@
+% Built by roxygen3 0.1
 \name{abstract}
 \alias{abstract}
 \title{Access abstract from a bibentry}
@@ -9,7 +10,8 @@
 
   \item{...}{Further arguments}
 }
-\description{
-  Access abstract from a bibentry
-}
 
+\description{
+Access abstract from a bibentry
+}
+\keyword{methods}

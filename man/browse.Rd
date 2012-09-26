@@ -1,3 +1,4 @@
+% Built by roxygen3 0.1
 \name{browse}
 \alias{browse}
 \title{Open a bibentry in the browser}
@@ -9,7 +10,8 @@
 
   \item{...}{Further arguments}
 }
-\description{
-  Open a bibentry in the browser
-}
 
+\description{
+Open a bibentry in the browser
+}
+\keyword{methods}

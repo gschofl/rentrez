@@ -14,9 +14,9 @@ setClassUnion("characterOrNull", c("character", "NULL"))
 # eutil-class ------------------------------------------------------------
 
 
-#' \dQuote{eutil} class
+#' eutil
 #'
-#' eutil is an S4 class that is extended by the 
+#' \dQuote{eutil} is an S4 class that is extended by the 
 #' \code{\linkS4class{einfo}}, \code{\linkS4class{esearch}},
 #' \code{\linkS4class{esummary}}, \code{\linkS4class{efetch}},
 #' \code{\linkS4class{elink}}, \code{\linkS4class{epost}},
@@ -27,22 +27,17 @@ setClassUnion("characterOrNull", c("character", "NULL"))
 #' Detailed information about the EUtilities provided by NCBI is available
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25501/}{here}.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{url}:}{A character vector containing the query URL.}
-#'   \item{\code{error}:}{Any error or warning messages parsed from
-#'   the output of the call submitted to Entrez.}
-#'   \item{\code{content}:}{An \code{XMLInternalDocument} object or
-#'   a character vector holding the unparsed output from the call
-#'   submitted to Entrez.}
-#' }
-#'   
-#' @param ... arguments passed to the constructor method
-#' 
-#' @name eutil-class
-#' @rdname eutil-class
-#' @exportClass eutil
-#' @aliases eutil,eutil-method
+#' @slot url A character vector containing the query URL.
+#' @slot error Any error or warning messages parsed from
+#' the output of the call submitted to Entrez.
+#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
+#' a character vector holding the unparsed output from the call
+#' submitted to Entrez.
+#'  
+#' @rdname eutil
+#' @export
+#' @classHierarchy
+#' @classMethods
 .eutil <- setClass("eutil",
                    representation(url = "character",
                                   error = "list",
@@ -61,12 +56,11 @@ setClassUnion("characterOrNull", c("character", "NULL"))
 #' Utilities from the resulting \code{eutil} objects. As default, the function
 #' will attempt to parse the contents into an R object.
 #' 
-#' @param x An \code{\linkS4class{eutil}} object.
-#' @param ... Arguments passed on to methods.
-#' 
+#' @param x An \code{\linkS4class{eutil}} object
+#' @param ... Further arguments passed on to methods. 
+#' @rdname content
 #' @export
-#' @docType methods
-#' @rdname content-methods
+#' @genericMethods
 setGeneric("content", signature="x", function(x, ...) {
   standardGeneric("content")
 })
@@ -77,17 +71,16 @@ setGeneric("content", signature="x", function(x, ...) {
 
 #' Extract errors from an eutil request.
 #' 
-#' @param x an \code{\linkS4class{eutil}} object.
-#' @param ... Arguments passed on to methods.
+#' @param x An \code{\linkS4class{eutil}} object
+#' @param ... Further arguments passed on to methods. 
+#' @rdname error
 #' @export
-#' @docType methods
+#' @genericMethods
 setGeneric("error", signature="x", function(x, ...) {
   standardGeneric("error")
 })
 
 
-#' @rdname eutil-class
-#' @rdname error
 setMethod("error", "eutil", function (x) {
   e <- x@error
   if (all(idx <- vapply(e, is.null, logical(1)))) {
@@ -103,46 +96,41 @@ setMethod("error", "eutil", function (x) {
 
 #' Extract url from an eutil request.
 #' 
-#' @param x an \code{\linkS4class{eutil}} object.
-#' @param ... Arguments passed on to methods.
+#' @param x An \code{\linkS4class{eutil}} object
+#' @param ... Further arguments passed on to methods. 
+#' @rdname query
 #' @export
-#' @docType methods
+#' @genericMethods
 setGeneric("query",  signature="x", function(x, ...) {
   standardGeneric("query")
 })
 
 
-#' @rdname eutil-class
-#' @rdname query
 setMethod("query", "eutil", function (x) x@url)
 
 
 # idlist-class -----------------------------------------------------------
 
 
-#' \dQuote{idlist} class
+#' idlist
 #' 
-#' A container for UIDs
+#' \dQuote{idlist} is an S4 class that provides a container for primary
+#' UIDs used by NCBI.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{database}:}{Database from which the UIDs were retrieved}
-#'   \item{\code{retStart}:}{The index of the first UID that is returned
-#'   by an \code{esearch} call.}
-#'   \item{\code{retMax}:}{The number of UIDs out of the total number of
-#'   records that is returned by an \code{esearch} call.}
-#'   \item{\code{count}:}{The total number of records matching a query.}
-#'   \item{\code{queryTranslation}:}{The search term as translated by the
-#'   Entrez search system}
-#'   \item{\code{uid}:}{A character vector holding the retrieved UIDs.}
-#' }
+#' @slot database Database from which the UIDs were retrieved
+#' @slot retStart The index of the first UID that is returned
+#' by a call to \code{\link{esearch}}.
+#' @slot retMax The number of UIDs out of the total number of
+#' records that is returned by a call to \code{\link{esearch}}.
+#' @slot count The total number of records matching a query.
+#' @slot queryTranslation The search term as translated by the
+#' Entrez search system
+#' @slot uid A character vector holding the retrieved UIDs.
 #' 
-#' @keywords internal
-#' @name idlist-class
-#' @rdname idlist-class
-#' @aliases show,idlist-method
-#' @aliases [,idlist-method
-#' @aliases length,idlist-method
+#' @rdname idlist
+#' @export
+#' @classHierarchy
+#' @classMethods
 .idlist <- setClass("idlist",
                     representation(database = "character",
                                    retMax = "numeric",
@@ -161,30 +149,28 @@ setMethod("query", "eutil", function (x) x@url)
 # webenv-class ----------------------------------------------------------
 
 
-#' \dQuote{webenv} class
+#' webenv
 #' 
-#' A container for web environments
+#' \dQuote{webenv} is an S4 class that provides a container for access
+#' information to NCBI web environments.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{database}:}{Database from which the UIDs were retrieved}
-#'   \item{\code{retStart}:}{The index of the first UID that is returned
-#'   by an \code{esearch} call.}
-#'   \item{\code{retMax}:}{The number of UIDs out of the total number of
-#'   records that is returned by an \code{esearch} call.}
-#'   \item{\code{count}:}{The total number of records matching a query.}
-#'   \item{\code{queryTranslation}:}{The search term as translated by the
-#'   Entrez search system}
-#'   \item{\code{queryKey}:}{Integer query key returned by an esearch call
-#'   when \strong{usehistory} is set \code{TRUE}}
-#'   \item{\code{webEnv}:}{Web environment string returned from an esearch
-#'   call when \strong{usehistory} is set \code{TRUE}}
-#' }
+#' @slot database Database from which the UIDs were retrieved.
+#' @slot retStart The index of the first UID that is returned
+#' by a call to \code{\link{esearch}}.
+#' @slot retMax The number of UIDs out of the total number of
+#' records that is returned by a call to \code{\link{esearch}}.
+#' @slot count The total number of records matching a query.
+#' @slot queryTranslation The search term as translated by the
+#' Entrez search system.
+#' @slot queryKey Integer query key returned by an esearch call
+#' when \strong{usehistory} is set \code{TRUE}.
+#' @slot webEnv Web environment string returned from an esearch
+#' call when \strong{usehistory} is set \code{TRUE}}
 #' 
-#' @keywords internal
-#' @name webenv-class
-#' @rdname webenv-class
-#' @aliases show,webenv-method
+#' @rdname webenv
+#' @export
+#' @classHierarchy
+#' @classMethods
 .webenv <- setClass("webenv",
                     representation(database = "character",
                                    retMax = "numeric",
@@ -202,7 +188,6 @@ setMethod("query", "eutil", function (x) x@url)
                               webEnv = NA_character_))
 
 
-#' @keywords internal
 setClassUnion("webOrId", c("webenv", "idlist"))
 
 
@@ -229,7 +214,6 @@ setMethod("show", "webenv",
 # subsetting-method ------------------------------------------------------
 
 
-#' @rdname idlist-class
 setMethod("[", c("idlist", "numeric", "missing", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
             uids <- x@uid[i]
@@ -242,7 +226,5 @@ setMethod("[", c("idlist", "numeric", "missing", "ANY"),
 # length-method ----------------------------------------------------------
 
 
-#' @rdname idlist-class
-setMethod("length", "idlist",
-          function (x) length(x@uid))
+setMethod("length", "idlist", function (x) length(x@uid))
 

@@ -1,13 +1,24 @@
+% Built by roxygen3 0.1
 \name{query}
 \alias{query}
-\alias{query-methods}
 \title{Extract url from an eutil request.}
+\usage{
+  query(x, ...)
+}
 \arguments{
-  \item{x}{an \code{\linkS4class{eutil}} object.}
+  \item{x}{An \code{\linkS4class{eutil}} object}
 
-  \item{...}{Arguments passed on to methods.}
+  \item{...}{Further arguments passed on to methods.}
 }
+
 \description{
-  Extract url from an eutil request.
+Extract url from an eutil request.
+}
+\section{Method signatures for generic query}{
+\itemize{
+  \item \linkS4class{eutil}
 }
 
+}
+
+\keyword{methods}

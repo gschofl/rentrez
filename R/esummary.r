@@ -6,50 +6,38 @@ NULL
 # esummary-class ---------------------------------------------------------
 
 
-#' \dQuote{esummary} class
+#' esummary
 #' 
-#' esummary is an S4 class that provides a container for data retrived by
-#' calls to the NCBI ESummary utility.
+#' \dQuote{esummary} is an S4 class that provides a container for data
+#' retrived by calls to the NCBI ESummary utility.
 #' 
-#' @section Slots:
-#' \describe{
-#'   \item{\code{url}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{error}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{content}:}{See \code{\linkS4class{eutil}}.}
-#'   \item{\code{database}:}{The name of the queried database.}
-#'   \item{\code{version}:}{The version of the document summary requested.}
-#'   \item{\code{docsum}:}{The parsed document summaries for a list of input
-#'   UIDs}
-#' }
-#' 
-#' @section Extends: 
-#'   Class \code{"\linkS4class{eutil}"}, directly.
-#'   
-#' @param ... arguments passed to the constructor method
-#' 
-#' @seealso \code{\link{esummary}} for generating calls to the NCBI
-#' ESummary utility.
+#' @slot url A character vector containing the query URL.
+#' @slot error Any error or warning messages parsed from
+#' the output of the call submitted to Entrez.
+#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
+#' a character vector holding the unparsed output from the call
+#' submitted to Entrez.
+#' @slot database The name of the queried database.
+#' @slot version The version of the document summary requested.
+#' @slot docsum The parsed document summaries for a list of input UIDs.
 #'
-#' @name esummary-class
-#' @rdname esummary-class
-#' @exportClass esummary
-#' @aliases content,esummary-method
-.esummary <- 
-  setClass("esummary",
-           representation(database = "character",
-                          version = "character",
-                          docsum = "listOrFrame"),
-           prototype(database = NA_character_,
-                     version = NA_character_,
-                     docsum = list),
-           contains = "eutil")
+#' @rdname esummary
+#' @export
+#' @classHierarchy
+#' @classMethods
+.esummary <- setClass("esummary",
+                      representation(database = "character",
+                                     version = "character",
+                                     docsum = "listOrFrame"),
+                      prototype(database = NA_character_,
+                                version = NA_character_,
+                                docsum = list),
+                      contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
 
 
-#' @aliases show,esummary-method
-#' @rdname show-methods
 setMethod("show", "esummary",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
@@ -62,8 +50,6 @@ setMethod("show", "esummary",
 # content-method ---------------------------------------------------------
 
 
-#' @rdname esummary-class
-#' @rdname content-methods
 setMethod("content", "esummary",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -77,7 +63,6 @@ setMethod("content", "esummary",
 # subsetting-method ------------------------------------------------------
 
 
-#' @rdname esearch-class
 setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
             x <- x@docsum
@@ -85,13 +70,11 @@ setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
           })
 
 
-
-#' Retrieve document summaries (DocSums)
-#'
-#' \code{esummary} retrieves document summaries for a list of primary 
-#' UIDs or for a set of UIDs stored in the user's web environment
+#' \code{esummary} retrieves document summaries (DocSums) for a list of
+#' primary UIDs or for a set of UIDs stored in the user's web environment
 #' (using the Entrez History server).
 #' 
+#' @details
 #' See the official online documentation for NCBI's
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESummary}{EUtilities}
 #' for additional information.
@@ -121,15 +104,10 @@ setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
 #' (maximum: 10,000).
 #' @param version If "2.0" \code{esummary} will retrieve version 2.0
 #' ESummary XML output.
-#'
-#' @return An \code{\linkS4class{esummary}} object.
-#' 
-#' @seealso \code{\link{content}} to retrieve parsed DocSums from 
-#' \code{\linkS4class{esummary}} objects.
-#'
+#' @return An \code{esummary} instance.
 #' @export
-#'
 #' @example inst/examples/esummary.r
+#' @autoImports
 esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
                       retstart = 1, retmax = 10000, version = "default") {
   

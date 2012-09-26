@@ -1,3 +1,4 @@
+% Built by roxygen3 0.1
 \name{ecount}
 \alias{ecount}
 \title{Retrieve the number of records in an Entrez database matching a text
@@ -10,21 +11,21 @@ query}
 
   \item{db}{An NCBI database (default = "nuccore").}
 
-  \item{...}{Additional parameters passed on to
-  \code{\link{esearch}}.}
+  \item{...}{Additional parameters passed on to \code{\link{esearch}}.}
 }
+
 \value{
-  A numeric vector.
+A numeric vector.
 }
 \description{
-  Some additional details about this function
+Some additional details about this function
 }
 \examples{
 ## retrieve the number of records for a search term in a database
 n <- ecount(term="Chlamydia psittaci", db="gene")
 n
 }
-\seealso{
-  \code{\link{esearch}}.
-}
 
+\seealso{
+\code{\link{esearch}}.
+}
