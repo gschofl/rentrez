@@ -42,7 +42,7 @@ Entrez search system.}
 when \strong{usehistory} is set \code{TRUE}.}
 
   \item{webEnv}{Web environment string returned from an esearch
-call when \strong{usehistory} is set \code{TRUE}}}
+call when \strong{usehistory} is set \code{TRUE}}
 
 }
 }

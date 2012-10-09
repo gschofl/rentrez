@@ -177,6 +177,7 @@ setMethod("content", "efetch",
 #' \code{\link{content}} to retrieve data from \code{\linkS4class{efetch}}
 #' objects.
 #' @example inst/examples/efetch.r
+#' @export
 #' @autoImports
 efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
                     rettype = NULL, retmode = NULL, retstart = NULL,

@@ -165,7 +165,7 @@ setMethod("query", "eutil", function (x) x@url)
 #' @slot queryKey Integer query key returned by an esearch call
 #' when \strong{usehistory} is set \code{TRUE}.
 #' @slot webEnv Web environment string returned from an esearch
-#' call when \strong{usehistory} is set \code{TRUE}}
+#' call when \strong{usehistory} is set \code{TRUE}
 #' 
 #' @rdname webenv
 #' @export

@@ -1,13 +1,14 @@
 #' @autoImports
 .query <- function (eutil, ...) {
-  eutils_host <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-  query_string <- .query_string(..., tool="rentrez", email="gschofl@yahoo.de")
   
-  if (identical(eutil, "egquery"))
-    url <- sprintf('http://eutils.ncbi.nlm.nih.gov/gquery/%s', query_string)
-  else
-    url <- sprintf('%s%s.fcgi%s', eutils_host, eutil, query_string)
-  
+  if (identical(eutil, "egquery")) {
+    url <- get_query_url('http://eutils.ncbi.nlm.nih.gov/gquery/',
+                         ..., , tool="rentrez", email="gschofl@yahoo.de")
+  } else {
+    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil, '.fcgi')
+    url <- get_query_url(host, ..., tool="rentrez", email="gschofl@yahoo.de")
+  }
+
   if (identical(eutil, "efetch")) {
     .eutil(url = curlUnescape(url), content = getURL(url))
   } else {
@@ -17,12 +18,16 @@
 
 
 #' @autoImports
-.query_string <- function (...) {
-  args <- list(...)
+get_query_url <- function (host, ...) {
+  if (missing(host)) {
+    stop("No host url provided")
+  }
+  args <- compact(list(...))
   params <- names(args)
-  empty <- vapply(args, is.null, logical(1))
-  fields <- paste(as.character(params[!empty]), as.character(args[!empty]), sep="=")
-  .escape(paste("?", paste(fields, collapse="&"), sep=""))
+  fields <- sprintf("%s=%s", as.character(params),
+                    vapply(args, paste0, collapse=",",
+                           FUN.VALUE=character(1), USE.NAMES=FALSE))
+  sprintf('%s%s', host, .escape(paste0("?", paste0(fields, collapse="&"))))
 }
 
 

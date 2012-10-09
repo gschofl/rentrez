@@ -60,7 +60,7 @@ the output of the call submitted to Entrez.}
 a character vector holding the unparsed output from the call
 submitted to Entrez.}
 
-  \item{term}{The search term passed on to the EGQuery Utility}}
+  \item{term}{The search term passed on to the EGQuery Utility.}
 
   \item{count}{A data frame with the following columns:
 \code{dbName}, \code{menuName}, \code{count}, and \code{status}.}

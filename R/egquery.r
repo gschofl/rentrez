@@ -16,7 +16,7 @@ NULL
 #' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
 #' a character vector holding the unparsed output from the call
 #' submitted to Entrez.
-#' @slot term The search term passed on to the EGQuery Utility}
+#' @slot term The search term passed on to the EGQuery Utility.
 #' @slot count A data frame with the following columns:
 #' \code{dbName}, \code{menuName}, \code{count}, and \code{status}.
 #' 

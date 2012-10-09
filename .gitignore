@@ -1,4 +1,11 @@
 .Rproj.user
 .Rhistory
 .RData
-dev/
+*.Rproj
+data/
+doc/
+inst/
+scripts/
+test/
+scratch.r
+
