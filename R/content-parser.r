@@ -73,14 +73,14 @@ docsum <- function (x, version) {
 #' @autoImports
 .parseSequence <- function (x, ...) {
   
+  ## if rettype = gp or gb
+  if (grepl("^gb|^gp", x@type) && x@mode == "text") {
+    return( gbRecord(gb = x, ...) )
+  }
+  
   ## if rettype = fasta
   if (grepl("^fasta", x@type) && x@mode == "text") {
     return( .parseFasta(x = x, ...) )
-  }
-  
-  ## if rettype = gp or gb
-  if (grepl("^gb|^gp", x@type) && x@mode == "text") {
-    return( .parseGb(x = x, ...) )
   }
   
   ## if retmode = xml return parsed xml tree
@@ -140,29 +140,6 @@ docsum <- function (x, version) {
       x
     })
     return( fasta )
-  }
-}
-
-
-#' @autoImports
-.parseGb <- function (x, format = 'gbRecord') {
-  
-  format <- match.arg(format, 'gbRecord')
-  
-  if (format == "gbRecord") {
-    
-    dbs <- gbRecord(x, with_sequence=TRUE, force=FALSE)
-    
-    if (length(dbs) == 1L) {
-      return(dbs)
-    } else {
-      records <- list()
-      for (db in dbs) {
-        records <- c(records, list(db))
-      }
-      names(records) <- vapply(records, "[[", "accession", FUN.VALUE=character(1))
-      return(records)
-    }
   }
 }
 
