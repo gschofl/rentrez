@@ -24,12 +24,12 @@ NULL
 #' @export
 #' @classHierarchy
 #' @classMethods
-.egquery <- setClass("egquery",
-                     representation(term = "character",
-                                    count = "data.frame"),
-                     prototype(term = NA_character_,
-                               count = data.frame()),
-                     contains = "eutil")
+setClass("egquery",
+         representation(term = "character",
+                        count = "data.frame"),
+         prototype(term = NA_character_,
+                   count = data.frame()),
+         contains = "eutil")
 
 
 # show-method ------------------------------------------------------------
@@ -68,16 +68,16 @@ egquery <- function (term) {
   
   o <- .query(eutil="egquery", term=term, retmode="xml")
   
-  .egquery(url=o@url, content=o@content, error=checkErrors(o), 
-           term=xmlValue(getNodeSet(xmlRoot(o@content), "/Result/Term")[[1L]]),
-           count=data.frame(stringsAsFactors=FALSE,
-                            dbName=vapply(getNodeSet(xmlRoot(o@content),
-                                                     "//ResultItem/DbName"), xmlValue, character(1)),
-                            menuName=vapply(getNodeSet(xmlRoot(o@content),
-                                                       "//ResultItem/MenuName"), xmlValue, character(1)),
-                            count=as.integer(vapply(getNodeSet(xmlRoot(o@content),
-                                                               "//ResultItem/Count"), xmlValue, character(1))),
-                            status=vapply(getNodeSet(xmlRoot(o@content),
-                                                     "//ResultItem/Status"), xmlValue, character(1))))   
+  new("egquery", url=o@url, content=o@content, error=checkErrors(o), 
+      term=xmlValue(getNodeSet(xmlRoot(o@content), "/Result/Term")[[1L]]),
+      count=data.frame(stringsAsFactors=FALSE,
+                       dbName=vapply(getNodeSet(xmlRoot(o@content),
+                                                "//ResultItem/DbName"), xmlValue, character(1)),
+                       menuName=vapply(getNodeSet(xmlRoot(o@content),
+                                                  "//ResultItem/MenuName"), xmlValue, character(1)),
+                       count=as.integer(vapply(getNodeSet(xmlRoot(o@content),
+                                                          "//ResultItem/Count"), xmlValue, character(1))),
+                       status=vapply(getNodeSet(xmlRoot(o@content),
+                                                "//ResultItem/Status"), xmlValue, character(1))))   
 }
 

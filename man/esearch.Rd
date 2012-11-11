@@ -90,8 +90,16 @@ Super classes:
 \itemize{
   \item \code{\link{[}}
   \item \code{\link{content}}
+  \item \code{\link{count}}
+  \item \code{\link{database}}
   \item \code{\link{length}}
+  \item \code{\link{queryKey}}
+  \item \code{\link{queryTranslation}}
+  \item \code{\link{retmax}}
+  \item \code{\link{retstart}}
   \item \code{\link{show}}
+  \item \code{\link{uid}}
+  \item \code{\link{webEnv}}
 }
 
 }
@@ -139,8 +147,7 @@ the output of the call submitted to Entrez.}
 a character vector holding the unparsed output from the call
 submitted to Entrez.}
 
-  \item{id}{An \code{\linkS4class{idlist}} or \code{\linkS4class{webenv}}
-object.}
+  \item{uid}{An \linkS4class{uid} or \linkS4class{webenv} object.}
 
 }
 }

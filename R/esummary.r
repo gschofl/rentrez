@@ -25,14 +25,20 @@ NULL
 #' @export
 #' @classHierarchy
 #' @classMethods
-.esummary <- setClass("esummary",
-                      representation(database = "character",
-                                     version = "character",
-                                     docsum = "listOrFrame"),
-                      prototype(database = NA_character_,
-                                version = NA_character_,
-                                docsum = list),
-                      contains = "eutil")
+setClass("esummary",
+         representation(database = "character",
+                        version = "character",
+                        docsum = "listOrFrame"),
+         prototype(database = NA_character_,
+                   version = NA_character_,
+                   docsum = list),
+         contains = "eutil")
+
+
+# accessor-methods -------------------------------------------------------
+
+
+setMethod("database", "esummary", function(x) x@database)
 
 
 # show-method ------------------------------------------------------------
@@ -41,7 +47,7 @@ NULL
 setMethod("show", "esummary",
           function(object) {
             cat(sprintf("Esummary query using the %s database\n",
-                        sQuote(object@database)))
+                        sQuote(database(object))))
             print(object@docsum)
             invisible()
           })
@@ -50,6 +56,8 @@ setMethod("show", "esummary",
 # content-method ---------------------------------------------------------
 
 
+#' @rdname content
+#' @autoImports
 setMethod("content", "esummary",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
@@ -63,8 +71,15 @@ setMethod("content", "esummary",
 # subsetting-method ------------------------------------------------------
 
 
-setMethod("[", c("esummary", "ANY", "ANY", "ANY"),
+setMethod("[", "esummary",
           function (x, i, j, ..., drop = TRUE) {
+            x <- x@docsum
+            callNextMethod()
+          })
+
+
+setMethod("[[", "esummary",
+          function (x, i, j, ...) {
             x <- x@docsum
             callNextMethod()
           })
@@ -151,7 +166,7 @@ esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
            version = if (identical(version, "2.0")) "2.0" else NULL)
   }
   
-  .esummary(database = db, version = version, error = checkErrors(o),
-            url = o@url, content = o@content, docsum = docsum(o, version))
+  new("esummary", database = db, version = version, error = checkErrors(o),
+      url = o@url, content = o@content, docsum = docsum(o, version))
 }
 

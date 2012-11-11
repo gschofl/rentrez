@@ -1,5 +1,5 @@
 Package: rentrez
-Version: 0.1-3
+Version: 0.1-4
 Date: 2012-07-29
 Title: An R interface to the NCBI EUtilities
 Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),
@@ -20,8 +20,10 @@ Imports:
     phangorn,
     ape
 Collate:
+    'all-generics.r'
     'utils.r'
     'eutil.r'
+    'uid-list.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'
@@ -30,4 +32,6 @@ Collate:
     'epost.r'
     'elink.r'
     'egquery.r'
+    'taxonomy.r'
+    'S3.r'
     'content-parser.r'

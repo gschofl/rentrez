@@ -113,80 +113,59 @@ checkErrors <- function (o) {
 
 #' @autoImports
 .getId <- function (id) {
-  
   if (isS4(id)) {
-    if (class(id) %in% c("esearch","idlist","webenv")) {
-      if (is(id, "esearch")) {
-        id <- id@id
-      }
-      if (is(id, "idlist")) {
+    if (class(id) %in% c("epost", "esearch", "uid", "webenv")) {
+      id <- if (is(id, "esearch")) id@uid else id
+      if (is(id, "uid")) {
         WebEnv <- NULL
         query_key <- NULL
-        count <- id@retMax # retMax is the number of UIDs included in the XML output
-        uid <- id@uid
-        db <- id@database
-      } else if (is(id, "webenv")) {
-        WebEnv <- id@webEnv
-        query_key <- id@queryKey
-        count <- id@count # the total number of UIDs stored on the history server
+        count <- retmax(id) # retmax is the number of UIDs included in the XML output
+        uid <- uid(id)
+        db <- database(id)
+      } else if (class(id) %in% c("epost", "webenv")) {
+        WebEnv <- webEnv(id)
+        query_key <- queryKey(id)
+        count <- count(id) # the total number of UIDs stored on the history server
         uid <- NULL
-        db <- id@database
+        db <- database(id)
       }
       return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
-    }
-    
-    if (is(id, "epost")) {
-      WebEnv <- id@webEnv
-      query_key <- id@queryKey
-      count <- id@count
-      uid <- NULL
-      db <- id@database
-    } else if (is(id, "elink")) {
-      if (is.na(id@queryKey) && is.na(id@webEnv)) {
+    }   
+    if (is(id, "elink")) {
+      if (is.na(queryKey(id)) && is.na(webEnv(id))) {
         WebEnv <- NULL
         query_key <- NULL
         count <- length(unlist(id@linkset))
         uid <- unname(unlist(id@linkset))
-        db <- id@databaseTo
+        db <- database(id)[["to"]]
       } else {
-        WebEnv <- id@webEnv
-        query_key <- id@queryKey
+        WebEnv <- webEnv(id)
+        query_key <- queryKey(id)
         count <- NA # we don't have any clue how many UIDs are stored at the
-        # history server if we use elink with usehistory=TRUE. 
+                    # history server if we use elink with usehistory=TRUE. 
         uid <- NULL
-        db <- id@databaseTo
+        db <- database(id)[["to"]]
       }
     } else {
       stop("UIDs must be provided as 'esearch', 'epost', or 'elink' objects.")
     }
-    
     return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
-    
   }
-  
   if (!isS4(id)) {
-    ## a vector of UIDS as returned by content(esearch_object) 
-    if (is(id, "idlist") || inherits(id, "character") || inherits(id, "numeric")) {
+    # a vector of UIDS as returned by content(esearch_object) 
+    if (inherits(id, "character") || inherits(id, "numeric")) {
       WebEnv <- NULL 
       query_key <- NULL
       count <- length(id)
       uid <- as.character(unname(id))
       db <- attr(id, "database")
-      ## a list as returned by content(epost_object)
-    } else if (is(id, "webenv")) {
-      WebEnv <- id$webEnv
-      query_key <- id$queryKey
-      count <- NA_integer_
-      uid <- NULL
-      db <- attr(id, "database")
     } else if (!is.null(names(id))) {
       db <- .convertDbXref(names(id))
     } else {
-      stop("UIDs must be provided as a vector of UIDs or as a 'webenv' object")
+      stop("UIDs must be provided as a vector of UIDs")
     } 
     return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
-  }
-  
+  } 
 }
 
 

@@ -69,7 +69,9 @@ Super classes:
 \section{Generics with methods for esummary}{
 \itemize{
   \item \code{\link{[}}
+  \item \code{\link{[[}}
   \item \code{\link{content}}
+  \item \code{\link{database}}
   \item \code{\link{show}}
 }
 

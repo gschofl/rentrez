@@ -30,17 +30,28 @@ NULL
 #' @export
 #' @classHierarchy
 #' @classMethods
-.epost <- 
-  setClass("epost",
-           representation(database = "character",
-                          count = "numeric",
-                          queryKey = "numeric",
-                          webEnv = "character"),
-           prototype(database = NA_character_,
-                     count = NA_integer_,
-                     queryKey = NA_integer_,
-                     webEnv = NA_character_),
-           contains = "eutil")
+setClass("epost",
+         representation(database = "character",
+                        count = "numeric",
+                        queryKey = "integer",
+                        webEnv = "character"),
+         prototype(database = NA_character_,
+                   count = NA_integer_,
+                   queryKey = NA_integer_,
+                   webEnv = NA_character_),
+         contains = "eutil")
+
+
+# accessor methods -------------------------------------------------------
+
+
+setMethod("database", "epost", function(x) x@database)
+
+setMethod("count", "epost", function(x) x@count)
+
+setMethod("queryKey", "epost", function(x) x@queryKey)
+
+setMethod("webEnv", "epost", function(x) x@webEnv)
 
 
 # show-method ------------------------------------------------------------
@@ -49,8 +60,8 @@ NULL
 setMethod("show", "epost",
           function (object) {
             cat(sprintf("EPost upload of %s UIDs for database %s.\nQuery Key: %s\nWeb Environment: %s\n",
-                        object@count, sQuote(object@database),
-                        object@queryKey, sQuote(object@webEnv)))
+                        count(object), sQuote(database(object)),
+                        queryKey(object), sQuote(webEnv(object))))
             invisible()
           })
 
@@ -61,8 +72,8 @@ setMethod("show", "epost",
 setMethod("content", "epost",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
-              structure(list(webEnv = x@webEnv, queryKey = x@queryKey),
-                        database = x@database, class = c("webenv","list"))
+              new("webenv", database = database(x), count = count(x),
+                  queryKey = queryKey(x), webEnv = webEnv(x))
             } else {
               x@content
             }
@@ -113,7 +124,7 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
     .query("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
   }
   
-  .epost(url=o@url, content=o@content, database=db, count=env_list$count,
-         queryKey=as.numeric(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
-         webEnv=as.character(xmlValue(xmlRoot(o@content)[["WebEnv"]])))  
+  new("epost", url=o@url, content=o@content, database=db, count=env_list$count,
+      queryKey=as.integer(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
+      webEnv=as.character(xmlValue(xmlRoot(o@content)[["WebEnv"]])))  
 }

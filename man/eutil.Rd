@@ -35,12 +35,23 @@ Sub classes:
 \section{Generics with methods for eutil}{
 \itemize{
   \item \code{\link{[}}* (4 methods defined for subclasses)
+  \item \code{\link{[[}}* (1 methods defined for subclasses)
   \item \code{\link{c}}* (1 methods defined for subclasses)
   \item \code{\link{content}}* (7 methods defined for subclasses)
+  \item \code{\link{count}}* (3 methods defined for subclasses)
+  \item \code{\link{database}}* (5 methods defined for subclasses)
   \item \code{\link{error}}
   \item \code{\link{length}}* (1 methods defined for subclasses)
   \item \code{\link{query}}
+  \item \code{\link{queryKey}}* (3 methods defined for subclasses)
+  \item \code{\link{queryTranslation}}* (1 methods defined for subclasses)
+  \item \code{\link{retmax}}* (1 methods defined for subclasses)
+  \item \code{\link{retmode}}* (1 methods defined for subclasses)
+  \item \code{\link{retstart}}* (1 methods defined for subclasses)
+  \item \code{\link{rettype}}* (1 methods defined for subclasses)
   \item \code{\link{show}}* (7 methods defined for subclasses)
+  \item \code{\link{uid}}* (2 methods defined for subclasses)
+  \item \code{\link{webEnv}}* (3 methods defined for subclasses)
   \item \code{\link{write}}* (1 methods defined for subclasses)
 }
 

@@ -16,24 +16,35 @@ NULL
 #' a character vector holding the unparsed output from the call
 #' submitted to Entrez.
 #' @slot database A character vector giving the name of the queried database.
-#' @slot type A character vector specifying the record view returned, such as
-#' Abstract or MEDLINE from \sQuote{PubMed}, or GenPept or FASTA from
-#' \sQuote{protein}.
-#' @slot mode A character vector specifying the data format of the records
-#' returned, such as plain text, HMTL or XML.
+#' @slot rettype Retrieval Mode. A character vector specifying the record
+#' view returned, such as \sQuote{Abstract} or \sQuote{MEDLINE} from
+#' \emph{pubmed}, or \sQuote{GenPept} or \sQuote{FASTA} from \emph{protein}.
+#' @slot retmode Retrieval Mode. A character vector specifying the data format
+#' of the records returned, such as plain \sQuote{text}, \sQuote{HMTL} or 
+#' \sQuote{XML}.
 #' 
 #' @rdname efetch
 #' @export
 #' @classHierarchy
 #' @classMethods
-.efetch <- setClass("efetch", 
-                    representation(database = "character",
-                                   type = "characterOrNull",
-                                   mode = "characterOrNull"),
-                    prototype(database = NA_character_,
-                              type = NA_character_,
-                              mode = NA_character_),
-                    contains = "eutil")
+setClass("efetch", 
+         representation(database = "character",
+                        rettype = "characterOrNull",
+                        retmode = "characterOrNull"),
+         prototype(database = NA_character_,
+                   rettype = NA_character_,
+                   retmode = NA_character_),
+         contains = "eutil")
+
+
+# accessor-methods -------------------------------------------------------
+
+
+setMethod("database", "efetch", function(x) x@database)
+
+setMethod("retmode", "efetch", function(x) x@retmode)
+
+setMethod("rettype", "efetch", function(x) x@rettype)
 
 
 # show-method ------------------------------------------------------------
@@ -42,9 +53,9 @@ NULL
 setMethod("show", "efetch",
           function (object) {
             cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
-                        sQuote(object@database), sQuote(object@url)))
+                        sQuote(database(object)), sQuote(query(object))))
             cat(object@content)
-            invisible()
+            invisible(NULL)
           })
 
 
@@ -77,24 +88,21 @@ setMethod("write", "efetch",
 #' @autoImports
 setMethod("c", "efetch",
           function (x, ..., recursive = FALSE) {
-            db <- unique(c(x@database, unlist(lapply(list(...), slot, "database"))))
-            db <- db[not.na(db)]
+            db <- compactNA(unique(c(database(x), vapply(list(...), database, character(1)))))
             if (length(db) > 1L)
               stop("Cannot combine objects from different databases")
-            type <- unique(c(x@type, unlist(lapply(list(...), slot, "type"))))
-            type <- type[not.na(type)]
-            if (length(type) > 1L)
+            rt <- compactNA(unique(c(rettype(x), vapply(list(...), rettype, character(1)))))
+            if (length(rt) > 1L)
               stop("Cannot combine objects with different data types")
-            mode <- unique(c(x@mode, unlist(lapply(list(...), slot, "mode"))))
-            mode <- mode[not.na(mode)]
-            if (length(mode) > 1L)
+            rm <- compactNA(unique(c(retmode(x), vapply(list(...), retmode, character(1)))))
+            if (length(rm) > 1L)
               stop("Cannot combine objects with different data modes")
             
-            url <- c(x@url, unlist(lapply(list(...), slot, "url")))
+            url <- c(query(x), vapply(list(...), query, character(1)))
             content <- c(x@content, unlist(lapply(list(...), slot, "content")))
             
-            .efetch(url = url, content = content, error = list(),
-                    database = db, mode = mode, type = type)
+            new("efetch", url = url, content = content, error = list(),
+                database = db, retmode = rm, rettype = rt)
           })
 
 
@@ -105,10 +113,13 @@ setMethod("c", "efetch",
 setMethod("content", "efetch",
           function(x, parse = TRUE, ...) {
             if (isTRUE(parse)) {
-              if (x@database == "pubmed") {
+              if (database(x) == "pubmed") {
                 return( .parsePubmed(x) )
               }
-              if (x@database %in% c("protein","nucleotide","nuccore")) {
+              if (database(x) == "taxonomy") {
+                return( .parseTaxon(x) )
+              }
+              if (database(x) %in% c("protein","nucleotide","nuccore")) {
                 return( .parseSequence(x, ...) )
               }
               return( x@content )
@@ -248,9 +259,9 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
            retmax = retmax, strand = strand, seq_start = seq_start,
            seq_stop = seq_stop, complexity = complexity)
   }
-
-  .efetch(url = o@url, content = o@content, error = list(),
-          database = db, mode = retmode, type = rettype)
+  
+  new("efetch", url = o@url, content = o@content, error = list(),
+      database = db, retmode = retmode, rettype = rettype)
 }
 
 #' Retrieve batches of data records in the requested format from NCBI
@@ -292,7 +303,7 @@ efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
                           strand=NULL, seq_start=NULL, seq_stop=NULL,
                           complexity=NULL) {
   
-  if (!is(id, "esearch") && !is(id, "epost") && !is(id, "elink"))
+  if (class(id) %ni% c("esearch", "epost", "elink"))
     stop("efetch.batch() expects an 'esearch', 'epost', or 'elink' object")
   
   max_chunk <- 500
@@ -302,14 +313,14 @@ efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
     chunk_size <- max_chunk
   }
   
-  if (id@count <= max_chunk) {
+  if (count(id) <= max_chunk) {
     res <- efetch(id=id, rettype=rettype, retmode=retmode, retstart=NULL,
                   retmax=NULL, strand=strand, seq_start=seq_start,
                   seq_stop=seq_stop, complexity=complexity)
   } else {
-    n_chunks <- id@count %/% chunk_size
+    n_chunks <- count(id)%/%chunk_size
     retstart <- seq(from=1, to=n_chunks*chunk_size, by=chunk_size)
-    res <- .efetch()
+    res <- new("efetch")
     for (start in retstart) {
       res <- c(res, efetch(id=id, rettype=rettype, retmode=retmode,
                            retstart=start, retmax=chunk_size, strand=strand,
@@ -320,64 +331,3 @@ efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
   }
   res
 }
-
-## convenience methods for bibentries ####
-
-#' Open a bibentry in the browser
-#' 
-#' @param ref A \code{\link[utils]{bibentry}} object
-#' @param ... Further arguments
-#' 
-#' @export
-browse <- function (ref, ...) {
-  UseMethod("browse", ref)
-}
-
-
-#' @export
-browse.bibentry <- function (ref, browser = getOption("browser")) {  
-  if (all(!nzchar(ref$doi))) {
-    return("No doi available")
-  }
-  l <- lapply(ref$doi[nzchar(ref$doi)], function (doi) {
-    browseURL(paste0('http://dx.doi.org/', doi), browser = browser)
-  })
-  invisible()
-}
-
-#' Access abstract from a bibentry
-#' 
-#' @param ref A \code{\link[utils]{bibentry}} object
-#' @param ... Further arguments
-#' 
-#' @export
-abstract <- function (ref, ...) {
-  UseMethod("abstract", ref)
-}
-
-#' @export
-abstract.bibentry <- function (ref) {
-  return(ref$abstract)
-}
-
-
-#' @export
-print.idlist <- function (x) {
-  print(unclass(x))
-  invisible()
-}
-
-
-#' @export
-print.webenv <- function (x) {
-  print(unclass(x))
-  invisible()
-}
-
-
-#' @export
-`[.idlist` <- function (x, i, j, ..., drop = TRUE) {
-  v <- NextMethod()
-  structure(v, database = attr(x, "database"), class = attr(x, "class"))
-}
-

@@ -74,17 +74,17 @@ docsum <- function (x, version) {
 .parseSequence <- function (x, ...) {
   
   ## if rettype = gp or gb
-  if (grepl("^gb|^gp", x@type) && x@mode == "text") {
+  if (grepl("^gb|^gp", rettype(x)) && retmode(x) == "text") {
     return( gbRecord(gb = x, ...) )
   }
   
   ## if rettype = fasta
-  if (grepl("^fasta", x@type) && x@mode == "text") {
+  if (grepl("^fasta", rettype(x)) && retmode(x) == "text") {
     return( .parseFasta(x = x, ...) )
   }
   
   ## if retmode = xml return parsed xml tree
-  if (x@mode == "xml") {
+  if (retmode(x) == "xml") {
     return( xmlParse(x@content) )
   }
   
@@ -103,9 +103,9 @@ docsum <- function (x, version) {
     return( x@content )
   }
   
-  if (x@database %in% c("nucleotide","nuccore")) {
+  if (database(x) %in% c("nucleotide","nuccore")) {
     seqtype <- "DNA"
-  } else if (x@database == "protein") {
+  } else if (database(x) == "protein") {
     seqtype <- "AA"
   }
   
@@ -113,11 +113,11 @@ docsum <- function (x, version) {
     f_tmp <- tempfile(fileext=".fa")
     write(x, file=f_tmp)
     fasta <- switch(seqtype,
-                    DNA=tryCatch(read.DNAStringSet(f_tmp, use.names=TRUE),
+                    DNA=tryCatch(readDNAStringSet(f_tmp, use.names=TRUE),
                                  error = function (e) {
-                                   read.AAStringSet(f_tmp, use.names=TRUE)
+                                   readAAStringSet(f_tmp, use.names=TRUE)
                                  }),              
-                    AA=read.AAStringSet(f_tmp, use.names=TRUE))
+                    AA=readAAStringSet(f_tmp, use.names=TRUE))
     unlink(f_tmp)
     return( fasta )
   }
@@ -149,8 +149,8 @@ docsum <- function (x, version) {
 #' @autoImports
 .parsePubmed <- function (x) {
   
-  if (x@mode != 'xml') {
-    return( x@content )
+  if (retmode(x) != 'xml') {
+    return( xmlParse(x@content) )
   }
   
   doc <- getNodeSet(xmlRoot(xmlParse(x@content)), '//PubmedArticle')
@@ -218,7 +218,54 @@ docsum <- function (x, version) {
   
   reff <- do.call("c", reff)
   reff
+}
+
+
+## parse taxonomy records (efetch) ####
+
+
+#' @autoImports
+.parseTaxon <- function (x) {
   
+  taxaSet <- getNodeSet(xmlRoot(xmlParse(x@content)), '//TaxaSet/Taxon')
+  tx <- lapply(taxaSet, function (taxon) {
+#     taxon <- taxaSet[[1]]
+    taxon <- xmlDoc(taxon)
+    taxId <- unlist(xpathApply(taxon, "/Taxon/TaxId", xmlValue))
+    parentTaxId <- unlist(xpathApply(taxon, "/Taxon/ParentTaxId", xmlValue))
+    sciName <- unlist(xpathApply(taxon, "/Taxon/ScientificName", xmlValue))
+    rank <- unlist(xpathApply(taxon, "/Taxon/Rank", xmlValue))
+    
+    nm <- xpathSApply(taxon, "//OtherNames/*", xmlName)
+    obj <- xpathSApply(taxon, "//OtherNames/*", xmlValue)[nm != "Name"]
+    otherName <- setNames(obj, nm[nm != "Name"]) %||% NULL
+    
+    classCDE <- xpathSApply(taxon, "//OtherNames/Name/ClassCDE", xmlValue)
+    dispName <- xpathSApply(taxon, "//OtherNames/Name/DispName", xmlValue)
+    authority <-  dispName[classCDE == "authority"] %||% NULL
+    typeMaterial <- dispName[classCDE == "type material"] %||% NULL
+    
+    lineage <- lapply(getNodeSet(taxon, "//LineageEx/Taxon"), function (l) {
+      l <- xmlDoc(l)
+      new("taxon", taxId = xpathSApply(l, "//TaxId", xmlValue),
+          scientificName = xpathSApply(l, "//ScientificName", xmlValue),
+          rank = xpathSApply(l, "//ScientificName", xmlValue))
+    })
+    
+    free(taxon)
+    
+    new("taxon", taxId = taxId, parentTaxId = parentTaxId,
+        scientificName = sciName, otherName = otherName,
+        authority = authority, typeMaterial = typeMaterial,
+        rank = rank, lineage = new("Lineage", lineage),
+        content = taxon)
+  })
+  
+  if (length(tx) > 1) {
+    return(new("taxonList", tx))
+  } else {
+    return(tx[[1]])
+  }  
 }
 
 
@@ -331,4 +378,3 @@ docsum <- function (x, version) {
   names(ll) <- xpathSApply(xmlRoot(content), "//LinkName", xmlValue)
   ll
 }
-

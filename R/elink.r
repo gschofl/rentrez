@@ -17,7 +17,7 @@ NULL
 #' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
 #' a character vector holding the unparsed output from the call
 #' submitted to Entrez.
-#' @slot id
+#' @slot uid
 #' @slot databaseTo 
 #' @slot command 
 #' @slot queryKey 
@@ -28,20 +28,35 @@ NULL
 #' @export
 #' @classHierarchy
 #' @classMethods
-.elink <- setClass("elink",
-                   representation(id = "webOrId",
-                                  databaseTo = "character",
-                                  command = "character",
-                                  queryKey = "numeric",
-                                  webEnv = "character",
-                                  linkset = "listOrFrame"),
-                   prototype(id = .idlist(),
-                             databaseTo = NA_character_,
-                             command = NA_character_,
-                             queryKey = NA_integer_,
-                             webEnv = NA_character_,
-                             linkset = list()),
-                   contains = "eutil")
+setClass("elink",
+         representation(uid = "webenvOrUid",
+                        databaseTo = "character",
+                        command = "character",
+                        queryKey = "integer",
+                        webEnv = "character",
+                        linkset = "listOrFrame"),
+         prototype(uid = new("uid"),
+                   databaseTo = NA_character_,
+                   command = NA_character_,
+                   queryKey = NA_integer_,
+                   webEnv = NA_character_,
+                   linkset = list()),
+         contains = "eutil")
+
+
+# accessor-methods -------------------------------------------------------
+
+
+setMethod("database", "elink", function(x) c(from = database(x@uid),
+                                             to = x@databaseTo))
+
+setMethod("count", "elink", function(x) count(x@uid))
+
+setMethod("uid", "elink", function(x) x@uid)
+
+setMethod("queryKey", "elink", function(x) x@queryKey)
+
+setMethod("webEnv", "elink", function(x) x@webEnv)
 
 
 # show-method ------------------------------------------------------------
@@ -59,14 +74,15 @@ setMethod("show", "elink",
               .show.links(object)
             else {
               cat(sprintf("ELink from database %s to database %s.\n",
-                          sQuote(object@id@database), sQuote(object@databaseTo)))
+                          sQuote(database(object)[["from"]]),
+                          sQuote(database(object)[["to"]])))
               
-              if (is(object@id, "idlist")) {
+              if (is(object@uid, "uid")) {
                 cat("IdList:\n")
-                print(object@id@uid)
-              } else if (is(object@id, "webenv")){            
+                print(uid(object@uid))
+              } else if (is(object@uid, "webenv")){            
                 cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
-                            object@id@queryKey, object@id@webEnv))
+                            queryKey(object@uid), webEnv(object@uid)))
               }
               
               cat("Summary of LinkSet:\n")
@@ -132,11 +148,11 @@ setMethod("show", "elink",
 setMethod("content", "elink",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
-              if (is.na(x@webEnv) || is.na(x@queryKey)) {
+              if (is.na(webEnv(x)) || is.na(queryKey(x))) {
                 x@linkset
               } else {
-                structure(list(webEnv = x@id@webEnv, queryKey = x@id@queryKey),
-                          database = x@id@database, class = c("webenv","list"))
+                new("webenv", database = database(x)[["to"]],
+                    webEnv = webEnv(x), queryKey = queryKey(x))
               } 
             } else {
               x@content
@@ -149,12 +165,12 @@ setMethod("content", "elink",
 
 setMethod("[", c("elink", "ANY", "missing"),
           function (x, i, j, ..., drop = TRUE) {
-            if (is(x@id, "webenv")) {
-              message("Subsetting won't work if USEHISTORY = TRUE")
+            if (is(x@uid, "webenv")) {
+              message("No subsetting for ", sQuote(class(x@uid)),  " objects.")
+              return(x)
             } else {
-              uids <- unlist(x@link[i][[1L]][["id"]], use.names=FALSE)
-              .idlist(database = x@id@database,
-                      uid = uids,
+              uids <- unlist(x@linkset[i][[1L]][["id"]], use.names=FALSE)
+              new("uid", database = database(x)[["to"]], uid = uids,
                       count = length(uids))
             }
           })
@@ -311,17 +327,16 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
   }
   
   id <- if (!is.null(env_list$query_key)) {
-    .webenv(database = dbFrom, queryKey = env_list$query_key, webEnv = env_list$WebEnv,
-            count = env_list$count)
+    new("webenv", database = dbFrom, count = env_list$count,
+        queryKey = env_list$query_key, webEnv = env_list$WebEnv)
   } else {
-    .idlist(database = dbFrom, uid = env_list$uid, count = env_list$count)
+    new("uid", database = dbFrom, uid = env_list$uid, count = env_list$count)
   }
   
-  el <- .elink(url = o@url, content = o@content, error = checkErrors(o),
-               id = id, databaseTo = if (is.null(dbTo)) "any" else dbTo,
-               command = cmd, queryKey = queryKey, webEnv = webEnv,
-               linkset = linkset)
-  el
+  new("elink", url = o@url, content = o@content, error = checkErrors(o),
+      uid = id, databaseTo = if (is.null(dbTo)) "any" else dbTo,
+      command = cmd, queryKey = queryKey, webEnv = webEnv,
+      linkset = linkset)
 }
 
 

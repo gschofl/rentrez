@@ -51,7 +51,11 @@ Super classes:
 \section{Generics with methods for epost}{
 \itemize{
   \item \code{\link{content}}
+  \item \code{\link{count}}
+  \item \code{\link{database}}
+  \item \code{\link{queryKey}}
   \item \code{\link{show}}
+  \item \code{\link{webEnv}}
 }
 
 }

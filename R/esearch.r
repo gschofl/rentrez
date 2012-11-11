@@ -1,5 +1,6 @@
 #' @include utils.r
 #' @include eutil.r
+#' @include uid-list.r
 NULL
 
 
@@ -17,17 +18,57 @@ NULL
 #' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
 #' a character vector holding the unparsed output from the call
 #' submitted to Entrez.
-#' @slot id An \code{\linkS4class{idlist}} or \code{\linkS4class{webenv}}
-#' object.
+#' @slot uid An \linkS4class{uid} or \linkS4class{webenv} object.
 #' 
 #' @rdname esearch
 #' @export
 #' @classHierarchy
 #' @classMethods
-.esearch <- setClass("esearch",
-                     representation(id = "webOrId"),
-                     prototype(id = .idlist()),
-                     contains = "eutil")
+setClass("esearch",
+         representation(uid = "webenvOrUid"),
+         prototype(uid = new("uid")),
+         contains = "eutil")
+
+
+# accessor methods -------------------------------------------------------
+
+
+setMethod("database", "esearch", function(x) database(x@uid))
+
+setMethod("retmax", "esearch", function(x) retmax(x@uid))
+
+setMethod("retstart", "esearch", function(x) retstart(x@uid))
+
+setMethod("count", "esearch", function(x) count(x@uid))
+
+setMethod("queryTranslation", "esearch", function(x) queryTranslation(x@uid))
+
+setMethod("uid", "esearch", function (x) {
+  if (is(x@uid, "uid")) {
+    uid(x@uid)
+  } else if (is(x@uid, "webenv")) {
+    message("No UIDs available. Use 'queryKey' and 'webEnv'")
+    return(invisible(NULL))
+  }
+})
+
+setMethod("webEnv", "esearch", function(x) {
+  if (is(x@uid, "webenv")) {
+    webEnv(x@uid)
+  } else if (is(x@uid, "uid")) {
+    message("No Web Environment string available. Use 'uid'")
+    return(invisible(NULL))
+  }
+})
+
+setMethod("queryKey", "esearch", function(x) {
+  if (is(x@uid, "webenv")) {
+    queryKey(x@uid)
+  } else if (is(x@uid, "uid"))  {
+    message("No Query Key available. Use 'uid'")
+    return(invisible(NULL))
+  }
+})
 
 
 # show-method ------------------------------------------------------------
@@ -36,28 +77,31 @@ NULL
 #' @autoImports
 setMethod("show", "esearch",
           function (object) {
-            # has IdList, hence rettype = "uilist"
+            # has 'IdList', hence rettype = "uilist"
             if (is(object@content, "XMLInternalDocument") &&
                 not_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) { 
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\n",
-                          sQuote(object@id@database), sQuote(object@id@queryTranslation)))
+                          sQuote(database(object)), sQuote(queryTranslation(object))))
               
-              if (is(object@id, "webenv")) {
+              if (is(object@uid, "webenv")) {
                 cat(sprintf("Number of UIDs stored on the History server: %s\nQuery Key: %s\nWebEnv: %s\n",
-                            object@id@count, object@id@queryKey, object@id@webEnv))
+                            count(object), queryKey(object), webEnv(object)))
               }
               
-              if (is(object@id, "idlist")) {
+              if (is(object@uid, "uid")) {
                 cat(sprintf("Total number of hits: %s\nNumber of hits retrieved: %s\n",
-                            object@id@count, object@id@retMax))
-                print(object@id@uid)
+                            count(object), retmax(object)))
+                print(uid(object))
               }
 
               # show if esearch was performed with rettype = "count"
             } else if (is(object@content, "XMLInternalDocument") &&
               is_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) {  
               cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
-                          sQuote(object@id@database), object@id@count))
+                          sQuote(database(object)), count(object)))
+            } else {
+              # fall back to show the 'webenvOrUid' object
+              show(object@uid)
             }
             
             invisible()
@@ -71,16 +115,16 @@ setMethod("show", "esearch",
 setMethod("content", "esearch",
           function (x, parse = TRUE) {
             if (isTRUE(parse)) {
-              if (is(x@id, "idlist")) {
-                if (is.na(x@id@retMax) && not.na(x@id@count)) {
-                  x@id@count
+              if (is(x@uid, "uid")) {
+                if (is.na(retmax(x)) && not.na(count(x))) {
+                  count(x)
                 } else {
-                  structure(x@id@uid, database = x@id@database,
-                            class = c("idlist","character"))
+                  new("uid", database = database(x), count = count(x),
+                      uid = uid(x))
                 }
-              } else if (is(x@id, "webenv")) {
-                structure(list(webEnv = x@id@webEnv, queryKey = x@id@queryKey),
-                          database = x@id@database, class = c("webenv","list"))
+              } else if (is(x@uid, "webenv")) {
+                new("webenv", database = database(x), count = count(x),
+                    webEnv = webEnv(x), queryKey = queryKey(x))                    
               }
             } else {
               x@content
@@ -92,23 +136,16 @@ setMethod("content", "esearch",
 
 
 #' @autoImports
-setMethod("[", c("esearch", "numeric", "missing", "ANY"),
+setMethod("[", c("esearch", "numeric"),
           function (x, i, j, ..., drop = TRUE) {
-            if (is(x@id, "webenv")) {
-              message("Subsetting won't work if USEHISTORY = TRUE")
-            } else {
-              uids <- x@id@uid[i]
-              .idlist(database = x@id@database, retMax = length(uids),
-                      retStart = x@id@retStart, count = x@id@count,
-                      queryTranslation = x@id@queryTranslation, uid = uids)
-            }
+            x@uid[i]
           })
   
 
 # length-method ----------------------------------------------------------
 
 
-setMethod("length", "esearch", function (x) x@id@retMax)
+setMethod("length", "esearch", function (x) length(x@uid))
 
 
 #' \code{esearch} searches and retrieves primary UIDs matching a text query
@@ -188,43 +225,45 @@ esearch <- function (term, db = "nuccore", usehistory = FALSE,
            reldate=reldate, mindate=mindate, maxdate=maxdate)
   }
   
-  retMax <- as.numeric(xmlValue(xmlRoot(o@content)[["RetMax"]]))
-  retStart <- as.numeric(xmlValue(xmlRoot(o@content)[["RetStart"]]))
+  retmax <- as.numeric(xmlValue(xmlRoot(o@content)[["RetMax"]]))
+  retstart <- as.numeric(xmlValue(xmlRoot(o@content)[["RetStart"]]))
   queryTranslation <- xmlValue(xmlRoot(o@content)[["QueryTranslation"]])
   count <- as.numeric(xmlValue(xmlRoot(o@content)[["Count"]]))
   
-  id <- if (usehistory) {
-    .webenv(database = db, retMax = retMax, retStart = retStart,
-            queryTranslation = queryTranslation, count = count,
-            queryKey = as.numeric(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
-            webEnv = xmlValue(xmlRoot(o@content)[["WebEnv"]]))
+  uid <- if (usehistory) {
+    new("webenv",
+        database = db, retmax = retmax, retstart = retstart,
+        queryTranslation = queryTranslation, count = count,
+        queryKey = as.integer(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
+        webEnv = xmlValue(xmlRoot(o@content)[["WebEnv"]]))
   } else {
-    .idlist(database = db, retMax = retMax, retStart = retStart,
-            queryTranslation = queryTranslation, count = count,
-            uid = as.character(sapply(getNodeSet(o@content, '//Id'), xmlValue)))
+    new("uid",
+        database = db, retmax = retmax, retstart = retstart,
+        queryTranslation = queryTranslation, count = count,
+        uid = as.character(sapply(getNodeSet(o@content, '//Id'), xmlValue)))
   }
 
-  .esearch(url = o@url, content = o@content, error = checkErrors(o), id = id)
+  new("esearch", url = o@url, content = o@content, error = checkErrors(o), uid = uid)
 }
 
 
-#' Retrieve the number of records in an Entrez database matching a text
-#' query
-#'
-#' Some additional details about this function
-#'
-#' @param term A valid NCBI search term.
-#' @param db An NCBI database (default = "nuccore").
-#' @param ... Additional parameters passed on to \code{\link{esearch}}.
-#'
-#' @return A numeric vector.
-#' @seealso \code{\link{esearch}}.
-#' @export
-#' @example inst/examples/ecount.r
-ecount <- function (term, db = "nuccore", ...) {
-  x <- esearch(term=term, db=db, rettype="count", ...)
-  cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
-              sQuote(x@id@database), x@id@count))
-  return(x@id@count)
-}
+# #' Retrieve the number of records in an Entrez database matching a text
+# #' query
+# #'
+# #' Some additional details about this function
+# #'
+# #' @param term A valid NCBI search term.
+# #' @param db An NCBI database (default = "nuccore").
+# #' @param ... Additional parameters passed on to \code{\link{esearch}}.
+# #'
+# #' @return A numeric vector.
+# #' @seealso \code{\link{esearch}}.
+# #' @export
+# #' @example inst/examples/ecount.r
+# ecount <- function (term, db = "nuccore", ...) {
+#   x <- esearch(term=term, db=db, rettype="count", ...)
+#   cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
+#               sQuote(x@id@database), x@id@count))
+#   return(x@id@count)
+# }
 

@@ -95,6 +95,9 @@ Super classes:
 \itemize{
   \item \code{\link{c}}
   \item \code{\link{content}}
+  \item \code{\link{database}}
+  \item \code{\link{retmode}}
+  \item \code{\link{rettype}}
   \item \code{\link{show}}
   \item \code{\link{write}}
 }
@@ -175,12 +178,13 @@ submitted to Entrez.}
 
   \item{database}{A character vector giving the name of the queried database.}
 
-  \item{type}{A character vector specifying the record view returned, such as
-Abstract or MEDLINE from \sQuote{PubMed}, or GenPept or FASTA from
-\sQuote{protein}.}
+  \item{rettype}{Retrieval Mode. A character vector specifying the record
+view returned, such as \sQuote{Abstract} or \sQuote{MEDLINE} from
+\emph{pubmed}, or \sQuote{GenPept} or \sQuote{FASTA} from \emph{protein}.}
 
-  \item{mode}{A character vector specifying the data format of the records
-returned, such as plain text, HMTL or XML.}
+  \item{retmode}{Retrieval Mode. A character vector specifying the data format
+of the records returned, such as plain \sQuote{text}, \sQuote{HMTL} or 
+\sQuote{XML}.}
 
 }
 }

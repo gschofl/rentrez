@@ -105,7 +105,12 @@ Super classes:
 \itemize{
   \item \code{\link{[}}
   \item \code{\link{content}}
+  \item \code{\link{count}}
+  \item \code{\link{database}}
+  \item \code{\link{queryKey}}
   \item \code{\link{show}}
+  \item \code{\link{uid}}
+  \item \code{\link{webEnv}}
 }
 
 }
@@ -145,13 +150,13 @@ the output of the call submitted to Entrez.}
 a character vector holding the unparsed output from the call
 submitted to Entrez.}
 
-  \item{id}{An object of class \linkS4class{webOrId}}
+  \item{uid}{An object of class \linkS4class{webenvOrUid}}
 
   \item{databaseTo}{An object of class \linkS4class{character}}
 
   \item{command}{An object of class \linkS4class{character}}
 
-  \item{queryKey}{An object of class \linkS4class{numeric}}
+  \item{queryKey}{An object of class \linkS4class{integer}}
 
   \item{webEnv}{An object of class \linkS4class{character}}
 
