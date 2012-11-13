@@ -68,9 +68,8 @@ Super classes:
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
   \item{database}{The number of items posted.}
 

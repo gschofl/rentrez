@@ -6,11 +6,6 @@ NULL
 setOldClass("list")
 setOldClass("data.frame")
 
-#### Class Unions ####
-setClassUnion("characterOrNull", c("character", "NULL"))
-setClassUnion("XMLOrChar", c("XMLInternalDocument", "character"))
-setClassUnion("listOrFrame", c("data.frame", "list"))
-
 
 # eutil-class ------------------------------------------------------------
 
@@ -31,21 +26,23 @@ setClassUnion("listOrFrame", c("data.frame", "list"))
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
 #'  
 #' @rdname eutil
 #' @export
 #' @classHierarchy
 #' @classMethods
-.eutil <- setClass("eutil",
-                   representation(url = "character",
-                                  error = "list",
-                                  content = "XMLOrChar"),
-                   prototype(url = NA_character_,
-                             error = list(),
-                             content = NA_character_))
+eutil <- setClass("eutil",
+                  representation(url = "character",
+                                 error = "list",
+                                 content = "raw"),
+                  prototype(url = NA_character_,
+                            error = list(),
+                            content = raw()))
+
+
+setMethod("queryUrl", "eutil", function (x) x@url)
 
 
 setMethod("error", "eutil", function (x) {
@@ -58,9 +55,15 @@ setMethod("error", "eutil", function (x) {
 })
 
 
-setMethod("query", "eutil", function (x) x@url)
-
-
+#' @autoImports
+setMethod("content", "eutil",
+          function (x, as = "text") {
+            as <- match.arg(as, c("text", "xml", "raw"))
+            switch(as,
+                   text =  rawToChar(x@content),
+                   xml = xmlParse(rawToChar(x@content), useInternalNodes=TRUE),
+                   raw = x@content)
+          })
 
 
 

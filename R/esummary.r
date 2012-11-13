@@ -2,10 +2,11 @@
 #' @include eutil.r
 NULL
 
+setOldClass("list")
+setOldClass("data,frame")
+setClassUnion("listOrDataFrame", c("list", "data.frame"))
 
 # esummary-class ---------------------------------------------------------
-
-
 #' esummary
 #' 
 #' \dQuote{esummary} is an S4 class that provides a container for data
@@ -14,9 +15,8 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
 #' @slot database The name of the queried database.
 #' @slot version The version of the document summary requested.
 #' @slot docsum The parsed document summaries for a list of input UIDs.
@@ -28,17 +28,18 @@ NULL
 setClass("esummary",
          representation(database = "character",
                         version = "character",
-                        docsum = "listOrFrame"),
+                        docsum = "listOrDataFrame"),
          prototype(database = NA_character_,
                    version = NA_character_,
-                   docsum = list),
+                   docsum = list()),
          contains = "eutil")
 
 
 # accessor-methods -------------------------------------------------------
 
-
 setMethod("database", "esummary", function(x) x@database)
+
+setMethod("docsum", "esummary", function(x) x@docsum)
 
 
 # show-method ------------------------------------------------------------
@@ -46,25 +47,10 @@ setMethod("database", "esummary", function(x) x@database)
 
 setMethod("show", "esummary",
           function(object) {
-            cat(sprintf("Esummary query using the %s database\n",
+            print(docsum(object))
+            cat(sprintf("\nEsummary query using the %s database",
                         sQuote(database(object))))
-            print(object@docsum)
-            invisible()
-          })
-
-
-# content-method ---------------------------------------------------------
-
-
-#' @rdname content
-#' @autoImports
-setMethod("content", "esummary",
-          function (x, parse = TRUE) {
-            if (isTRUE(parse)) {
-              x@docsum
-            } else {
-              x@content
-            }
+            invisible(NULL)
           })
 
 
@@ -73,14 +59,14 @@ setMethod("content", "esummary",
 
 setMethod("[", "esummary",
           function (x, i, j, ..., drop = TRUE) {
-            x <- x@docsum
+            x <- docsum(x)
             callNextMethod()
           })
 
 
 setMethod("[[", "esummary",
           function (x, i, j, ...) {
-            x <- x@docsum
+            x <- docsum(x)
             callNextMethod()
           })
 
@@ -166,7 +152,8 @@ esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
            version = if (identical(version, "2.0")) "2.0" else NULL)
   }
   
-  new("esummary", database = db, version = version, error = checkErrors(o),
-      url = o@url, content = o@content, docsum = docsum(o, version))
+  new("esummary", url = queryUrl(o), content = content(o, "raw"),
+      error = checkErrors(o), database = db, version = version,
+      docsum = .docsum(content(o, "xml"), version))
 }
 

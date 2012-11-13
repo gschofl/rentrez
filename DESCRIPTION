@@ -13,17 +13,13 @@ Depends:
 Imports:
     methods,
     rmisc,
-    biofiles,
     XML,
-    RCurl,
-    Biostrings,
-    phangorn,
-    ape
+    RCurl
 Collate:
     'all-generics.r'
     'utils.r'
     'eutil.r'
-    'uid-list.r'
+    'idlist.r'
     'einfo.r'
     'esearch.r'
     'esummary.r'
@@ -32,6 +28,4 @@ Collate:
     'epost.r'
     'elink.r'
     'egquery.r'
-    'taxonomy.r'
-    'S3.r'
     'content-parser.r'

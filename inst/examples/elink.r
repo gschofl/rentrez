@@ -5,7 +5,8 @@ gis <- c("84785887","84785899","84785907","84785905","84785889")
 rv <- elink(gis, "nucleotide", "pubmed")
 rv
 
-content(efetch(rv))
+# Fetch the XML records for the linked articles
+efetch(rv)
 
 # Example: Check whether two nucleotide sequences have any LinkOut providers.
 gis <- c("84785887","84785899")
@@ -17,4 +18,4 @@ a <- esearch("Chlamydia and cpaf", "protein")
 a
 l <- elink(a[1], dbTo="pubmed")
 l
-content(efetch(l))
+efetch(l)

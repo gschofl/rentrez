@@ -21,7 +21,6 @@ Super classes:
 \section{Generics with methods for einfoDbList}{
 \itemize{
   \item \code{\link{[}}
-  \item \code{\link{content}}
 }
 
 }
@@ -34,9 +33,8 @@ Super classes:
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
   \item{dbList}{A list of the names of all valid Entrez databases.}
 

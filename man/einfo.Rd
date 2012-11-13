@@ -47,7 +47,6 @@ Super classes:
 \section{Generics with methods for einfo}{
 \itemize{
   \item \code{\link{[}}* (1 methods defined for subclasses)
-  \item \code{\link{content}}* (2 methods defined for subclasses)
   \item \code{\link{show}}
 }
 
@@ -62,12 +61,12 @@ databases <- einfo()
 databases
 
 # database statistics for protein
-protein <- einfo(db="protein")
+protein <- einfo("protein")
 protein
 
-# search fields for protein
-p <- content(protein)
-cbind(p$fields$Name, strtrim(p$fields$Description, 60))
+# retrieve xml response
+p <- content(protein, "xml")
+p
 }
 
 \keyword{classes}

@@ -41,10 +41,8 @@
 #'     Environment on the Entrez history server for subsequent use with
 #'     \code{esummary}, \code{elink}, or \code{efetch}.
 #'     
-#'     \item \code{\link{content}}: Retrieves the query results from the
+#'     \item \code{\link{content}}: Extract the content of a request from the
 #'     \code{\linkS4class{eutil}} object returned by any of the above functions.
-#'     \code{content} will attempt to parse the query results into native R
-#'     objects.
 #'   
 #'     Typical usage is: 
 #'     \preformatted{
@@ -58,7 +56,4 @@
 #'
 #' @name rentrez-package
 #' @author Gerhard Schöfl \email{gschofl@@yahoo.de}
-#' @docType package
-NA
-####
-
+NULL

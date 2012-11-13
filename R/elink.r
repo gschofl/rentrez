@@ -14,49 +14,54 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
-#' @slot uid
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
+#' @slot idList
 #' @slot databaseTo 
 #' @slot command 
 #' @slot queryKey 
 #' @slot webEnv 
-#' @slot linkset A list containing the linked data.
+#' @slot linkSet A list containing the linked data.
 #' 
 #' @rdname elink
 #' @export
 #' @classHierarchy
 #' @classMethods
 setClass("elink",
-         representation(uid = "webenvOrUid",
+         representation(idList = "idList",
                         databaseTo = "character",
                         command = "character",
                         queryKey = "integer",
                         webEnv = "character",
-                        linkset = "listOrFrame"),
-         prototype(uid = new("uid"),
+                        linkSet = "list"),
+         prototype(idList = new("idList"),
                    databaseTo = NA_character_,
                    command = NA_character_,
                    queryKey = NA_integer_,
                    webEnv = NA_character_,
-                   linkset = list()),
+                   linkSet = list()),
          contains = "eutil")
 
 
 # accessor-methods -------------------------------------------------------
 
 
-setMethod("database", "elink", function(x) c(from = database(x@uid),
+setMethod("database", "elink", function(x) c(from = database(x@idList),
                                              to = x@databaseTo))
 
-setMethod("count", "elink", function(x) count(x@uid))
+setMethod("count", "elink", function(x) count(x@idList))
 
-setMethod("uid", "elink", function(x) x@uid)
+setMethod("idList", "elink", function(x) x@idList)
 
 setMethod("queryKey", "elink", function(x) x@queryKey)
 
 setMethod("webEnv", "elink", function(x) x@webEnv)
+
+setMethod("linkSet", "elink", function(x) x@linkSet)
+
+setMethod("content", "elink", function(x, as = "xml") {
+  callNextMethod(x = x, as = as)
+})
 
 
 # show-method ------------------------------------------------------------
@@ -77,19 +82,20 @@ setMethod("show", "elink",
                           sQuote(database(object)[["from"]]),
                           sQuote(database(object)[["to"]])))
               
-              if (is(object@uid, "uid")) {
-                cat("IdList:\n")
-                print(uid(object@uid))
-              } else if (is(object@uid, "webenv")){            
+              if (has_webenv(object)) {
                 cat(sprintf("Query Key: %s\nWeb Environment: %s\n",
-                            queryKey(object@uid), webEnv(object@uid)))
+                            queryKey(object@idList),
+                            webEnv(object@idList)))
+              } else {            
+                cat("IdList:\n")
+                print(idList(object@idList))
               }
               
               cat("Summary of LinkSet:\n")
-              lnames <- names(object@linkset)
+              lnames <- names(object@linkSet)
               llen <- numeric(0)
               for (lname in lnames)
-                llen <- c(llen, length(object@linkset[[lname]][["id"]]))
+                llen <- c(llen, length(object@linkSet[[lname]][["id"]]))
               print(data.frame(LinkName=lnames, LinkCount=llen))
               
               invisible()
@@ -99,21 +105,21 @@ setMethod("show", "elink",
 
 .show.acheck <- function (object) {
   cat("ELink list of possible links for a set of UIDs:\n")
-  print(object@linkset)
+  print(object@linkSet)
   invisible()
 }
 
 
 .show.ncheck <- function (object) {
   cat("Existence of links within the same database for a set of UIDs\n")
-  print(object@linkset)
+  print(object@linkSet)
   invisible()
 }
 
 
 .show.lcheck <- function (object) {
   cat("Existence of external links for a set of UIDs\n")
-  print(object@linkset)
+  print(object@linkSet)
   invisible()
 }
 
@@ -122,7 +128,7 @@ setMethod("show", "elink",
 .show.links <- function (object) {
   cat("External links for UID:")
   w <- getOption("width")
-  x <- lapply(object@linkset, function(o) {
+  x <- lapply(object@linkSet, function(o) {
     cat(sprintf("\n\nUID %s\n", attr(o, "id")))
     url <- c("Url", o[["url"]])
     cat <- c("Category", o[["category"]])
@@ -142,37 +148,14 @@ setMethod("show", "elink",
 }
 
 
-# content-method ---------------------------------------------------------
-
-
-setMethod("content", "elink",
-          function (x, parse = TRUE) {
-            if (isTRUE(parse)) {
-              if (is.na(webEnv(x)) || is.na(queryKey(x))) {
-                x@linkset
-              } else {
-                new("webenv", database = database(x)[["to"]],
-                    webEnv = webEnv(x), queryKey = queryKey(x))
-              } 
-            } else {
-              x@content
-            }
-          })
-
-
 # subsetting-method ------------------------------------------------------
 
 
 setMethod("[", c("elink", "ANY", "missing"),
           function (x, i, j, ..., drop = TRUE) {
-            if (is(x@uid, "webenv")) {
-              message("No subsetting for ", sQuote(class(x@uid)),  " objects.")
-              return(x)
-            } else {
-              uids <- unlist(x@linkset[i][[1L]][["id"]], use.names=FALSE)
-              new("uid", database = database(x)[["to"]], uid = uids,
-                      count = length(uids))
-            }
+              ids <- unlist(x@linkSet[i][[1L]][["id"]], use.names=FALSE)
+              new("idList", database = database(x)[["to"]],
+                  idList = ids, count = length(ids))
           })
 
 
@@ -300,43 +283,44 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
            maxdate = maxdate)
   }
   
-  queryKey <- if (length(qk <- xpathSApply(o@content, "//QueryKey")) > 0L) {
+  response <- xmlRoot(content(o, "xml"))
+  queryKey <- if (length(qk <- xpathSApply(response, "//QueryKey")) > 0L) {
     as.integer(xmlValue(qk[[1L]]))
   } else {
     NA_integer_
   }
   
-  webEnv <- if (length(we <- xpathSApply(o@content, "//WebEnv")) > 0L) {
+  webEnv <- if (length(we <- xpathSApply(response, "//WebEnv")) > 0L) {
     xmlValue(we[[1L]])
   } else {
     NA_character_
   }
       
   if (cmd == "acheck") {
-    uid <- xpathSApply(xmlRoot(o@content), "//Id", xmlValue)
-    linkset <- .parseIdLinkSet(content=o@content)
+    uid <- xpathSApply(response, "//Id", xmlValue)
+    linkSet <- .parseIdLinkSet(response)
   } else if (cmd %in% c("ncheck","lcheck")) {
     uid <- NA_character_
-    linkset <- .parseIdCheckList(content=o@content)
+    linkSet <- .parseIdCheckList(response)
   } else if (cmd %in% c("llinks","llinkslib","prlinks")) {
-    uid <- xpathSApply(xmlRoot(o@content), "//IdUrlSet/Id", xmlValue)
-    linkset <- .parseIdUrlList(content=o@content)
+    uid <- xpathSApply(response, "//IdUrlSet/Id", xmlValue)
+    linkSet <- .parseIdUrlList(response)
   } else {
-    uid <- sapply(getNodeSet(o@content, "//IdList/Id"), xmlValue)
-    linkset <- .parseLinkSet(content=o@content)
+    uid <- sapply(getNodeSet(response, "//IdList/Id"), xmlValue)
+    linkSet <- .parseLinkSet(response)
   }
   
-  id <- if (!is.null(env_list$query_key)) {
-    new("webenv", database = dbFrom, count = env_list$count,
-        queryKey = env_list$query_key, webEnv = env_list$WebEnv)
-  } else {
-    new("uid", database = dbFrom, uid = env_list$uid, count = env_list$count)
-  }
   
-  new("elink", url = o@url, content = o@content, error = checkErrors(o),
-      uid = id, databaseTo = if (is.null(dbTo)) "any" else dbTo,
+  id <- new("idList", database = dbFrom, count = length(uid),
+             queryKey = env_list$query_key %||% NA_integer_,
+             webEnv = env_list$WebEnv %||% NA_character_,
+             idList = uid)
+  
+  new("elink", url = queryUrl(o), content = content(o, "raw"),
+      error = checkErrors(o), idList = id,
+      databaseTo = if (is.null(dbTo)) "any" else dbTo,
       command = cmd, queryKey = queryKey, webEnv = webEnv,
-      linkset = linkset)
+      linkSet = linkSet)
 }
 
 

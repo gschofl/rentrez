@@ -1,6 +1,6 @@
 #' @include utils.r
 #' @include eutil.r
-#' @include uid-list.r
+#' @include idlist.r
 NULL
 
 
@@ -15,59 +15,43 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
-#' @slot uid An \linkS4class{uid} or \linkS4class{webenv} object.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
+#' @slot idList
 #' 
 #' @rdname esearch
 #' @export
 #' @classHierarchy
 #' @classMethods
 setClass("esearch",
-         representation(uid = "webenvOrUid"),
-         prototype(uid = new("uid")),
+         representation(idList = "idList"),
+         prototype(idList = new("idList")),
          contains = "eutil")
 
 
 # accessor methods -------------------------------------------------------
 
 
-setMethod("database", "esearch", function(x) database(x@uid))
+setMethod("database", "esearch", function(x) database(x@idList))
 
-setMethod("retmax", "esearch", function(x) retmax(x@uid))
+setMethod("retmax", "esearch", function(x) retmax(x@idList))
 
-setMethod("retstart", "esearch", function(x) retstart(x@uid))
+setMethod("retstart", "esearch", function(x) retstart(x@idList))
 
-setMethod("count", "esearch", function(x) count(x@uid))
+setMethod("count", "esearch", function(x) count(x@idList))
 
-setMethod("queryTranslation", "esearch", function(x) queryTranslation(x@uid))
+setMethod("queryTranslation", "esearch", function(x) queryTranslation(x@idList))
 
-setMethod("uid", "esearch", function (x) {
-  if (is(x@uid, "uid")) {
-    uid(x@uid)
-  } else if (is(x@uid, "webenv")) {
-    message("No UIDs available. Use 'queryKey' and 'webEnv'")
-    return(invisible(NULL))
-  }
+setMethod("queryKey", "esearch", function (x) queryKey(x@idList))
+
+setMethod("webEnv", "esearch", function (x) webEnv(x@idList))
+
+setMethod("idList", "esearch", function (x, db = TRUE) {
+  idList(x@idList, db = db)
 })
 
-setMethod("webEnv", "esearch", function(x) {
-  if (is(x@uid, "webenv")) {
-    webEnv(x@uid)
-  } else if (is(x@uid, "uid")) {
-    message("No Web Environment string available. Use 'uid'")
-    return(invisible(NULL))
-  }
-})
-
-setMethod("queryKey", "esearch", function(x) {
-  if (is(x@uid, "webenv")) {
-    queryKey(x@uid)
-  } else if (is(x@uid, "uid"))  {
-    message("No Query Key available. Use 'uid'")
-    return(invisible(NULL))
-  }
+setMethod("content", "esearch", function(x, as = "xml") {
+  callNextMethod(x = x, as = as)
 })
 
 
@@ -77,58 +61,27 @@ setMethod("queryKey", "esearch", function(x) {
 #' @autoImports
 setMethod("show", "esearch",
           function (object) {
+            response <- xmlRoot(content(object, "xml"))
             # has 'IdList', hence rettype = "uilist"
-            if (is(object@content, "XMLInternalDocument") &&
-                not_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) { 
+            if (length(response[["IdList"]]) > 0L) { 
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\n",
-                          sQuote(database(object)), sQuote(queryTranslation(object))))
+                          sQuote(database(object)),
+                          sQuote(queryTranslation(object))))
               
-              if (is(object@uid, "webenv")) {
+              if (has_webenv(object)) {
                 cat(sprintf("Number of UIDs stored on the History server: %s\nQuery Key: %s\nWebEnv: %s\n",
                             count(object), queryKey(object), webEnv(object)))
-              }
-              
-              if (is(object@uid, "uid")) {
+              } else {
                 cat(sprintf("Total number of hits: %s\nNumber of hits retrieved: %s\n",
                             count(object), retmax(object)))
-                print(uid(object))
+                print(idList(object, FALSE))
               }
-
               # show if esearch was performed with rettype = "count"
-            } else if (is(object@content, "XMLInternalDocument") &&
-              is_empty(getNodeSet(xmlRoot(object@content), "//IdList"))) {  
+            } else {  
               cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
                           sQuote(database(object)), count(object)))
-            } else {
-              # fall back to show the 'webenvOrUid' object
-              show(object@uid)
             }
-            
-            invisible()
-          })
-
-
-# content-method ---------------------------------------------------------
-
-
-#' @autoImports
-setMethod("content", "esearch",
-          function (x, parse = TRUE) {
-            if (isTRUE(parse)) {
-              if (is(x@uid, "uid")) {
-                if (is.na(retmax(x)) && not.na(count(x))) {
-                  count(x)
-                } else {
-                  new("uid", database = database(x), count = count(x),
-                      uid = uid(x))
-                }
-              } else if (is(x@uid, "webenv")) {
-                new("webenv", database = database(x), count = count(x),
-                    webEnv = webEnv(x), queryKey = queryKey(x))                    
-              }
-            } else {
-              x@content
-            }
+            invisible(NULL)
           })
 
 
@@ -138,14 +91,19 @@ setMethod("content", "esearch",
 #' @autoImports
 setMethod("[", c("esearch", "numeric"),
           function (x, i, j, ..., drop = TRUE) {
-            x@uid[i]
+            initialize(x, idList = x@idList[i])
           })
   
 
 # length-method ----------------------------------------------------------
 
 
-setMethod("length", "esearch", function (x) length(x@uid))
+setMethod("length", "esearch", function (x) {
+  if (has_webenv(x))
+    count(x)
+  else 
+    length(idList(x))
+})
 
 
 #' \code{esearch} searches and retrieves primary UIDs matching a text query
@@ -214,36 +172,40 @@ esearch <- function (term, db = "nuccore", usehistory = FALSE,
     .httpPOST("esearch", db=db, term=.escape(term, httpPOST=TRUE),
               usehistory=if (usehistory) "y" else NULL,
               WebEnv=WebEnv, query_key=as.character(query_key),
-              retstart=as.character(retstart), retmax=as.character(retmax),
+              retstart=as.character(retstart),
+              retmax=if (usehistory) "0" else as.character(retmax),
               rettype=rettype, field=field, datetype=datetype,
               reldate=reldate, mindate=mindate, maxdate=maxdate)
   } else {
     .query("esearch", db=db, term=term,
            usehistory=if (usehistory) "y" else NULL,
            WebEnv=WebEnv, query_key=query_key, retstart=retstart,
-           retmax=retmax, rettype=rettype, field=field, datetype=datetype,
-           reldate=reldate, mindate=mindate, maxdate=maxdate)
+           retmax=if (usehistory) 0 else retmax, rettype=rettype,
+           field=field, datetype=datetype, reldate=reldate,
+           mindate=mindate, maxdate=maxdate)
   }
   
-  retmax <- as.numeric(xmlValue(xmlRoot(o@content)[["RetMax"]]))
-  retstart <- as.numeric(xmlValue(xmlRoot(o@content)[["RetStart"]]))
-  queryTranslation <- xmlValue(xmlRoot(o@content)[["QueryTranslation"]])
-  count <- as.numeric(xmlValue(xmlRoot(o@content)[["Count"]]))
-  
-  uid <- if (usehistory) {
-    new("webenv",
-        database = db, retmax = retmax, retstart = retstart,
-        queryTranslation = queryTranslation, count = count,
-        queryKey = as.integer(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
-        webEnv = xmlValue(xmlRoot(o@content)[["WebEnv"]]))
+  response <- xmlRoot(xmlParse(rawToChar(o@content), useInternalNodes=TRUE))
+  retmax <- as.numeric(xmlValue(response[["RetMax"]]))
+  retstart <- as.numeric(xmlValue(response[["RetStart"]]))
+  queryTranslation <- as.character(xmlValue(response[["QueryTranslation"]]))
+  count <- as.numeric(xmlValue(response[["Count"]]))
+  queryKey <- as.integer(xmlValue(response[["QueryKey"]]))
+  webEnv <- as.character(xmlValue(response[["WebEnv"]]))
+  idList <- response[["IdList"]]
+  idList <- if (not.null(idList)) {
+    vapply(xmlChildren(idList), xmlValue,
+           FUN.VALUE=character(1), USE.NAMES=FALSE) %||% NA_character_
   } else {
-    new("uid",
-        database = db, retmax = retmax, retstart = retstart,
-        queryTranslation = queryTranslation, count = count,
-        uid = as.character(sapply(getNodeSet(o@content, '//Id'), xmlValue)))
+    NA_character_
   }
-
-  new("esearch", url = o@url, content = o@content, error = checkErrors(o), uid = uid)
+  
+  uid <- new("idList", database = db, retmax = retmax, retstart = retstart,
+             queryTranslation = queryTranslation, count = count,
+             queryKey = queryKey, webEnv = webEnv, idList = idList)
+  
+  new("esearch", url = o@url, content = o@content, error = checkErrors(o),
+      idList = uid)
 }
 
 

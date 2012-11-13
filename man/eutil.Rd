@@ -37,20 +37,22 @@ Sub classes:
   \item \code{\link{[}}* (4 methods defined for subclasses)
   \item \code{\link{[[}}* (1 methods defined for subclasses)
   \item \code{\link{c}}* (1 methods defined for subclasses)
-  \item \code{\link{content}}* (7 methods defined for subclasses)
+  \item \code{\link{content}} (4 methods defined for subclasses)
   \item \code{\link{count}}* (3 methods defined for subclasses)
   \item \code{\link{database}}* (5 methods defined for subclasses)
+  \item \code{\link{docsum}}* (1 methods defined for subclasses)
   \item \code{\link{error}}
+  \item \code{\link{idList}}* (2 methods defined for subclasses)
   \item \code{\link{length}}* (1 methods defined for subclasses)
-  \item \code{\link{query}}
+  \item \code{\link{linkSet}}* (1 methods defined for subclasses)
   \item \code{\link{queryKey}}* (3 methods defined for subclasses)
   \item \code{\link{queryTranslation}}* (1 methods defined for subclasses)
+  \item \code{\link{queryUrl}}
   \item \code{\link{retmax}}* (1 methods defined for subclasses)
   \item \code{\link{retmode}}* (1 methods defined for subclasses)
   \item \code{\link{retstart}}* (1 methods defined for subclasses)
   \item \code{\link{rettype}}* (1 methods defined for subclasses)
   \item \code{\link{show}}* (7 methods defined for subclasses)
-  \item \code{\link{uid}}* (2 methods defined for subclasses)
   \item \code{\link{webEnv}}* (3 methods defined for subclasses)
   \item \code{\link{write}}* (1 methods defined for subclasses)
 }
@@ -66,9 +68,8 @@ Sub classes:
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
 }
 }

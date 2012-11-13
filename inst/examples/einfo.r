@@ -5,9 +5,9 @@ databases <- einfo()
 databases
 
 # database statistics for protein
-protein <- einfo(db="protein")
+protein <- einfo("protein")
 protein
 
-# search fields for protein
-p <- content(protein)
-cbind(p$fields$Name, strtrim(p$fields$Description, 60))
+# retrieve xml response
+p <- content(protein, "xml")
+p

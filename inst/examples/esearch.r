@@ -12,11 +12,12 @@ pnas <- esearch(term="PNAS[jour] and 97[vol]", db="pubmed")
 pnas
 
 # Search for protein UIDs corresponding to BRCA1 in humans.
-# To ensure that we retrieve the full list of IDs, we use 
-# ecount() to set the 'retmax' parameter.
+# To ensure that we retrieve the full list of IDs, we count
+# the number of hits to set the 'retmax' parameter.
 
 query <- "BRCA1 and human"
-brca1 <- esearch(query, "protein", retmax=ecount(query, "protein"))
+n <- count(esearch(query, "protein", rettype="count"))
+brca1 <- esearch(query, "protein", retmax=n)
 
 ## Storing search results on the Entrez history server #####################
 

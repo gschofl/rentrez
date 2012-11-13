@@ -12,9 +12,8 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
 #' @slot database A character vector giving the name of the queried database.
 #' @slot rettype Retrieval Mode. A character vector specifying the record
 #' view returned, such as \sQuote{Abstract} or \sQuote{MEDLINE} from
@@ -29,8 +28,8 @@ NULL
 #' @classMethods
 setClass("efetch", 
          representation(database = "character",
-                        rettype = "characterOrNull",
-                        retmode = "characterOrNull"),
+                        rettype = "character",
+                        retmode = "character"),
          prototype(database = NA_character_,
                    rettype = NA_character_,
                    retmode = NA_character_),
@@ -46,15 +45,36 @@ setMethod("retmode", "efetch", function(x) x@retmode)
 
 setMethod("rettype", "efetch", function(x) x@rettype)
 
+#' @autoImports
+setMethod("content", "efetch",
+          function (x, as = NULL) {
+            as <- as %||% retmode(x)
+            if (as == "asn.1") 
+              as <- "text"
+            as <- match.arg(as, c("text", "xml", "raw"))
+            switch(as,
+                   text = rawToChar(x@content),
+                   xml = xmlParse(rawToChar(x@content), useInternalNodes=TRUE),
+                   raw = x@content)
+          })
+
 
 # show-method ------------------------------------------------------------
 
 
 setMethod("show", "efetch",
           function (object) {
-            cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n\n",
-                        sQuote(database(object)), sQuote(query(object))))
-            cat(object@content)
+            
+            if (retmode(object) == "xml")
+              print(content(object))
+            else
+              cat(content(object))
+            
+            cat(sprintf("EFetch query using the %s database.\nQuery url: %s\n",
+                        sQuote(database(object)), sQuote(queryUrl(object))))
+            cat(sprintf("Retrieval type: %s, retrieval mode: %s\n",
+                        sQuote(rettype(object)), sQuote(retmode(object))))
+            
             invisible(NULL)
           })
 
@@ -70,7 +90,7 @@ setMethod("show", "efetch",
 #' @export
 setMethod("write", "efetch",
           function (x, file = "data", append = FALSE) {
-            write(x = x@content, file = file, append = append)
+            write(x = content(x, "text"), file = file, append = append)
           })
 
 
@@ -98,35 +118,12 @@ setMethod("c", "efetch",
             if (length(rm) > 1L)
               stop("Cannot combine objects with different data modes")
             
-            url <- c(query(x), vapply(list(...), query, character(1)))
-            content <- c(x@content, unlist(lapply(list(...), slot, "content")))
+            url <- c(queryUrl(x), vapply(list(...), queryUrl, character(1)))
+            content <- c(content(x, "raw"),
+                         unlist(lapply(list(...), content, as="raw")))
             
             new("efetch", url = url, content = content, error = list(),
                 database = db, retmode = rm, rettype = rt)
-          })
-
-
-# content-method ---------------------------------------------------------
-
-
-#' @autoImports
-setMethod("content", "efetch",
-          function(x, parse = TRUE, ...) {
-            if (isTRUE(parse)) {
-              if (database(x) == "pubmed") {
-                return( .parsePubmed(x) )
-              }
-              if (database(x) == "taxonomy") {
-                return( .parseTaxon(x) )
-              }
-              if (database(x) %in% c("protein","nucleotide","nuccore")) {
-                return( .parseSequence(x, ...) )
-              }
-              return( x@content )
-
-            } else {
-              x@content
-            }
           })
 
 
@@ -212,7 +209,7 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
     env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
                     uid = NULL, db = db)
   } else {
-    env_list <-.getId(id)
+    env_list <- .getId(id)
     ## abort if no db was provided and id did not contain db 
     if (is.null(db) && is.null(db <- env_list$db)) {
       stop("No database name provided")
@@ -230,7 +227,7 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
                       protein="text", gene="text")
   }
 
-  if (is.finite(env_list$count) && (env_list$count > 500 || retmax > 500)) {
+  if (retmax > 500 && (is.finite(env_list$count) && (env_list$count > 500))) {
     # if record_count exceeds 500 issue a warning and recommend
     # efetch.batch()
     message(gettextf("You are attempting to download %s records.\nOnly the first 500 are downloaded. Use efetch.batch() instead.",

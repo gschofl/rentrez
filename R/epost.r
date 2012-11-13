@@ -14,9 +14,8 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
 #' @slot database The number of items posted.
 #' @slot count The index of the first hit retrieved.
 #' @slot queryKey Integer label called query key, specifying the
@@ -33,7 +32,7 @@ NULL
 setClass("epost",
          representation(database = "character",
                         count = "numeric",
-                        queryKey = "integer",
+                        queryKey = "numeric",
                         webEnv = "character"),
          prototype(database = NA_character_,
                    count = NA_integer_,
@@ -53,6 +52,10 @@ setMethod("queryKey", "epost", function(x) x@queryKey)
 
 setMethod("webEnv", "epost", function(x) x@webEnv)
 
+setMethod("content", "epost", function(x, as = "xml") {
+  callNextMethod(x = x, as = as)
+})
+
 
 # show-method ------------------------------------------------------------
 
@@ -63,20 +66,6 @@ setMethod("show", "epost",
                         count(object), sQuote(database(object)),
                         queryKey(object), sQuote(webEnv(object))))
             invisible()
-          })
-
-
-# content-method ---------------------------------------------------------
-
-
-setMethod("content", "epost",
-          function (x, parse = TRUE) {
-            if (isTRUE(parse)) {
-              new("webenv", database = database(x), count = count(x),
-                  queryKey = queryKey(x), webEnv = webEnv(x))
-            } else {
-              x@content
-            }
           })
 
 
@@ -112,7 +101,7 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
     stop("No UIDs provided")
   }
   
-  env_list <-.getId(id)
+  env_list <- .getId(id)
   ## abort if no db was provided and id did not contain db 
   if (is.null(db) && is.null(db <- env_list$db)) {
     stop("No database name provided")
@@ -124,7 +113,8 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
     .query("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
   }
   
+  response <- xmlRoot(content(o, "xml"))
   new("epost", url=o@url, content=o@content, database=db, count=env_list$count,
-      queryKey=as.integer(xmlValue(xmlRoot(o@content)[["QueryKey"]])),
-      webEnv=as.character(xmlValue(xmlRoot(o@content)[["WebEnv"]])))  
+      queryKey=as.integer(xmlValue(response[["QueryKey"]])),
+      webEnv=as.character(xmlValue(response[["WebEnv"]])))  
 }

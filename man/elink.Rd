@@ -107,9 +107,10 @@ Super classes:
   \item \code{\link{content}}
   \item \code{\link{count}}
   \item \code{\link{database}}
+  \item \code{\link{idList}}
+  \item \code{\link{linkSet}}
   \item \code{\link{queryKey}}
   \item \code{\link{show}}
-  \item \code{\link{uid}}
   \item \code{\link{webEnv}}
 }
 
@@ -123,7 +124,8 @@ gis <- c("84785887","84785899","84785907","84785905","84785889")
 rv <- elink(gis, "nucleotide", "pubmed")
 rv
 
-content(efetch(rv))
+# Fetch the XML records for the linked articles
+efetch(rv)
 
 # Example: Check whether two nucleotide sequences have any LinkOut providers.
 gis <- c("84785887","84785899")
@@ -135,7 +137,7 @@ a <- esearch("Chlamydia and cpaf", "protein")
 a
 l <- elink(a[1], dbTo="pubmed")
 l
-content(efetch(l))
+efetch(l)
 }
 
 \keyword{classes}
@@ -146,11 +148,10 @@ content(efetch(l))
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
-  \item{uid}{An object of class \linkS4class{webenvOrUid}}
+  \item{idList}{An object of class \linkS4class{idList}}
 
   \item{databaseTo}{An object of class \linkS4class{character}}
 
@@ -160,7 +161,7 @@ submitted to Entrez.}
 
   \item{webEnv}{An object of class \linkS4class{character}}
 
-  \item{linkset}{A list containing the linked data.}
+  \item{linkSet}{A list containing the linked data.}
 
 }
 }

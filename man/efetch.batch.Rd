@@ -57,7 +57,7 @@ for additional information.
 query <- "human[orgn] and biomol ncrna[prop]"
 
 # Let's check how many there are
-n <- ecount(query, "nucleotide")
+esearch(query, "nucleotide", rettype="count")
 
 # upload the GIs to the history server
 ncrna <- esearch(query, "nucleotide", usehistory=TRUE)

@@ -1,5 +1,4 @@
 % Built by roxygen3 0.1
-\docType{package}
 \name{rentrez-package}
 \alias{rentrez-package}
 \title{The rentrez package provides an interface to NCBI's
@@ -49,10 +48,8 @@ Entrez utilities.
     Environment on the Entrez history server for subsequent use with
     \code{esummary}, \code{elink}, or \code{efetch}.
     
-    \item \code{\link{content}}: Retrieves the query results from the
+    \item \code{\link{content}}: Extract the content of a request from the
     \code{\linkS4class{eutil}} object returned by any of the above functions.
-    \code{content} will attempt to parse the query results into native R
-    objects.
   
     Typical usage is: 
     \preformatted{
@@ -75,24 +72,16 @@ query <- "Chlamydia[mesh] and genome[mesh] and 2012[pdat]"
 #
 # check how many records fit the bill and download the PMIDs
 #
-n <- ecount(query, "pubmed")
-pmids <- esearch(query, "pubmed", retmax=n)
+n <- esearch(query, "pubmed", rettype="count")
+n
+pmids <- esearch(query, "pubmed", retmax=count(n))
 
 #
-# Fetch the records and parse them to bibentries
+# Fetch the records and retrieve the XML response
 #
 articles <- efetch(pmids)
-parsed_articles <- content(articles)
-parsed_articles
-
-#
-# look at the abstract
-#
-abstract(parsed_articles[2])
-
-## Not run
-## get the paper
-# browse(parsed_articles[2])
+articles_xml <- content(articles)
+articles_xml
 
 
 ############################################################################
@@ -111,7 +100,7 @@ p <- epost(id, "protein")
 #
 # retrieve docsums with esummary
 #
-sum <- content(esummary(p))
+sum <- docsum(esummary(p))
 
 #
 # get FASTAs with efetch
@@ -122,11 +111,6 @@ prot <- efetch(p, rettype = "fasta")
 # retrieve the content of the efetch object
 #
 seq <- content(prot)
-
-#
-# alternatively use DNAbin as a container for the sequence
-#
-seq <- content(prot, format="DNAbin")
 
 }
 

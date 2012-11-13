@@ -1,29 +1,29 @@
 ## parse docsums (esummary) ####
-
 #' @autoImports
-docsum <- function (x, version) {
+.docsum <- function (x, version) {
   
   if (identical(version, "default")) {
-    nodes <- getNodeSet(x@content, '//DocSum')
+    nodes <- getNodeSet(x, '//DocSum')
     uids <- vapply(nodes, function (x) {
       xmlValue(xmlChildren(x)[["Id"]])
     }, character(1))
   } else if (identical(version, "2.0")) {
-    nodes <- getNodeSet(x@content, '//DocumentSummary')
+    nodes <- getNodeSet(x, '//DocumentSummary')
     uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
   }
   
   docsum <- {
     docsum_list <- lapply(nodes, .parse_docsum)
     flat_docsum_list <- flatten(docsum_list, start_after=1, delim_path=".")
-    
     # check if all docsums have same number of tags
     if (length(unique(vapply(flat_docsum_list, length, numeric(1)))) > 1L) {
       warning("DocSum records have unequal numbers of tags,\nso we cannot return a data frame.")
       flat_docsum_list
-    } else
+    } else {
+      flat_docsum_list <- lapply(flat_docsum_list, unlist)
       data.frame(stringsAsFactors=FALSE, 
                  cbind(Id = uids, do.call(rbind, flat_docsum_list)))
+    }
   }
   
   docsum
@@ -67,210 +67,7 @@ docsum <- function (x, version) {
 }
 
 
-## Parse Sequence data (efetch) ####
-
-
-#' @autoImports
-.parseSequence <- function (x, ...) {
-  
-  ## if rettype = gp or gb
-  if (grepl("^gb|^gp", rettype(x)) && retmode(x) == "text") {
-    return( gbRecord(gb = x, ...) )
-  }
-  
-  ## if rettype = fasta
-  if (grepl("^fasta", rettype(x)) && retmode(x) == "text") {
-    return( .parseFasta(x = x, ...) )
-  }
-  
-  ## if retmode = xml return parsed xml tree
-  if (retmode(x) == "xml") {
-    return( xmlParse(x@content) )
-  }
-  
-  ## otherwise return the raw content
-  return( x@content )
-}
-
-
-#' @autoImports
-.parseFasta <- function (x, format = 'Biostrings') {
-  
-  format <- match.arg(format, c("Biostrings", "DNAbin", "String"))
-  
-  if (!grepl("^>", x@content)) {
-    warning("Does not appear to contain a valid fasta file")
-    return( x@content )
-  }
-  
-  if (database(x) %in% c("nucleotide","nuccore")) {
-    seqtype <- "DNA"
-  } else if (database(x) == "protein") {
-    seqtype <- "AA"
-  }
-  
-  if (format == "Biostrings") {
-    f_tmp <- tempfile(fileext=".fa")
-    write(x, file=f_tmp)
-    fasta <- switch(seqtype,
-                    DNA=tryCatch(readDNAStringSet(f_tmp, use.names=TRUE),
-                                 error = function (e) {
-                                   readAAStringSet(f_tmp, use.names=TRUE)
-                                 }),              
-                    AA=readAAStringSet(f_tmp, use.names=TRUE))
-    unlink(f_tmp)
-    return( fasta )
-  }
-  
-  if (format == "DNAbin") {
-    fasta <- switch(seqtype,
-                    DNA=ape::read.dna(file=textConnection(x@content), format="fasta"),
-                    AA=phangorn::read.aa(file=textConnection(x@content), format="fasta"))
-    return( fasta )  
-  }
-  
-  if (format == "String") {
-    fasta_split <- unlist(strsplit(x@content, "\n\n"))
-    fasta <- lapply(fasta_split, function (fasta) {
-      x <- unlist(strsplit(fasta, "\n"))
-      desc_idx <- grep(pattern="^>", x)
-      desc <- sub(">", "", x[desc_idx])
-      x <- paste0(x[-desc_idx], collapse="")
-      attr(x, "desc") <- desc
-      x
-    })
-    return( fasta )
-  }
-}
-
-
-## parse pubmed records (efetch) ####
-
-#' @autoImports
-.parsePubmed <- function (x) {
-  
-  if (retmode(x) != 'xml') {
-    return( xmlParse(x@content) )
-  }
-  
-  doc <- getNodeSet(xmlRoot(xmlParse(x@content)), '//PubmedArticle')
-  reff <- lapply(doc, function (art) {
-    #     art <- xmlDoc(doc[[1]])
-    art <- xmlDoc(art)
-    
-    author <- {
-      lastName <- xpathApply(art, "//AuthorList//LastName", xmlValue)
-      foreName <- xpathApply(art, "//AuthorList//ForeName", xmlValue)
-      list(author = do.call(personList,
-                            Map(person, given=foreName, family=lastName)))
-    }
-    
-    issue <- list(
-      volume = xpathSApply(art, '//JournalIssue/Volume', xmlValue),
-      number = xpathSApply(art, '//JournalIssue/Issue', xmlValue),
-      year = {
-        year <- xpathSApply(art, '//JournalIssue/PubDate/Year', xmlValue)
-        medlineDate <- xpathSApply(art, '//JournalIssue/PubDate/MedlineDate', xmlValue)
-        if (length(year) > 0) year else medlineDate
-      },
-      month = xpathSApply(art, '//JournalIssue/PubDate/Month', xmlValue),
-      pages = xpathSApply(art, '//Pagination/MedlinePgn', xmlValue)
-    )
-    
-    journal <- list(
-      issn = xpathSApply(art, '//Journal/ISSN', xmlValue),
-      journal = xpathSApply(art, '//Journal/Title', xmlValue),
-      abbrev = xpathSApply(art, '//Journal/ISOAbbreviation', xmlValue) 
-    )
-    
-    article <- list(
-      title = xpathSApply(art, '//ArticleTitle', xmlValue),
-      abstract = {
-        abs <- xpathSApply(art, '//Abstract/AbstractText', xmlValue)
-        headers <- xpathSApply(art, '//Abstract/AbstractText', xmlGetAttr, "Label")
-        if (is.null(headers[[1]])) {
-          abs
-        } else {
-          paste0(headers, ": ", abs, collapse="\n")
-        }
-      },
-      doi = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="doi"]', xmlValue),
-      pii = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pii"]', xmlValue),
-      pmid = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pubmed"]', xmlValue),
-      pmc = xpathSApply(art, '//ArticleIdList/ArticleId[@IdType="pmc"]', xmlValue)
-    )
-    
-    affiliation <- list(
-      affiliation = xpathSApply(art, "//Affiliation", xmlValue)
-    )
-    
-    issue[vapply(issue, function (x) length(x) < 1L, logical(1))] <- ""
-    journal[vapply(journal, function (x) length(x) < 1L, logical(1))] <- ""
-    article[vapply(article, function (x) length(x) < 1L, logical(1))] <- ""
-    affiliation[vapply(affiliation, function (x) length(x) < 1L, logical(1))] <- ""
-    
-    free(art)
-    
-    ref <- bibentry('Article', other=c(author, article, journal, issue, affiliation))
-    ref
-  
-  })
-  
-  reff <- do.call("c", reff)
-  reff
-}
-
-
-## parse taxonomy records (efetch) ####
-
-
-#' @autoImports
-.parseTaxon <- function (x) {
-  
-  taxaSet <- getNodeSet(xmlRoot(xmlParse(x@content)), '//TaxaSet/Taxon')
-  tx <- lapply(taxaSet, function (taxon) {
-#     taxon <- taxaSet[[1]]
-    taxon <- xmlDoc(taxon)
-    taxId <- unlist(xpathApply(taxon, "/Taxon/TaxId", xmlValue))
-    parentTaxId <- unlist(xpathApply(taxon, "/Taxon/ParentTaxId", xmlValue))
-    sciName <- unlist(xpathApply(taxon, "/Taxon/ScientificName", xmlValue))
-    rank <- unlist(xpathApply(taxon, "/Taxon/Rank", xmlValue))
-    
-    nm <- xpathSApply(taxon, "//OtherNames/*", xmlName)
-    obj <- xpathSApply(taxon, "//OtherNames/*", xmlValue)[nm != "Name"]
-    otherName <- setNames(obj, nm[nm != "Name"]) %||% NULL
-    
-    classCDE <- xpathSApply(taxon, "//OtherNames/Name/ClassCDE", xmlValue)
-    dispName <- xpathSApply(taxon, "//OtherNames/Name/DispName", xmlValue)
-    authority <-  dispName[classCDE == "authority"] %||% NULL
-    typeMaterial <- dispName[classCDE == "type material"] %||% NULL
-    
-    lineage <- lapply(getNodeSet(taxon, "//LineageEx/Taxon"), function (l) {
-      l <- xmlDoc(l)
-      new("taxon", taxId = xpathSApply(l, "//TaxId", xmlValue),
-          scientificName = xpathSApply(l, "//ScientificName", xmlValue),
-          rank = xpathSApply(l, "//ScientificName", xmlValue))
-    })
-    
-    free(taxon)
-    
-    new("taxon", taxId = taxId, parentTaxId = parentTaxId,
-        scientificName = sciName, otherName = otherName,
-        authority = authority, typeMaterial = typeMaterial,
-        rank = rank, lineage = new("Lineage", lineage),
-        content = taxon)
-  })
-  
-  if (length(tx) > 1) {
-    return(new("taxonList", tx))
-  } else {
-    return(tx[[1]])
-  }  
-}
-
-
 ## Parse linksets (elink) ####
-
 
 #' @autoImports
 .parseIdUrlList <- function (content) {
@@ -304,7 +101,6 @@ docsum <- function (x, version) {
   idurls
 }
 
-
 # Parse IdCheckList returned from cmd=ncheck,lcheck
 #' @autoImports
 .parseIdCheckList <- function (content) {
@@ -324,7 +120,6 @@ docsum <- function (x, version) {
   
   chklst
 }
-
 
 # Parse a LinkSet and return it as a data.frame
 #' @autoImports
@@ -356,7 +151,6 @@ docsum <- function (x, version) {
   
   ll
 }
-
 
 # Parse a LinkSet and return it as a named list
 #' @autoImports

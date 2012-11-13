@@ -70,8 +70,8 @@ Super classes:
 \itemize{
   \item \code{\link{[}}
   \item \code{\link{[[}}
-  \item \code{\link{content}}
   \item \code{\link{database}}
+  \item \code{\link{docsum}}
   \item \code{\link{show}}
 }
 
@@ -85,19 +85,20 @@ Super classes:
 
 id <- c(313848131,313847824,313847819,313847818,313847817)
 doc <- esummary(id, "protein")
-doc
 
 # Download data from a previous ESearch.
-(s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE))
+s <- esearch(term="evolution and ecology", db="journals", usehistory=TRUE)
 doc <- esummary(s)
 
-# Retrieve the contents of the esearch object as a data frame.
-doc <- content(doc)
-doc["Title"]
+# Retrieve the docsum as a data frame or as the XML response.
+ds <- docsum(doc)
+ds[["Title"]]
+
+ds_xml <- content(doc, "xml")
 
 # Get accession numbers for a list of GIs
 id <- c(313848131,313847824,313847819,313847818,313847817)
-prot <- content(esummary(id, "protein"))
+prot <- docsum(esummary(id, "protein"))
 names(prot)
 prot[,c("Id","Caption","Length","TaxId")]
 }
@@ -110,9 +111,8 @@ prot[,c("Id","Caption","Length","TaxId")]
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
   \item{database}{The name of the queried database.}
 

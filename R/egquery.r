@@ -13,9 +13,8 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content An \code{\linkS4class{XMLInternalDocument}} object or
-#' a character vector holding the unparsed output from the call
-#' submitted to Entrez.
+#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' contents of a request to Entrez.
 #' @slot term The search term passed on to the EGQuery Utility.
 #' @slot count A data frame with the following columns:
 #' \code{dbName}, \code{menuName}, \code{count}, and \code{status}.
@@ -68,16 +67,19 @@ egquery <- function (term) {
   
   o <- .query(eutil="egquery", term=term, retmode="xml")
   
-  new("egquery", url=o@url, content=o@content, error=checkErrors(o), 
-      term=xmlValue(getNodeSet(xmlRoot(o@content), "/Result/Term")[[1L]]),
-      count=data.frame(stringsAsFactors=FALSE,
-                       dbName=vapply(getNodeSet(xmlRoot(o@content),
-                                                "//ResultItem/DbName"), xmlValue, character(1)),
-                       menuName=vapply(getNodeSet(xmlRoot(o@content),
-                                                  "//ResultItem/MenuName"), xmlValue, character(1)),
-                       count=as.integer(vapply(getNodeSet(xmlRoot(o@content),
-                                                          "//ResultItem/Count"), xmlValue, character(1))),
-                       status=vapply(getNodeSet(xmlRoot(o@content),
-                                                "//ResultItem/Status"), xmlValue, character(1))))   
+  response <- content(o, "xml")
+  term <- xmlValue(getNodeSet(response, "/Result/Term")[[1L]])
+  count <- data.frame(stringsAsFactors=FALSE,
+                      dbName=vapply(getNodeSet(response, "//ResultItem/DbName"),
+                                    xmlValue, character(1)),
+                      menuName=vapply(getNodeSet(response, "//ResultItem/MenuName"),
+                                      xmlValue, character(1)),
+                      count=as.integer(vapply(getNodeSet(response, "//ResultItem/Count"),
+                                              xmlValue, character(1))),
+                      status=vapply(getNodeSet(response, "//ResultItem/Status"),
+                                    xmlValue, character(1)))
+  
+  new("egquery", url=queryUrl(o), content=content(o, "raw"),
+      error=checkErrors(o), term = term, count = count)
 }
 

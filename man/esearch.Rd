@@ -92,13 +92,13 @@ Super classes:
   \item \code{\link{content}}
   \item \code{\link{count}}
   \item \code{\link{database}}
+  \item \code{\link{idList}}
   \item \code{\link{length}}
   \item \code{\link{queryKey}}
   \item \code{\link{queryTranslation}}
   \item \code{\link{retmax}}
   \item \code{\link{retstart}}
   \item \code{\link{show}}
-  \item \code{\link{uid}}
   \item \code{\link{webEnv}}
 }
 
@@ -119,11 +119,12 @@ pnas <- esearch(term="PNAS[jour] and 97[vol]", db="pubmed")
 pnas
 
 # Search for protein UIDs corresponding to BRCA1 in humans.
-# To ensure that we retrieve the full list of IDs, we use 
-# ecount() to set the 'retmax' parameter.
+# To ensure that we retrieve the full list of IDs, we count
+# the number of hits to set the 'retmax' parameter.
 
 query <- "BRCA1 and human"
-brca1 <- esearch(query, "protein", retmax=ecount(query, "protein"))
+n <- count(esearch(query, "protein", rettype="count"))
+brca1 <- esearch(query, "protein", retmax=n)
 
 ## Storing search results on the Entrez history server #####################
 
@@ -143,11 +144,10 @@ brca1
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{An \code{\linkS4class{XMLInternalDocument}} object or
-a character vector holding the unparsed output from the call
-submitted to Entrez.}
+  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+contents of a request to Entrez.}
 
-  \item{uid}{An \linkS4class{uid} or \linkS4class{webenv} object.}
+  \item{idList}{An object of class \linkS4class{idList}}
 
 }
 }

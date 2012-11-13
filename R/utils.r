@@ -2,18 +2,16 @@
 .query <- function (eutil, ...) {
   
   if (identical(eutil, "egquery")) {
-    url <- get_query_url('http://eutils.ncbi.nlm.nih.gov/gquery/',
-                         ..., , tool="rentrez", email="gschofl@yahoo.de")
+    url <- get_query_url('http://eutils.ncbi.nlm.nih.gov/gquery/', ...,
+                         tool="rentrez", email="gschofl@yahoo.de")
   } else {
-    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil, '.fcgi')
+    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil, 
+                   '.fcgi')
     url <- get_query_url(host, ..., tool="rentrez", email="gschofl@yahoo.de")
   }
-
-  if (identical(eutil, "efetch")) {
-    .eutil(url = curlUnescape(url), content = getURL(url))
-  } else {
-    .eutil(url = curlUnescape(url), content = xmlTreeParse(getURL(url), useInternalNodes=TRUE))
-  }
+  
+  eutil(url = curlUnescape(url),
+        content = charToRaw(as.character(getURL(url))))
 }
 
 
@@ -70,40 +68,36 @@ get_query_url <- function (host, ...) {
                         http_post_url, sep="/"),
                   ..., type='POST', .opts=curlOptions(useragent=user_agent))
   
-  if (identical(eutil, "efetch")) {
-    .eutil(url = 'HTTP_POST', content = as.character(doc))
-  } else {
-    .eutil(url = 'HTTP_POST', content = xmlTreeParse(doc, useInternalNodes=TRUE))
-  }
+  eutil(url = 'HTTP_POST', content = charToRaw(as.character(doc)))
 }
 
 
 #' @autoImports
 checkErrors <- function (o) {
-  error <- NULL
-  err_msgs <- NULL
-  wrn_msgs <- NULL
-  
-  err_node <- getNodeSet(o@content, '//ERROR')
-  if (length(err_node) > 0)
+  error <- err_msgs <- wrn_msgs <- NULL
+
+  o <- xmlParse(rawToChar(o@content),
+                useInternalNodes=TRUE)
+  err_node <- getNodeSet(o, '//ERROR')
+  if (not_empty(err_node))
     error <- lapply(err_node, xmlValue)
   
-  err_list_node <- getNodeSet(o@content, '//ErrorList')
-  if (length(err_list_node) > 0)
+  err_list_node <- getNodeSet(o, '//ErrorList')
+  if (not_empty(err_list_node))
     err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
   
-  wrn_list_node <- getNodeSet(o@content, '//WarningList')
-  if (length(wrn_list_node) > 0)
+  wrn_list_node <- getNodeSet(o, '//WarningList')
+  if (not_empty(wrn_list_node))
     wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
   
-  if (!is.null(error))
+  if (not.null(error))
     message('Error:\n\t', unlist(error))
   
-  if (!is.null(err_msgs))
+  if (not.null(err_msgs))
     message('Error(s):\n\t', 
             paste(paste(names(err_msgs), err_msgs, sep="\t"), collapse="\n\t"))
   
-  if (!is.null(wrn_msgs))
+  if (not.null(wrn_msgs))
     message('Warning(s):\n\t', 
             paste(paste(names(wrn_msgs), wrn_msgs, sep="\t"), collapse="\n\t"))
   
@@ -114,29 +108,28 @@ checkErrors <- function (o) {
 #' @autoImports
 .getId <- function (id) {
   if (isS4(id)) {
-    if (class(id) %in% c("epost", "esearch", "uid", "webenv")) {
-      id <- if (is(id, "esearch")) id@uid else id
-      if (is(id, "uid")) {
-        WebEnv <- NULL
-        query_key <- NULL
-        count <- retmax(id) # retmax is the number of UIDs included in the XML output
-        uid <- uid(id)
-        db <- database(id)
-      } else if (class(id) %in% c("epost", "webenv")) {
+    if (class(id) %in% c("epost", "esearch", "idList")) {
+      if (has_webenv(id)) {
         WebEnv <- webEnv(id)
         query_key <- queryKey(id)
         count <- count(id) # the total number of UIDs stored on the history server
         uid <- NULL
         db <- database(id)
+      } else {
+        WebEnv <- NULL
+        query_key <- NULL
+        count <- retmax(id) # retmax is the number of UIDs included in the XML output
+        uid <- idList(id, db = FALSE)
+        db <- database(id)
       }
       return( list(WebEnv=WebEnv, query_key=query_key, count=count, uid=uid, db=db) )
     }   
     if (is(id, "elink")) {
-      if (is.na(queryKey(id)) && is.na(webEnv(id))) {
+      if (!has_webenv(id)) {
         WebEnv <- NULL
         query_key <- NULL
-        count <- length(unlist(id@linkset))
-        uid <- unname(unlist(id@linkset))
+        count <- length(unlist(linkSet(id), use.names=FALSE))
+        uid <- unlist(linkSet(id), use.names=FALSE)
         db <- database(id)[["to"]]
       } else {
         WebEnv <- webEnv(id)
@@ -160,7 +153,7 @@ checkErrors <- function (o) {
       uid <- as.character(unname(id))
       db <- attr(id, "database")
     } else if (!is.null(names(id))) {
-      db <- .convertDbXref(names(id))
+      db <- .convertDbXref(dbx_name=names(id))
     } else {
       stop("UIDs must be provided as a vector of UIDs")
     } 
@@ -193,3 +186,10 @@ checkErrors <- function (o) {
   if (is.null(id)) NULL else paste0(id, collapse = ",")
 }
 
+
+has_webenv <- function (x) {
+  if (not.na(webEnv(x)) && not.na(queryKey(x)))
+    TRUE
+  else
+    FALSE
+}
