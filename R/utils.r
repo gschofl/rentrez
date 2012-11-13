@@ -193,3 +193,52 @@ has_webenv <- function (x) {
   else
     FALSE
 }
+
+
+set_rettype <- function (db) {
+  switch(db,
+         biosample = "full",
+         biosystems = "xml",
+         gds = "summary",
+         gene = "gene_table",
+         homologene = NULL,
+         mesh = "full",
+         nimcatalog = NULL,
+         nucleotide = "gb",
+         nuccore = "gb",
+         nucest = "gb",
+         nucgss = "gb",
+         popset = "gb",
+         protein = "gp",
+         pmc = "medline",
+         pubmed = "medline",
+         snp = NULL,
+         taxonomy = NULL,
+         NULL)
+}
+
+
+set_retmode <- function (db) {
+  switch(db,
+         biosample = "xml",
+         biosystems = "xml",
+         gds = "text",
+         gene = "text",
+         homologene = "xml",
+         mesh = "text",
+         nimcatalog = "xml",
+         nucleotide = "text",
+         nuccore = "text",
+         nucest = "text",
+         nucgss = "text",
+         popset = "text",
+         protein = "text",
+         pmc = "text",
+         pubmed = "text",
+         snp = "xml",
+         taxonomy ="xml",
+         NULL)
+}
+
+
+

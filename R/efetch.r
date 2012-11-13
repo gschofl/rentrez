@@ -217,15 +217,11 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
   }
 
   ## set default rettype and retmode for some databases
-  if (is.null(rettype)) {
-    rettype <- switch(db, pubmed="medline", nucleotide="gb", nuccore="gb",
-                      protein="gp", gene="gene_table")
-  }
-  
-  if (is.null(retmode)) {
-    retmode <- switch(db, pubmed="xml", nucleotide="text", nuccore="text",
-                      protein="text", gene="text")
-  }
+  if (is.null(rettype))
+    rettype <- set_rettype(db)
+
+  if (is.null(retmode))
+    retmode <- set_retmode(db)
 
   if (retmax > 500 && (is.finite(env_list$count) && (env_list$count > 500))) {
     # if record_count exceeds 500 issue a warning and recommend
@@ -257,8 +253,10 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
            seq_stop = seq_stop, complexity = complexity)
   }
   
-  new("efetch", url = o@url, content = o@content, error = list(),
-      database = db, retmode = retmode, rettype = rettype)
+  new("efetch", url = queryUrl(o), content = content(o, "raw"),
+      error = list(), database = db,
+      retmode = retmode %||% NA_character_,
+      rettype = rettype %||% NA_character_)
 }
 
 #' Retrieve batches of data records in the requested format from NCBI
