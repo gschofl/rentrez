@@ -285,6 +285,7 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
 #' See
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
 #' for allowed values for each database.
+#' @param retmax Total number of records from the input set to be retrieved.
 #' @param strand Strand of DNA to retrieve. (1: plus strand, 2: minus strand)
 #' @param seq_start First sequence base to retrieve.
 #' @param seq_stop Last sequence base to retrieve.
@@ -295,8 +296,8 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
 #' @example inst/examples/efetch.batch.r
 #' @autoImports
 efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
-                          strand=NULL, seq_start=NULL, seq_stop=NULL,
-                          complexity=NULL) {
+                          retmax=NULL, strand=NULL, seq_start=NULL,
+                          seq_stop=NULL, complexity=NULL) {
   
   if (class(id) %ni% c("esearch", "epost", "elink"))
     stop("efetch.batch() expects an 'esearch', 'epost', or 'elink' object")
@@ -308,12 +309,17 @@ efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
     chunk_size <- max_chunk
   }
   
-  if (count(id) <= max_chunk) {
+  count <- count(id)
+  if (not.null(retmax) && retmax < count) {
+    count <- retmax
+  }
+  
+  if (count <= max_chunk) {
     res <- efetch(id=id, rettype=rettype, retmode=retmode, retstart=NULL,
                   retmax=NULL, strand=strand, seq_start=seq_start,
                   seq_stop=seq_stop, complexity=complexity)
   } else {
-    n_chunks <- count(id)%/%chunk_size
+    n_chunks <- count%/%chunk_size
     retstart <- seq(from=1, to=n_chunks*chunk_size, by=chunk_size)
     res <- new("efetch")
     for (start in retstart) {
