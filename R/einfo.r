@@ -51,20 +51,20 @@ setMethod("show", "einfo",
               cat(sprintf("Statistics for Entrez database %s\n",
                           sQuote(menuName(object))))
               n <- slotNames(object)
-              cat("->", n[1], "\n", sep="")
+              cat(n[1], ":\n", sep="")
               print(dbName(object))
-              cat("->", n[2], "\n", sep="")
+              cat(n[2], ":\n", sep="")
               print(menuName(object))
-              cat("->", n[3], "\n", sep="")
+              cat(n[3], ":\n", sep="")
               print(description(object))
-              cat("->", n[4], "\n", sep="")
+              cat(n[4], ":\n", sep="")
               print(records(object))
-              cat("->", n[5], "\n", sep="")
+              cat(n[5], ":\n", sep="")
               print(lastUpdate(object))
-              cat(paste0("@", n[6], paste0("$", names(fields(object)))),
+              cat(paste0(n[6], paste0("$", names(fields(object)))),
                   "\n", sep=" ")
               print(fields(object)$Name)
-              cat(paste0("@", n[7], paste0("$", names(links(object)))),
+              cat(paste0(n[7], paste0("$", names(links(object)))),
                   "\n", sep=" ")
               print(links(object)$Name)
               invisible(NULL)
@@ -206,11 +206,11 @@ einfo <- function (db) {
     
     new("einfoDb", url = queryUrl(o), content = content(o, "raw"),
         error = checkErrors(o),
-        dbName = xvalue(response, '//DbName'),
-        menuName = xvalue(response, '//MenuName'),
-        description = xvalue(response, '//Description'),
-        records = xvalue(response, '//Count', 'integer'),
-        lastUpdate = as.POSIXlt(xvalue(response, '//LastUpdate')),
+        dbName = xvalue(response, '//DbInfo/DbName'),
+        menuName = xvalue(response, '//DbInfo/MenuName'),
+        description = xvalue(response, '//DbInfo/Description'),
+        records = xvalue(response, '//DbInfo/Count', 'integer'),
+        lastUpdate = as.POSIXlt(xvalue(response, '//DbInfo/LastUpdate')),
         fields = field_info,
         links = link_info)
   }

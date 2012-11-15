@@ -283,30 +283,21 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
            maxdate = maxdate)
   }
   
-  response <- xmlRoot(content(o, "xml"))
-  queryKey <- if (length(qk <- xpathSApply(response, "//QueryKey")) > 0L) {
-    as.integer(xmlValue(qk[[1L]]))
-  } else {
-    NA_integer_
-  }
-  
-  webEnv <- if (length(we <- xpathSApply(response, "//WebEnv")) > 0L) {
-    xmlValue(we[[1L]])
-  } else {
-    NA_character_
-  }
+  response <- content(o, "xml")
+  queryKey <- xvalue(response, '//QueryKey', 'integer')
+  webEnv <- xvalue(response, '//WebEnv')
       
   if (cmd == "acheck") {
-    uid <- xpathSApply(response, "//Id", xmlValue)
+    uid <- xvalue(response, "//Id")
     linkSet <- .parseIdLinkSet(response)
   } else if (cmd %in% c("ncheck","lcheck")) {
     uid <- NA_character_
     linkSet <- .parseIdCheckList(response)
   } else if (cmd %in% c("llinks","llinkslib","prlinks")) {
-    uid <- xpathSApply(response, "//IdUrlSet/Id", xmlValue)
+    uid <- xvalue(response, "//IdUrlSet/Id")
     linkSet <- .parseIdUrlList(response)
   } else {
-    uid <- sapply(getNodeSet(response, "//IdList/Id"), xmlValue)
+    uid <- xvalue(response, "//IdList/Id")
     linkSet <- .parseLinkSet(response)
   }
   

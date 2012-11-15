@@ -185,47 +185,16 @@ esearch <- function (term, db = "nuccore", usehistory = FALSE,
            mindate=mindate, maxdate=maxdate)
   }
   
-  response <- xmlRoot(xmlParse(rawToChar(o@content), useInternalNodes=TRUE))
-  retmax <- as.numeric(xmlValue(response[["RetMax"]]))
-  retstart <- as.numeric(xmlValue(response[["RetStart"]]))
-  queryTranslation <- as.character(xmlValue(response[["QueryTranslation"]]))
-  count <- as.numeric(xmlValue(response[["Count"]]))
-  queryKey <- as.integer(xmlValue(response[["QueryKey"]]))
-  webEnv <- as.character(xmlValue(response[["WebEnv"]]))
-  idList <- response[["IdList"]]
-  idList <- if (not.null(idList)) {
-    vapply(xmlChildren(idList), xmlValue,
-           FUN.VALUE=character(1), USE.NAMES=FALSE) %||% NA_character_
-  } else {
-    NA_character_
-  }
+  response <- content(o, "xml")  
+  ids <- new("idList", database = db, 
+             retmax = xvalue(response, '//RetMax', 'numeric'),
+             retstart = xvalue(response, '//RetStart', 'numeric'),
+             queryTranslation = xvalue(response, '//QueryTranslation'),
+             count = xvalue(response, '/eSearchResult/Count', 'numeric'),
+             queryKey = xvalue(response, '//QueryKey', 'integer'),
+             webEnv = xvalue(response, '//WebEnv'),
+             idList = xvalue(response, '//IdList/Id'))
   
-  uid <- new("idList", database = db, retmax = retmax, retstart = retstart,
-             queryTranslation = queryTranslation, count = count,
-             queryKey = queryKey, webEnv = webEnv, idList = idList)
-  
-  new("esearch", url = o@url, content = o@content, error = checkErrors(o),
-      idList = uid)
+  new("esearch", url = queryUrl(o), content = content(o, "raw"),
+      error = checkErrors(o), idList = ids)
 }
-
-
-# #' Retrieve the number of records in an Entrez database matching a text
-# #' query
-# #'
-# #' Some additional details about this function
-# #'
-# #' @param term A valid NCBI search term.
-# #' @param db An NCBI database (default = "nuccore").
-# #' @param ... Additional parameters passed on to \code{\link{esearch}}.
-# #'
-# #' @return A numeric vector.
-# #' @seealso \code{\link{esearch}}.
-# #' @export
-# #' @example inst/examples/ecount.r
-# ecount <- function (term, db = "nuccore", ...) {
-#   x <- esearch(term=term, db=db, rettype="count", ...)
-#   cat(sprintf("ESearch query using the %s database.\nNumber of hits: %s\n",
-#               sQuote(x@id@database), x@id@count))
-#   return(x@id@count)
-# }
-

@@ -223,6 +223,9 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
   if (is.null(retmode))
     retmode <- set_retmode(db)
 
+  if (is.null(retmax))
+    retmax <- Inf
+  
   if (retmax > 500 && (is.finite(env_list$count) && (env_list$count > 500))) {
     # if record_count exceeds 500 issue a warning and recommend
     # efetch.batch()
