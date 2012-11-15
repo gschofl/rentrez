@@ -18,6 +18,18 @@ Super classes:
 
 }
 
+\section{Generics with methods for einfoDb}{
+\itemize{
+  \item \code{\link{description}}
+  \item \code{\link{fields}}
+  \item \code{\link{lastUpdate}}
+  \item \code{\link{links}}
+  \item \code{\link{menuName}}
+  \item \code{\link{records}}
+}
+
+}
+
 \keyword{classes}
 \section{Slots}{
 \describe{

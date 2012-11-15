@@ -7,4 +7,6 @@ doc/
 scripts/
 test/
 scratch.r
+README.html
+README.Rmd
 

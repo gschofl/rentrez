@@ -20,33 +20,53 @@ setClass("einfo",
          contains = "eutil")
 
 
-# show-method ------------------------------------------------------------
+# einfo accessors --------------------------------------------------------
 
+
+setMethod("dbName", "einfo", function(x) x@dbName)
+
+setMethod("menuName", "einfoDb", function(x) x@menuName)
+
+setMethod("description", "einfoDb", function(x) x@description)
+
+setMethod("records", "einfoDb", function(x) x@records)
+
+setMethod("lastUpdate", "einfoDb", function(x) x@lastUpdate)
+
+setMethod("fields", "einfoDb", function(x) x@fields)
+
+setMethod("links", "einfoDb", function(x) x@links)
+
+
+# show-method ------------------------------------------------------------
 
 #' @autoImports
 setMethod("show", "einfo",
           function (object) {
             if (is(object, "einfoDbList")) {
-              cat("List of all valid Entrez databases\n")
-              print(object@dbList)
+              cat("List of Entrez databases\n")
+              print(dbName(object))
               invisible(NULL)
             } else if (is(object, "einfoDb")) {
-              cat(sprintf("Statistics for Entrez database %s\n", sQuote(object@menuName)))
+              cat(sprintf("Statistics for Entrez database %s\n",
+                          sQuote(menuName(object))))
               n <- slotNames(object)
-              cat("@", n[1], "\n", sep="")
-              print(object@dbName)
-              cat("@", n[2], "\n", sep="")
-              print(object@menuName)
-              cat("@", n[3], "\n", sep="")
-              print(object@description)
-              cat("@", n[4], "\n", sep="")
-              print(object@records)
-              cat("@", n[5], "\n", sep="")
-              print(object@lastUpdate)
-              cat(paste0("@", n[6], paste0("$", names(object@fields))), "\n", sep=" ")
-              print(object@fields$Name)
-              cat(paste0("@", n[7], paste0("$", names(object@links))), "\n", sep=" ")
-              print(object@links$Name)
+              cat("->", n[1], "\n", sep="")
+              print(dbName(object))
+              cat("->", n[2], "\n", sep="")
+              print(menuName(object))
+              cat("->", n[3], "\n", sep="")
+              print(description(object))
+              cat("->", n[4], "\n", sep="")
+              print(records(object))
+              cat("->", n[5], "\n", sep="")
+              print(lastUpdate(object))
+              cat(paste0("@", n[6], paste0("$", names(fields(object)))),
+                  "\n", sep=" ")
+              print(fields(object)$Name)
+              cat(paste0("@", n[7], paste0("$", names(links(object)))),
+                  "\n", sep=" ")
+              print(links(object)$Name)
               invisible(NULL)
             }
           })
@@ -67,16 +87,16 @@ setMethod("show", "einfo",
 #' the output of the call submitted to Entrez.
 #' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
 #' contents of a request to Entrez.
-#' @slot dbList A list of the names of all valid Entrez databases.
+#' @slot dbName A list of the names of all valid Entrez databases.
 #'
 #' @rdname einfoDbList
 #' @export
 #' @classHierarchy
 #' @classMethods
-.einfoDbList <- setClass("einfoDbList",
-                         representation(dbList = "character"),
-                         prototype(dbList = NA_character_),
-                         contains = "einfo")
+setClass("einfoDbList",
+         representation(dbName = "character"),
+         prototype(dbName = NA_character_),
+         contains = "einfo")
 
 
 # subsetting-methods -----------------------------------------------------
@@ -84,7 +104,7 @@ setMethod("show", "einfo",
 
 setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
           function (x, i, j, ..., drop = TRUE) {
-            initialize(x, dbList = x@dbList[i])
+            initialize(x, dbName = dbName(x)[i])
           })
 
 
@@ -115,85 +135,83 @@ setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
 #' @export
 #' @classHierarchy
 #' @classMethods
-.einfoDb <- setClass("einfoDb",
-                     representation(dbName = "character",
-                                    menuName = "character",
-                                    description = "character",
-                                    records = "numeric",
-                                    lastUpdate = "POSIXlt",
-                                    fields = "data.frame",
-                                    links = "data.frame"),
-                     prototype(dbName = NA_character_,
-                               menuName = NA_character_,
-                               description = NA_character_,
-                               records = NA_integer_,
-                               lastUpdate = as.POSIXlt(NA),
-                               fields = data.frame(),
-                               links = data.frame()),
-                     contains = "einfo")
+setClass("einfoDb",
+         representation(dbName = "character",
+                        menuName = "character",
+                        description = "character",
+                        records = "numeric",
+                        lastUpdate = "POSIXlt",
+                        fields = "data.frame",
+                        links = "data.frame"),
+         prototype(dbName = NA_character_,
+                   menuName = NA_character_,
+                   description = NA_character_,
+                   records = NA_integer_,
+                   lastUpdate = as.POSIXlt(NA),
+                   fields = data.frame(),
+                   links = data.frame()),
+         contains = "einfo")
 
 
-#' \code{einfo} rtrieves information about each database in the NCBI Entrez
-#' system. If no database is specified \code{einfo} will return the current
-#' list of NCBI databases available for querying.
+#' \code{einfo} retrieves information about each database in the NCBI Entrez
+#' system. If no database is specified \code{einfo} will return a list of
+#' currently available NCBI databases.
 #' For specific databases, \code{einfo} returns the name, a description, the
 #' number of records indexed in the database, the date of the last update of
 #' the database, the fields and the available links from the database to
 #' other Entrez databases.
 #' 
 #' @details
-#' See the official online documentation for NCBI's
+#' See the documentation for the NCBI
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EInfo}{EUtilities}
 #' for additional information.
 #' 
-#' @param db \code{NULL} or a valid NCBI database name
-#' @return An \code{einfo} object.
+#' @param db A valid NCBI database name. If missing a list of all current NCBI
+#' databases is returned.
+#' @return An \code{einfo} instance.
 #' @export
 #' @example inst/examples/einfo.r
 #' @autoImports
-einfo <- function (db=NULL) {
-  if (is.null(db)) {
+einfo <- function (db) {
+  if (missing(db)) {
     o <- .query('einfo')
-    .einfoDbList(url = queryUrl(o), content = content(o, "raw"),
-                 error = checkErrors(o),
-                 dbList = xpathSApply(content(o, "xml"), '//DbList/DbName', xmlValue))
+    new("einfoDbList", url = queryUrl(o), content = content(o, "raw"),
+        error = checkErrors(o),
+        dbName = xvalue(content(o, "xml"), '//DbList/DbName'))
   } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
     o <- .query('einfo', db=db)
-    
-    response <- xmlRoot(content(o, "xml"))
+    response <- content(o, "xml")
     # extract FieldList elements
-    fnm <- vapply(getNodeSet(response, '//FieldList/Field[1]/child::node( )'),
-                  xmlName, character(1))
+    fnm <- unique(xname(response, '//FieldList/Field/child::node()'))        
     if (not_empty(fnm)) {
-      field_info <- as.data.frame(stringsAsFactors = FALSE,
-                                  split(sapply(getNodeSet(response, '//FieldList/Field/*'),
-                                               xmlValue), fnm))[, fnm]
+      fieldNodes <- getNodeSet(response, '//FieldList/Field/*')
+      fieldList <- split(vapply(fieldNodes, xmlValue, character(1)), fnm)
+      field_info <- data.frame(stringsAsFactors = FALSE, fieldList)[, fnm]
     } else  {
       field_info <- data.frame()
     }
-    
     # extract LinkList elements
-    lnm <- sapply(getNodeSet(response, '//LinkList/Link[1]/child::node( )'), xmlName)
+    lnm <- unique(xname(response, '//LinkList/Link/child::node( )'))
     if (not_empty(lnm)) {
-      link_info <- as.data.frame(stringsAsFactors = FALSE,
-                                 split(sapply(getNodeSet(response, '//LinkList/Link/*'),
-                                              xmlValue), lnm))[, lnm]
+      linkNodes <- getNodeSet(response, '//LinkList/Link/*')
+      linkList <- split(vapply(linkNodes, xmlValue, character(1)), lnm)
+      link_info <- data.frame(stringsAsFactors = FALSE, linkList)[, lnm]
     } else {
       link_info <- data.frame()
     }
     
-    .einfoDb(url = queryUrl(o), content = content(o, "raw"),
-             error = checkErrors(o),
-             dbName = xmlValue(response[[1L]][['DbName']]),
-             menuName = xmlValue(response[[1L]][['MenuName']]),
-             description = xmlValue(response[[1L]][['Description']]),
-             records = as.numeric(xmlValue(response[[1L]][['Count']])),
-             lastUpdate = as.POSIXlt(xmlValue(response[[1L]][['LastUpdate']])),
-             fields = field_info,
-             links = link_info)
+    new("einfoDb", url = queryUrl(o), content = content(o, "raw"),
+        error = checkErrors(o),
+        dbName = xvalue(response, '//DbName'),
+        menuName = xvalue(response, '//MenuName'),
+        description = xvalue(response, '//Description'),
+        records = xvalue(response, '//Count', 'integer'),
+        lastUpdate = as.POSIXlt(xvalue(response, '//LastUpdate')),
+        fields = field_info,
+        links = link_info)
   }
 }

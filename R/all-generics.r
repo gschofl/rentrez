@@ -81,3 +81,48 @@ setGeneric("docsum", function(x, ...) standardGeneric("docsum"))
 setGeneric("linkSet", function(x, ...) standardGeneric("linkSet"))
 
 
+#' @title EInfo accessors
+#' 
+#' @description
+#' Access the various slots of \linkS4class{einfo} instances.
+#' 
+#' @param x An \code{\linkS4class{einfo}} instance.
+#' @param ... Further arguments passed on to methods. 
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("dbName", function(x, ...) standardGeneric("dbName"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("menuName", function(x, ...) standardGeneric("menuName"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("description", function(x, ...) standardGeneric("description"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("records", function(x, ...) standardGeneric("records"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("lastUpdate", function(x, ...) standardGeneric("lastUpdate"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("fields", function(x, ...) standardGeneric("fields"))
+
+#' @rdname einfo-accessors
+#' @export
+#' @genericMethods
+setGeneric("links", function(x, ...) standardGeneric("links"))
+
+
+
+

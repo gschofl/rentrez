@@ -36,7 +36,7 @@ the output of the call submitted to Entrez.}
   \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
 contents of a request to Entrez.}
 
-  \item{dbList}{A list of the names of all valid Entrez databases.}
+  \item{dbName}{A list of the names of all valid Entrez databases.}
 
 }
 }

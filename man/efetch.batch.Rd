@@ -4,8 +4,8 @@
 \title{Retrieve batches of data records in the requested format from NCBI}
 \usage{
   efetch.batch(id, chunk_size = 200, rettype = NULL,
-    retmode = NULL, strand = NULL, seq_start = NULL,
-    seq_stop = NULL, complexity = NULL)
+    retmode = NULL, retmax = NULL, strand = NULL,
+    seq_start = NULL, seq_stop = NULL, complexity = NULL)
 }
 \arguments{
   \item{id}{(Required)
@@ -28,6 +28,8 @@ records returned, such as plain text, XML, or asn.1.
 See
 \href{http://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.chapter4_table1/?report=objectonly}{here}
 for allowed values for each database.}
+
+  \item{retmax}{Total number of records from the input set to be retrieved.}
 
   \item{strand}{Strand of DNA to retrieve. (1: plus strand, 2: minus strand)}
 
