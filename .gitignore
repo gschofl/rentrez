@@ -6,6 +6,7 @@ data/
 doc/
 scripts/
 test/
+cache/
 scratch.r
 README.html
 README.Rmd

@@ -1,11 +1,4 @@
 
-```
-## Loading required package: rmisc
-```
-
-```
-## Loading required package: rentrez
-```
 
 
 # rentrez
@@ -32,10 +25,10 @@ install_github("rentrez", "gschofl", ref = "no_parsing")
 
 #### `esearch`
 
-`esearch`: Searches and retrieves a list of primary UIDs or the NCBI History
+`esearch` searches and retrieves a list of primary UIDs or the NCBI History
 Server information (queryKey and webEnv).
 
-These can be passed on to in `epost`, `esummary`, `elink`, or `efetch`.
+These can be passed on to `epost`, `esummary`, `elink`, or `efetch`.
 
 
 ```r
@@ -56,7 +49,7 @@ pmid
 
 ```r
 
-# alternatively put the pmids on the history server
+# Alternatively put the pmids on the history server
 pmid2 <- esearch("Chlamydia psittaci[titl] and 2012[pdat]", "pubmed", usehistory = TRUE)
 pmid2
 ```
@@ -66,7 +59,7 @@ pmid2
 ## Query term: 'Chlamydia psittaci[titl] AND 2012[pdat]'
 ## Number of UIDs stored on the History server: 10
 ## Query Key: 1
-## WebEnv: NCID_1_261107234_130.14.18.48_5555_1352970255_534246560
+## WebEnv: NCID_1_261349938_130.14.18.48_5555_1352973083_279519721
 ```
 
 
@@ -98,6 +91,8 @@ count(pmid)
 ```
 
 ```r
+
+# get the list of ids as a character vector
 idList(pmid)
 ```
 
@@ -109,6 +104,27 @@ idList(pmid)
 ```
 
 ```r
+
+# get Query Key and Web Environment
+queryKey(pmid2)
+```
+
+```
+## [1] 1
+```
+
+```r
+webEnv(pmid2)
+```
+
+```
+## [1] "NCID_1_261349938_130.14.18.48_5555_1352973083_279519721"
+```
+
+
+
+```r
+# extract the content of an EUtil request as XML
 content(pmid, "xml")
 ```
 
@@ -121,35 +137,101 @@ content(pmid, "xml")
 ##   <RetStart>0</RetStart>
 ##   <IdList>
 ##     <Id>23098816</Id>
-##     <Id>22957128</Id>
-##     <Id>22689815</Id>
-##     <Id>22506068</Id>
-##     <Id>22472082</Id>
-##     <Id>22382892</Id>
-##     <Id>22302240</Id>
-##     <Id>22299031</Id>
-##     <Id>22296995</Id>
-##     <Id>21921110</Id>
-##   </IdList>
-##   <TranslationSet/>
-##   <TranslationStack>
-##     <TermSet>
-##       <Term>Chlamydia psittaci[titl]</Term>
-##       <Field>titl</Field>
-##       <Count>702</Count>
-##       <Explode>Y</Explode>
-##     </TermSet>
-##     <TermSet>
-##       <Term>2012[pdat]</Term>
-##       <Field>pdat</Field>
-##       <Count>910841</Count>
-##       <Explode>Y</Explode>
-##     </TermSet>
-##     <OP>AND</OP>
-##   </TranslationStack>
-##   <QueryTranslation>Chlamydia psittaci[titl] AND 2012[pdat]</QueryTranslation>
-## </eSearchResult>
+....
 ```
+
+
+
+#### `efetch`
+
+`edetch` retrieves data records from NCBI in a specified format corresponding
+to a list of primary UIDs or the user's Web Environment.
+
+First we search the protein database for Chlamydia CPAF
+
+```r
+cpaf <- esearch("Chlamydia[orgn] and CPAF", "protein")
+cpaf
+```
+
+```
+## ESearch query using the 'protein' database.
+## Query term: '"Chlamydia"[Organism] AND CPAF[All Fields]'
+## Total number of hits: 10
+## Number of hits retrieved: 10
+##  [1] "220702404" "220702402" "220702400" "220702394" "220702405"
+##  [6] "220702403" "220702401" "220702395" "339626260" "339460927"
+```
+
+
+Let's fetch the FASTA record for the first protein.
+
+```r
+cpaf_fasta <- efetch(cpaf[1], rettype = "fasta", retmode = "text")
+cpaf_fasta
+```
+
+```
+## >gi|220702404|pdb|3DPN|A Chain A, Crystal Structure Of Cpaf S499a Mutant
+## SLVCKNALQDLSFLEHLLQVKYAPKTWKEQYLGWDLVQSSVSAQQKLRTQENPSTSFCQQVLADFIGGLN
+## DFHAGVTFFAIESAYLPYTVQKSSDGRFYFVDIMTFSSEIRVGDELLEVDGAPVQDVLATLYGSNHKGTA
+## AEESAALRTLFSRMASLGHKVPSGRTTLKIRRPFGTTREVRVKWRYVPEGVGDLATIAPSIRAPQLQKSM
+## RSFFPKKDDAFHRSSSLFYSPMVPHFWAELRNHYATSGLKSGYNIGSTDGFLPVIGPVIWESEGLFRAYI
+## SSVTDGDGKSHKVGFLRIPTYSWQDMEDFDPSGPPPWEEFAKIIQVFSSNTEALIIDQTNNPGGSVLYLY
+## ALLSMLTDRPLELPKHRMILTQDEVVDALDWLTLLENVDTNVESRLALGDNMEGYTVDLQVAEYLKSFGR
+## QVLNCWSKGDIELSTPIPLFGFEKIHPHPRVQYSKPICVLINEQDFACADFFPVVLKDNDRALIVGTRTA
+....
+```
+
+
+And write it to file
+
+```r
+write(cpaf_fasta, file = "~/cpaf.fna")
+```
+
+
+Alternatively we can fetch the FASTA records as _TSeqSet_ XML
+and parse it into `AAStringSet`s using a parser function in me
+[ncbi](https://github.com/gschofl/ncbi) package.
+
+```r
+cpaf_xml <- efetch(cpaf, rettype = "fasta", retmode = "xml")
+cpaf_xml
+```
+
+```
+## <?xml version="1.0"?>
+## <!DOCTYPE TSeqSet PUBLIC "-//NCBI//NCBI TSeq/EN" "http://www.ncbi.nlm.nih.gov/dtd/NCBI_TSeq.dtd">
+## <TSeqSet>
+##   <TSeq>
+##     <TSeq_seqtype value="protein"/>
+##     <TSeq_gi>220702404</TSeq_gi>
+##     <TSeq_sid>pdb|3DPN|A</TSeq_sid>
+##     <TSeq_taxid>813</TSeq_taxid>
+....
+```
+
+
+
+```r
+require(ncbi)
+aa <- parseTSeqSet(cpaf_xml)
+aa
+```
+
+```
+##   A AAStringSet instance of length 10
+##      width seq                                         names               
+##  [1]   583 SLVCKNALQDLSFLEHLLQV...NNDGTIILAEDGSFHHHHHH NA Chain A, Cryst...
+##  [2]   583 SLVCKNALQDLSFLEHLLQV...NNDGTIILAEDGSFHHHHHH NA Chain A, Struc...
+##  [3]   583 SLVCKNALQDLSFLEHLLQV...NNDGTIILAEDGSFHHHHHH NA Chain A, Cryst...
+##  [4]   579 GESLVCKNALQDLSFLEHLL...LVCQLINNDGTIILAEDGSF NA Chain A, Cryst...
+##  [5]   583 SLVCKNALQDLSFLEHLLQV...NNDGTIILAEDGSFHHHHHH NA Chain B, Cryst...
+##  [6]   583 SLVCKNALQDLSFLEHLLQV...NNDGTIILAEDGSFHHHHHH NA Chain B, Struc...
+....
+```
+
 
 
 
