@@ -18,7 +18,7 @@ to install:
 
 ```r
 install_github("rmisc", "gschofl")
-install_github("rentrez", "gschofl", ref = "no_parsing")
+install_github("rentrez", "gschofl")
 ```
 
 
@@ -211,7 +211,8 @@ cpaf
 
 
 
-Let's fetch the FASTA record for the first protein.
+Let's fetch the FASTA record for the first protein. To do that, we have to
+set `rettype = "fasta"` and `retmode = "text"`. 
 
 
 ```r
