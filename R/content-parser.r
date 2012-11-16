@@ -28,6 +28,7 @@
 }
 
 # Parse a DocSum recursively and return it as a named list
+#' @importFrom XML xmlSize
 #' @autoImports
 .parse_docsum <- function (ds) {
   if (xmlName(ds) == "DocSum") {
