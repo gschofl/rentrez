@@ -4,9 +4,7 @@
   
   if (identical(version, "default")) {
     nodes <- getNodeSet(x, '//DocSum')
-    uids <- vapply(nodes, function (x) {
-      xmlValue(xmlChildren(x)[["Id"]])
-    }, character(1))
+    uids <- xvalue(x, '/eSummaryResult/DocSum/Id')
   } else if (identical(version, "2.0")) {
     nodes <- getNodeSet(x, '//DocumentSummary')
     uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))

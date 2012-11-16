@@ -66,18 +66,13 @@ egquery <- function (term) {
     term <- paste(term, collapse=" OR ")
   
   o <- .query(eutil="egquery", term=term, retmode="xml")
-  
   response <- content(o, "xml")
-  term <- xmlValue(getNodeSet(response, "/Result/Term")[[1L]])
+  term <- xvalue(response, '/Result/Term')
   count <- data.frame(stringsAsFactors=FALSE,
-                      dbName=vapply(getNodeSet(response, "//ResultItem/DbName"),
-                                    xmlValue, character(1)),
-                      menuName=vapply(getNodeSet(response, "//ResultItem/MenuName"),
-                                      xmlValue, character(1)),
-                      count=as.integer(vapply(getNodeSet(response, "//ResultItem/Count"),
-                                              xmlValue, character(1))),
-                      status=vapply(getNodeSet(response, "//ResultItem/Status"),
-                                    xmlValue, character(1)))
+                      dbName = xvalue(response, '//ResultItem/DbName'),
+                      menuName = xvalue(response, '//ResultItem/MenuName'),
+                      count = xvalue(response, '//ResultItem/Count', 'integer'),
+                      status = xvalue(response, '//ResultItem/Status'))
   
   new("egquery", url=queryUrl(o), content=content(o, "raw"),
       error=checkErrors(o), term = term, count = count)
