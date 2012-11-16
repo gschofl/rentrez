@@ -61,9 +61,9 @@ setMethod("content", "esearch", function(x, as = "xml") {
 #' @autoImports
 setMethod("show", "esearch",
           function (object) {
-            response <- xmlRoot(content(object, "xml"))
+            response <- content(object, "xml")
             # has 'IdList', hence rettype = "uilist"
-            if (length(response[["IdList"]]) > 0L) { 
+            if (not.na(xname(response, '//IdList'))) { 
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\n",
                           sQuote(database(object)),
                           sQuote(queryTranslation(object))))

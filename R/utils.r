@@ -75,18 +75,17 @@ get_query_url <- function (host, ...) {
 #' @autoImports
 checkErrors <- function (o) {
   error <- err_msgs <- wrn_msgs <- NULL
-
-  o <- xmlParse(rawToChar(o@content),
-                useInternalNodes=TRUE)
-  err_node <- getNodeSet(o, '//ERROR')
+  response <- content(o, 'xml')
+  
+  err_node <- getNodeSet(response, '//ERROR')
   if (not_empty(err_node))
     error <- lapply(err_node, xmlValue)
   
-  err_list_node <- getNodeSet(o, '//ErrorList')
+  err_list_node <- getNodeSet(response, '//ErrorList')
   if (not_empty(err_list_node))
     err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
   
-  wrn_list_node <- getNodeSet(o, '//WarningList')
+  wrn_list_node <- getNodeSet(response, '//WarningList')
   if (not_empty(wrn_list_node))
     wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
   
