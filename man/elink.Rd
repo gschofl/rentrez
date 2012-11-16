@@ -5,11 +5,12 @@
 \alias{elink-class}
 \title{elink}
 \usage{
-  elink(id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
-    cmd = "neighbor", correspondence = FALSE,
-    query_key = NULL, WebEnv = NULL, linkname = NULL,
-    term = NULL, holding = NULL, datetype = NULL,
-    reldate = NULL, mindate = NULL, maxdate = NULL)
+  elink(id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
+    usehistory = FALSE, cmd = "neighbor",
+    correspondence = FALSE, query_key = NULL,
+    WebEnv = NULL, term = NULL, holding = NULL,
+    datetype = NULL, reldate = NULL, mindate = NULL,
+    maxdate = NULL)
 }
 \arguments{
   \item{id}{(Required) A character vector of UIDs.}
@@ -18,6 +19,9 @@
 
   \item{dbTo}{Destination database from which to retrieve linked UIDs. If
 not provided links will be sought in the database containing the input UIDs.}
+
+  \item{linkname}{Name of the Entrez link to retrieve. Every link in
+Entrez is given a name of the form 'dbFrom_dbTo_subset'.}
 
   \item{usehistory}{If \code{TRUE} search results are stored directly in
 the user's Web environment so that they can be used in subsequents 
@@ -31,9 +35,6 @@ destination UIDs is preserved.}
   \item{query_key}{Query key.}
 
   \item{WebEnv}{Web Environment.}
-
-  \item{linkname}{Name of the Entrez link to retrieve. Every link in
-Entrez is given a name of the form 'dbFrom_dbTo_subset'.}
 
   \item{term}{Search query to limit the output set of linked UIDs.}
 
@@ -51,7 +52,7 @@ returned.}
 }
 
 \value{
-An \code{\elink} instance.
+An \code{elink} instance.
 }
 \description{
 \dQuote{elink} is an S4 class that provides a container for data retrived

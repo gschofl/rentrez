@@ -73,24 +73,23 @@
   idUrlSet <- getNodeSet(content, "//IdUrlSet")
   idurls <- lapply(idUrlSet, function (idUrl) {
     idUrl <- xmlDoc(idUrl)
-    id <- xpathSApply(idUrl, "/IdUrlSet/Id", xmlValue) 
+    id <- xvalue(idUrl, "/IdUrlSet/Id") 
     objUrlSet <- getNodeSet(idUrl, "//ObjUrl")
     urlset <- lapply(objUrlSet, function (objUrl) {
       objUrl <- xmlDoc(objUrl)
       l <- list(
-        url = unlist(xpathApply(objUrl, "/ObjUrl/Url", xmlValue)),
-        iconUrl = unlist(xpathApply(objUrl, "/ObjUrl/IconUrl", xmlValue)),
-        linkName = unlist(xpathApply(objUrl, "/ObjUrl/LinkName", xmlValue)),
-        subjectType = unlist(xpathApply(objUrl, "/ObjUrl/SubjectType", xmlValue)),
-        category = unlist(xpathApply(objUrl, "/ObjUrl/Category", xmlValue)),
-        attribute = paste0(unlist(xpathApply(objUrl, "/ObjUrl/Attribute", xmlValue)), collapse=";"),
-        provider.name = unlist(xpathApply(objUrl, "//Provider/Name", xmlValue)),
-        provider.nameAbbr = unlist(xpathApply(objUrl, "//Provider/NameAbbr", xmlValue)),
-        provider.id = unlist(xpathApply(objUrl, "//Provider/Id", xmlValue)),
-        provider.url = unlist(xpathApply(objUrl, "//Provider/Url", xmlValue)),
-        provider.iconUrl = unlist(xpathApply(objUrl, "//Provider/IconUrl", xmlValue))
+        url = xvalue(objUrl, '/ObjUrl/Url'),
+        iconUrl = xvalue(objUrl, '/ObjUrl/IconUrl'),
+        linkName = xvalue(objUrl, '/ObjUrl/LinkName'),
+        subjectType = xvalue(objUrl, "/ObjUrl/SubjectType"),
+        category = xvalue(objUrl, "/ObjUrl/Category"),
+        attribute = paste0(xvalue(objUrl, "/ObjUrl/Attribute"), collapse=";"),
+        provider.name = xvalue(objUrl, "//Provider/Name"),
+        provider.nameAbbr = xvalue(objUrl, "//Provider/NameAbbr"),
+        provider.id = xvalue(objUrl, "//Provider/Id"),
+        provider.url = xvalue(objUrl, "//Provider/Url"),
+        provider.iconUrl = xvalue(objUrl, "//Provider/IconUrl")
       )
-      l[vapply(l, is.null, logical(1))] <- ""
       data.frame(stringsAsFactors=FALSE, l)
     })
     structure(do.call(rbind, urlset), id = id)
@@ -103,15 +102,15 @@
 #' @autoImports
 .parseIdCheckList <- function (content) {
   content <- xmlRoot(content)
-  dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
-  id <- xpathSApply(content, "//Id", xmlValue)
-  has_neighbor <- unlist(xpathApply(content, "//Id", xmlGetAttr, "HasNeighbor"))
-  has_linkout <- unlist(xpathApply(content, "//Id", xmlGetAttr, "HasLinkOut"))
-  
-  chklst <- if (not.null(has_neighbor)) {
+  dbFrom <- xvalue(content, "//DbFrom")
+  id <- xvalue(content, "//Id")
+  has_neighbor <- xattr(content, "//Id", "HasNeighbor")
+  has_linkout <- xattr(content, "//Id", "HasLinkOut")
+
+  chklst <- if (not.na(has_neighbor)) {
     data.frame(stringsAsFactors=FALSE, Id=id,
                HasNeighbor=ifelse(has_neighbor == "Y", TRUE, FALSE))
-  } else if  (!is.null(has_linkout)) {
+  } else if  (not.na(has_linkout)) {
     data.frame(stringsAsFactors=FALSE, Id=id,
                HasLinkOut=ifelse(has_linkout == "Y", TRUE, FALSE))
   }
@@ -123,7 +122,7 @@
 #' @autoImports
 .parseIdLinkSet <- function (content) {
   content <- xmlRoot(content)
-  dbFrom <- xpathSApply(content, "//DbFrom", xmlValue)
+  dbFrom <- xvalue(content, "//DbFrom")
   idLinkSet <- getNodeSet(xmlRoot(content), "//IdLinkSet")
   
   if (length(idLinkSet) < 1L)
@@ -131,16 +130,15 @@
   
   ll <- lapply(idLinkSet, function (ls) {
     ls <- xmlDoc(ls)
-    Id <- xpathSApply(ls, "(//Id)[1]", xmlValue)
+    Id <- xvalue(ls, "(//Id)[1]")
     link_info <- 
       lapply(getNodeSet(ls, "//LinkInfo"), function (li) {
         li <- xmlDoc(li)
-        li <- list(DbTo=xpathSApply(li, "//DbTo", xmlValue), 
-                   LinkName=xpathSApply(li, "//LinkName", xmlValue),
-                   MenuTag=xpathSApply(li, "//MenuTag", xmlValue),
-                   HtmlTag=xpathSApply(li, "//HtmlTag", xmlValue),
-                   Priority=xpathSApply(li, "//Priority", xmlValue))
-        li[vapply(li, length, integer(1)) == 0L] <- NA_character_
+        li <- list(DbTo = xvalue(li, "//DbTo"), 
+                   LinkName = xvalue(li, "//LinkName"),
+                   MenuTag = xvalue(li, "//MenuTag"),
+                   HtmlTag = xvalue(li, "//HtmlTag"),
+                   Priority = xvalue(li, "//Priority"))
         li
       })
     data.frame(stringsAsFactors=FALSE, Id=Id, 
@@ -160,13 +158,12 @@
   
   ll <- lapply(linkSetDb, function(lsd) {
     lsd <- xmlDoc(lsd)
-    id <- xpathSApply(lsd, "//Id", xmlValue)
-    score <- xpathSApply(lsd, "//Score", xmlValue)
-    ans <- list(id=id, score=score)
-    ans[vapply(ans, length, integer(1)) == 0L] <- NULL
+    id <- xvalue(lsd, "//Id")
+    score <- xvalue(lsd, "//Score")
+    ans <- compact(list(id=id, score=score))
     ans
   })
   
-  names(ll) <- xpathSApply(xmlRoot(response), "//LinkName", xmlValue)
+  names(ll) <- xvalue(xmlRoot(response), "//LinkName")
   ll
 }

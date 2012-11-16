@@ -64,6 +64,17 @@ setMethod("content", "elink", function(x, as = "xml") {
 })
 
 
+# subsetting-method ------------------------------------------------------
+
+
+setMethod("[", c("elink", "ANY", "missing"),
+          function (x, i, j, ..., drop = TRUE) {
+            ids <- unlist(x@linkSet[i][[1L]][["id"]], use.names=FALSE)
+            new("idList", database = database(x)[["to"]],
+                idList = ids, count = length(ids))
+          })
+
+
 # show-method ------------------------------------------------------------
 
 
@@ -148,18 +159,6 @@ setMethod("show", "elink",
 }
 
 
-# subsetting-method ------------------------------------------------------
-
-
-setMethod("[", c("elink", "ANY", "missing"),
-          function (x, i, j, ..., drop = TRUE) {
-              ids <- unlist(x@linkSet[i][[1L]][["id"]], use.names=FALSE)
-              new("idList", database = database(x)[["to"]],
-                  idList = ids, count = length(ids))
-          })
-
-
-
 #' \code{elink} generates a list of UIDs in a specified Entrez database that
 #' are linked to a set of input UIDs in either the same or another
 #' database. For instance, the ELink utility can find Entrez gene records
@@ -218,7 +217,7 @@ setMethod("[", c("elink", "ANY", "missing"),
 #' returned.
 #' @param mindate Minimum date of search range. Format YYYY/MM/DD.
 #' @param maxdate Maximum date of search range. Format YYYY/MM/DD.
-#' @return An \code{\elink} instance.
+#' @return An \code{elink} instance.
 #' @export
 #' @example inst/examples/elink.r
 #' @autoImports
@@ -231,31 +230,31 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
   if (missing(id))
     stop("No UIDs provided")
   
-  ## id may be missing if WebEnv and query_key are provided
+  # id may be missing if WebEnv and query_key are provided
   if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
     stop("No UIDs provided")
   }
   
-  ## if WebEnv and query_key are provided, dbFrom must also be provided
+  # if WebEnv and query_key are provided, dbFrom must also be provided
   if (not.null(query_key) && not.null(WebEnv) && is.null(dbFrom)) {
     stop("No database name provided")
   }
   
-  ## construct list of environment variables
+  # construct list of environment variables
   if (missing(id)) {
-    ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
-    ## retmax stays restricted to 500.
+    # if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
+    # retmax stays restricted to 500.
     env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
                     uid = NULL, db = dbFrom)
   } else {
     env_list <- .getId(id)
-    ## abort if no dbFrom was provided and id did not contain dbFrom 
+    # abort if no dbFrom was provided and id did not contain dbFrom 
     if (is.null(dbFrom) && is.null(dbFrom <- env_list$db)) {
       stop("Provide the database containing the input UIDs (dbFrom)")
     }
   }
   
-  ## set dbTo = dbFrom if no dbTo is provided
+  # set dbTo = dbFrom if no dbTo is provided
   if (is.null(dbTo) && !grepl(pattern="check$|links", cmd))
     dbTo <- dbFrom
   
