@@ -200,6 +200,8 @@ setMethod("[", c("elink", "ANY", "missing"),
 #' @param dbFrom Initial database containing the UIDs in the input list.
 #' @param dbTo Destination database from which to retrieve linked UIDs. If
 #' not provided links will be sought in the database containing the input UIDs.
+#' @param linkname Name of the Entrez link to retrieve. Every link in
+#' Entrez is given a name of the form 'dbFrom_dbTo_subset'.
 #' @param usehistory If \code{TRUE} search results are stored directly in
 #' the user's Web environment so that they can be used in subsequents 
 #' calls to \code{\link{esummary}} or \code{\link{efetch}}.
@@ -208,8 +210,6 @@ setMethod("[", c("elink", "ANY", "missing"),
 #' destination UIDs is preserved.
 #' @param query_key Query key.
 #' @param WebEnv Web Environment.
-#' @param linkname Name of the Entrez link to retrieve. Every link in
-#' Entrez is given a name of the form 'dbFrom_dbTo_subset'.
 #' @param term Search query to limit the output set of linked UIDs.
 #' @param holding Name of LinkOut provider.
 #' @param datetype Type of date to limit the search. One of 'mdat'
@@ -222,9 +222,9 @@ setMethod("[", c("elink", "ANY", "missing"),
 #' @export
 #' @example inst/examples/elink.r
 #' @autoImports
-elink <- function (id, dbFrom = NULL, dbTo = NULL, usehistory = FALSE,
-                   cmd = "neighbor", correspondence = FALSE,
-                   query_key = NULL, WebEnv = NULL, linkname = NULL,
+elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
+                   usehistory = FALSE, cmd = "neighbor",
+                   correspondence = FALSE, query_key = NULL, WebEnv = NULL,
                    term = NULL, holding = NULL, datetype = NULL,
                    reldate = NULL, mindate = NULL, maxdate = NULL) {
   

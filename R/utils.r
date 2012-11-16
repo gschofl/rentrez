@@ -186,6 +186,7 @@ checkErrors <- function (o) {
 }
 
 
+#' @autoImports
 has_webenv <- function (x) {
   if (not.na(webEnv(x)) && not.na(queryKey(x)))
     TRUE

@@ -152,8 +152,8 @@
 
 # Parse a LinkSet and return it as a named list
 #' @autoImports
-.parseLinkSet <- function (content) {
-  linkSetDb <- getNodeSet(xmlRoot(content), "//LinkSetDb")
+.parseLinkSet <- function (response) {
+  linkSetDb <- getNodeSet(xmlRoot(response), "//LinkSetDb")
   
   if (length(linkSetDb) < 1L)
     return(list())
@@ -167,6 +167,6 @@
     ans
   })
   
-  names(ll) <- xpathSApply(xmlRoot(content), "//LinkName", xmlValue)
+  names(ll) <- xpathSApply(xmlRoot(response), "//LinkName", xmlValue)
   ll
 }

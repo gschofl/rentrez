@@ -9,16 +9,19 @@ set_type <- function(x, as) {
          x)
 }
 
+#' @autoImports
 xvalue <- function(xdoc, path, as = 'character') {
   v <- xpathSApply(xdoc, path, xmlValue) %||% NA_character_
   set_type(v, as)
 }
 
+#' @autoImports
 xname <- function(xdoc, path, as = 'character') {
   n <- xpathSApply(xdoc, path, xmlName) %||% NA_character_
   set_type(n, as)
 }
 
+#' @autoImports
 xattr <- function(xdoc, path, name, as = 'character') {
   a <- xpathSApply(xdoc, path, xmlGetAttr, name=name) %||% NA_character_
   set_type(a, as)

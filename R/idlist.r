@@ -80,6 +80,7 @@ setMethod("length", "idList", function (x) {
 # subsetting method ------------------------------------------------------
 
 
+#' @autoImports
 setMethod("[", c("idList", "numeric"),
           function (x, i, j, ..., drop = TRUE) {
             ids <- x@idList[i]
