@@ -91,6 +91,10 @@ setMethod("[[", "esummary",
 #' specified by \code{db}.
 #' @param db (Required only when \code{id} is a character vector of UIDs)
 #' Database from which to retrieve DocSums.
+#' @param retstart Numeric index of the first DocSum to be retrieved
+#' (default: 1).
+#' @param retmax Total number of DocSums from the input set to be retrieved
+#' (maximum: 10,000).
 #' @param query_key An integer specifying which of the UID lists attached
 #' to a user's Web Environment will be used as input to \code{efetch}.
 #' (Usually obtained drectely from objects returned by previous
@@ -99,18 +103,14 @@ setMethod("[[", "esummary",
 #' contains the UID list. (Usually obtained directely from objects returned
 #' by previous \code{\link{esearch}}, \code{\link{epost}} or
 #' \code{\link{elink}} calls.)
-#' @param retstart Numeric index of the first DocSum to be retrieved
-#' (default: 1).
-#' @param retmax Total number of DocSums from the input set to be retrieved
-#' (maximum: 10,000).
 #' @param version If "2.0" \code{esummary} will retrieve version 2.0
 #' ESummary XML output.
 #' @return An \code{esummary} instance.
 #' @export
 #' @example inst/examples/esummary.r
 #' @autoImports
-esummary <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
-                      retstart = 1, retmax = 10000, version = "default") {
+esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
+                      query_key = NULL, WebEnv = NULL, version = "default") {
   
   ## id may be missing if WebEnv and query_key are provided
   if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {

@@ -5,9 +5,9 @@
 \alias{esearch-class}
 \title{esearch}
 \usage{
-  esearch(term, db = "nuccore", usehistory = FALSE,
-    WebEnv = NULL, query_key = NULL, retstart = 0,
-    retmax = 100, rettype = "uilist", field = NULL,
+  esearch(term, db = "nuccore", rettype = "uilist",
+    retstart = 0, retmax = 100, usehistory = FALSE,
+    WebEnv = NULL, query_key = NULL, field = NULL,
     datetype = NULL, reldate = NULL, mindate = NULL,
     maxdate = NULL)
 }
@@ -15,6 +15,13 @@
   \item{term}{A valid Entrez text query.}
 
   \item{db}{Database to search (default: nuccore).}
+
+  \item{rettype}{Retrieval type. (default: 'uilist', alternative: 'count'.)}
+
+  \item{retstart}{Numeric index of the first UID in the
+retrieved set to be shown in the XML output (default: 0).}
+
+  \item{retmax}{Total number of UIDs to be retrieved (default: 100).}
 
   \item{usehistory}{If \code{TRUE} search results are stored directly in
 the user's Web environment so that they can be used in a subsequent 
@@ -35,13 +42,6 @@ limited.}
 When provided, \code{esearch} will find the intersection of the set
 specified by query_key and the set retrieved by the query in \code{term}
 (i.e. joins the two with AND).}
-
-  \item{retstart}{Numeric index of the first UID in the
-retrieved set to be shown in the XML output (default: 0).}
-
-  \item{retmax}{Total number of UIDs to be retrieved (default: 100).}
-
-  \item{rettype}{Retrieval type. (default: 'uilist', alternative: 'count'.)}
 
   \item{field}{Optional. Search field used to limit the entire search
 term.}

@@ -5,8 +5,8 @@
 \alias{esummary-class}
 \title{esummary}
 \usage{
-  esummary(id, db = NULL, query_key = NULL, WebEnv = NULL,
-    retstart = 1, retmax = 10000, version = "default")
+  esummary(id, db = NULL, retstart = 1, retmax = 10000,
+    query_key = NULL, WebEnv = NULL, version = "default")
 }
 \arguments{
   \item{id}{(Required)
@@ -22,6 +22,12 @@ specified by \code{db}.}
   \item{db}{(Required only when \code{id} is a character vector of UIDs)
 Database from which to retrieve DocSums.}
 
+  \item{retstart}{Numeric index of the first DocSum to be retrieved
+(default: 1).}
+
+  \item{retmax}{Total number of DocSums from the input set to be retrieved
+(maximum: 10,000).}
+
   \item{query_key}{An integer specifying which of the UID lists attached
 to a user's Web Environment will be used as input to \code{efetch}.
 (Usually obtained drectely from objects returned by previous
@@ -31,12 +37,6 @@ to a user's Web Environment will be used as input to \code{efetch}.
 contains the UID list. (Usually obtained directely from objects returned
 by previous \code{\link{esearch}}, \code{\link{epost}} or
 \code{\link{elink}} calls.)}
-
-  \item{retstart}{Numeric index of the first DocSum to be retrieved
-(default: 1).}
-
-  \item{retmax}{Total number of DocSums from the input set to be retrieved
-(maximum: 10,000).}
 
   \item{version}{If "2.0" \code{esummary} will retrieve version 2.0
 ESummary XML output.}

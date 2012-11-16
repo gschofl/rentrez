@@ -144,25 +144,16 @@ setMethod("c", "efetch",
 #' List of UIDs provided either as a character vector, as an
 #' \code{\linkS4class{esearch}} instance, or by reference to a web environment
 #' and a query key obtained directly from previous calls to
-#' \code{\linkS4class{esearch}} (if \code{usehistory} was set \code{TRUE}),
+#' \code{\linkS4class{esearch}} (if \code{usehistory = TRUE}),
 #' \code{\linkS4class{epost}} or \code{\linkS4class{elink}}.
 #' If UIDs are provided as a plain character vector, \code{db} must be
 #' specified explicitly, and all of the UIDs must be from the database
 #' specified by \code{db}.
-#' @param db (Required only when \code{id} is a character vector of UIDs)
+#' @param db (Required only when \code{id} is a vector of UIDs)
 #' Database from which to retrieve records. See
 #' \href{http://www.ncbi.nlm.nih.gov/books/NBK25497/table/chapter2.chapter2_table1/?report=objectonly}{here}
 #' for the supported databases.
-#' @param query_key An integer specifying which of the UID lists attached
-#' to a user's Web Environment will be used as input to \code{efetch}.
-#' (Usually obtained drectely from objects returned by previous
-#' \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
-#' \code{\linkS4class{elink}} calls.)
-#' @param WebEnv A character string specifying the Web Environment that
-#' contains the UID list. (Usually obtained directely from objects returned
-#' by previous \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
-#' \code{\linkS4class{elink}} calls.)
-#' @param rettype A character string specifying the report type returned,
+#' @param rettype A character string specifying the retrieval type,
 #' such as 'abstract' or 'medline' from PubMed, 'gp' or 'fasta' from
 #' protein, or 'gb', 'gbwithparts, or 'fasta_cds_na' from nuccore.
 #' See
@@ -174,6 +165,15 @@ setMethod("c", "efetch",
 #' for allowed values for each database.
 #' @param retstart Numeric index of the first record to be retrieved.
 #' @param retmax Total number of records from the input set to be retrieved.
+#' @param query_key An integer specifying which of the UID lists attached
+#' to a user's Web Environment will be used as input to \code{efetch}.
+#' (Usually obtained drectely from objects returned by previous
+#' \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
+#' \code{\linkS4class{elink}} calls.)
+#' @param WebEnv A character string specifying the Web Environment that
+#' contains the UID list. (Usually obtained directely from objects returned
+#' by previous \code{\linkS4class{esearch}}, \code{\linkS4class{epost}} or
+#' \code{\linkS4class{elink}} calls.)
 #' @param strand Strand of DNA to retrieve. (1: plus strand, 2: minus strand)
 #' @param seq_start First sequence base to retrieve.
 #' @param seq_stop Last sequence base to retrieve.
@@ -187,9 +187,9 @@ setMethod("c", "efetch",
 #' @example inst/examples/efetch.r
 #' @export
 #' @autoImports
-efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
-                    rettype = NULL, retmode = NULL, retstart = NULL,
-                    retmax = 500, strand = NULL, seq_start = NULL,
+efetch <- function (id, db = NULL, rettype = NULL, retmode = NULL,
+                    retstart = NULL, retmax = 500, query_key = NULL,
+                    WebEnv = NULL, strand = NULL, seq_start = NULL,
                     seq_stop = NULL, complexity = NULL) {
   
   ## id may be missing if WebEnv and query_key are provided

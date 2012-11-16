@@ -120,6 +120,10 @@ setMethod("length", "esearch", function (x) {
 #' 
 #' @param term A valid Entrez text query.
 #' @param db Database to search (default: nuccore).
+#' @param rettype Retrieval type. (default: 'uilist', alternative: 'count'.)
+#' @param retstart Numeric index of the first UID in the
+#' retrieved set to be shown in the XML output (default: 0).
+#' @param retmax Total number of UIDs to be retrieved (default: 100).
 #' @param usehistory If \code{TRUE} search results are stored directly in
 #' the user's Web environment so that they can be used in a subsequent 
 #' call to \code{\link{esummary}}, \code{\link{efetch}}, or
@@ -137,10 +141,6 @@ setMethod("length", "esearch", function (x) {
 #' When provided, \code{esearch} will find the intersection of the set
 #' specified by query_key and the set retrieved by the query in \code{term}
 #' (i.e. joins the two with AND).  
-#' @param retstart Numeric index of the first UID in the
-#' retrieved set to be shown in the XML output (default: 0).
-#' @param retmax Total number of UIDs to be retrieved (default: 100).
-#' @param rettype Retrieval type. (default: 'uilist', alternative: 'count'.)
 #' @param field Optional. Search field used to limit the entire search
 #' term.
 #' @param datetype Optional. Type of date to limit the search. One of "mdat"
@@ -156,9 +156,9 @@ setMethod("length", "esearch", function (x) {
 #' @export
 #' @example inst/examples/esearch.r
 #' @autoImports
-esearch <- function (term, db = "nuccore", usehistory = FALSE,
-                     WebEnv = NULL, query_key = NULL, retstart = 0,
-                     retmax = 100, rettype = "uilist", field = NULL,
+esearch <- function (term, db = "nuccore", rettype = "uilist",
+                     retstart = 0, retmax = 100, usehistory = FALSE,
+                     WebEnv = NULL, query_key = NULL, field = NULL,
                      datetype = NULL, reldate = NULL, mindate = NULL,
                      maxdate = NULL) {
   if (missing(term))
