@@ -113,8 +113,9 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
     .query("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
   }
   
-  response <- xmlRoot(content(o, "xml"))
-  new("epost", url=o@url, content=o@content, database=db, count=env_list$count,
-      queryKey=as.integer(xmlValue(response[["QueryKey"]])),
-      webEnv=as.character(xmlValue(response[["WebEnv"]])))  
+  response <- content(o, "xml")
+  new("epost", url=queryUrl(o), content=content(o, "raw"),
+      database=db, count=env_list$count,
+      queryKey = xvalue(response, '//QueryKey', 'integer'),
+      webEnv = xvalue(response, '//WebEnv'))  
 }
