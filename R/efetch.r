@@ -216,13 +216,9 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
     }
   }
 
-  ## set default rettype and retmode for some databases
-  if (is.null(rettype))
-    rettype <- set_rettype(db)
-
-  if (is.null(retmode))
-    retmode <- set_retmode(db)
-
+  # set default rettype and retmode for db
+  r <- set_record_type(db, rettype, retmode)
+  
   if (is.null(retmax))
     retmax <- Inf
   
@@ -244,22 +240,22 @@ efetch <- function (id, db = NULL, query_key = NULL, WebEnv = NULL,
     # use HTTP POST if uploading more than 100 user provided UIDs.
     .httpPOST('efetch', db = db, id = .collapse(env_list$uid),
               query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-              retmode = retmode, rettype = rettype, retstart = as.character(retstart),
-              retmax = as.character(retmax), strand = as.character(strand),
-              seq_start = as.character(seq_start), seq_stop = as.character(seq_stop),
-              complexity = as.character(complexity))
+              retmode = r$retmode, rettype = r$rettype,
+              retstart = as.character(retstart), retmax = as.character(retmax),
+              strand = as.character(strand), seq_start = as.character(seq_start),
+              seq_stop = as.character(seq_stop), complexity = as.character(complexity))
   } else {
     .query('efetch', db = db, id = .collapse(env_list$uid),
            query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-           retmode = retmode, rettype = rettype, retstart = retstart,
+           retmode = r$retmode, rettype = r$rettype, retstart = retstart,
            retmax = retmax, strand = strand, seq_start = seq_start,
            seq_stop = seq_stop, complexity = complexity)
   }
   
   new("efetch", url = queryUrl(o), content = content(o, "raw"),
       error = list(), database = db,
-      retmode = retmode %||% NA_character_,
-      rettype = rettype %||% NA_character_)
+      retmode = r$retmode %||% NA_character_,
+      rettype = r$rettype %||% NA_character_)
 }
 
 #' Retrieve batches of data records in the requested format from NCBI
