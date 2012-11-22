@@ -20,58 +20,6 @@ setClass("einfo",
          contains = "eutil")
 
 
-# einfo accessors --------------------------------------------------------
-
-
-setMethod("dbName", "einfo", function(x) x@dbName)
-
-setMethod("menuName", "einfoDb", function(x) x@menuName)
-
-setMethod("description", "einfoDb", function(x) x@description)
-
-setMethod("records", "einfoDb", function(x) x@records)
-
-setMethod("lastUpdate", "einfoDb", function(x) x@lastUpdate)
-
-setMethod("fields", "einfoDb", function(x) x@fields)
-
-setMethod("links", "einfoDb", function(x) x@links)
-
-
-# show-method ------------------------------------------------------------
-
-#' @autoImports
-setMethod("show", "einfo",
-          function (object) {
-            if (is(object, "einfoDbList")) {
-              cat("List of Entrez databases\n")
-              print(dbName(object))
-              invisible(NULL)
-            } else if (is(object, "einfoDb")) {
-              cat(sprintf("Statistics for Entrez database %s\n",
-                          sQuote(menuName(object))))
-              n <- slotNames(object)
-              cat(n[1], ":\n", sep="")
-              print(dbName(object))
-              cat(n[2], ":\n", sep="")
-              print(menuName(object))
-              cat(n[3], ":\n", sep="")
-              print(description(object))
-              cat(n[4], ":\n", sep="")
-              print(records(object))
-              cat(n[5], ":\n", sep="")
-              print(lastUpdate(object))
-              cat(paste0(n[6], paste0("$", names(fields(object)))),
-                  "\n", sep=" ")
-              print(fields(object)$Name)
-              cat(paste0(n[7], paste0("$", names(links(object)))),
-                  "\n", sep=" ")
-              print(links(object)$Name)
-              invisible(NULL)
-            }
-          })
-
-
 # einfoDbList-class ------------------------------------------------------
 
 
@@ -97,15 +45,6 @@ setClass("einfoDbList",
          representation(dbName = "character"),
          prototype(dbName = NA_character_),
          contains = "einfo")
-
-
-# subsetting-methods -----------------------------------------------------
-
-
-setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
-          function (x, i, j, ..., drop = TRUE) {
-            initialize(x, dbName = dbName(x)[i])
-          })
 
 
 # einfoDb-class ----------------------------------------------------------
@@ -151,6 +90,68 @@ setClass("einfoDb",
                    fields = data.frame(),
                    links = data.frame()),
          contains = "einfo")
+
+
+# einfo accessors --------------------------------------------------------
+
+
+setMethod("dbName", "einfo", function(x) x@dbName)
+
+setMethod("menuName", "einfoDb", function(x) x@menuName)
+
+setMethod("description", "einfoDb", function(x) x@description)
+
+setMethod("records", "einfoDb", function(x) x@records)
+
+setMethod("lastUpdate", "einfoDb", function(x) x@lastUpdate)
+
+setMethod("fields", "einfoDb", function(x) x@fields)
+
+setMethod("links", "einfoDb", function(x) x@links)
+
+
+# subsetting-methods -----------------------------------------------------
+
+
+setMethod("[", c("einfoDbList", "numeric", "missing", "ANY"),
+          function (x, i, j, ..., drop = TRUE) {
+            initialize(x, dbName = dbName(x)[i])
+          })
+
+
+# show-method ------------------------------------------------------------
+
+
+#' @autoImports
+setMethod("show", "einfo",
+          function (object) {
+            if (is(object, "einfoDbList")) {
+              cat("List of Entrez databases\n")
+              print(dbName(object))
+              invisible(NULL)
+            } else if (is(object, "einfoDb")) {
+              cat(sprintf("Statistics for Entrez database %s\n",
+                          sQuote(menuName(object))))
+              n <- slotNames(object)
+              cat(n[1], ":\n", sep="")
+              print(dbName(object))
+              cat(n[2], ":\n", sep="")
+              print(menuName(object))
+              cat(n[3], ":\n", sep="")
+              print(description(object))
+              cat(n[4], ":\n", sep="")
+              print(records(object))
+              cat(n[5], ":\n", sep="")
+              print(lastUpdate(object))
+              cat(paste0(n[6], paste0("$", names(fields(object)))),
+                  "\n", sep=" ")
+              print(fields(object)$Name)
+              cat(paste0(n[7], paste0("$", names(links(object)))),
+                  "\n", sep=" ")
+              print(links(object)$Name)
+              invisible(NULL)
+            }
+          })
 
 
 #' \code{einfo} retrieves information about each database in the NCBI Entrez

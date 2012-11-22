@@ -55,7 +55,7 @@ setMethod("error", "eutil", function (x) {
 })
 
 
-#' @autoImports
+#' @importFrom XML xmlParse
 setMethod("content", "eutil",
           function (x, as = "text") {
             as <- match.arg(as, c("text", "xml", "raw"))
