@@ -42,7 +42,7 @@ sum <- docsum(esummary(p))
 #
 # get FASTAs with efetch
 #
-prot <- efetch(p, rettype = "fasta")
+prot <- efetch(p, retmode="text", rettype="fasta")
 
 #
 # retrieve the content of the efetch object

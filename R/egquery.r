@@ -71,7 +71,7 @@ egquery <- function (term) {
   count <- data.frame(stringsAsFactors=FALSE,
                       dbName = xvalue(response, '//ResultItem/DbName'),
                       menuName = xvalue(response, '//ResultItem/MenuName'),
-                      count = xvalue(response, '//ResultItem/Count', 'integer'),
+                      count = xvalue(response, '//ResultItem/Count', as='integer'),
                       status = xvalue(response, '//ResultItem/Status'))
   
   new("egquery", url=queryUrl(o), content=content(o, "raw"),

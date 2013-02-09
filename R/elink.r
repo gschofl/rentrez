@@ -244,14 +244,16 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
   if (missing(id)) {
     # if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
     # retmax stays restricted to 500.
-    env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
-                    uid = NULL, db = dbFrom)
+    env_list <- list(WebEnv = WebEnv, query_key = query_key, count = 0,
+                     uid = NULL, db = dbFrom)
   } else {
     env_list <- .getId(id)
+    
     # abort if no dbFrom was provided and id did not contain dbFrom 
-    if (is.null(dbFrom) && is.null(dbFrom <- env_list$db)) {
+    dbFrom <- dbFrom %|null|% env_list$db
+    if (is.null(dbFrom))
       stop("Provide the database containing the input UIDs (dbFrom)")
-    }
+    
   }
   
   # set dbTo = dbFrom if no dbTo is provided
@@ -283,7 +285,7 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
   }
   
   response <- content(o, "xml")
-  queryKey <- xvalue(response, '//QueryKey', 'integer')
+  queryKey <- xvalue(response, '//QueryKey', as='integer')
   webEnv <- xvalue(response, '//WebEnv')
       
   if (cmd == "acheck") {
@@ -302,8 +304,8 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
   
   
   id <- new("idList", database = dbFrom, count = length(uid),
-             queryKey = env_list$query_key %||% NA_integer_,
-             webEnv = env_list$WebEnv %||% NA_character_,
+             queryKey = env_list$query_key %|null|% NA_integer_,
+             webEnv = env_list$WebEnv %|null|% NA_character_,
              idList = uid)
   
   new("elink", url = queryUrl(o), content = content(o, "raw"),

@@ -47,10 +47,10 @@ setMethod("queryUrl", "eutil", function (x) x@url)
 
 setMethod("error", "eutil", function (x) {
   e <- x@error
-  if (all(idx <- vapply(e, is.null, logical(1)))) {
+  if (all(is_null(e))) {
     message("No errors")
   } else {
-    print(e[!idx])
+    print(e[not_null(e)])
   }
 })
 

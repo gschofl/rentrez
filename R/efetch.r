@@ -48,7 +48,7 @@ setMethod("rettype", "efetch", function(x) x@rettype)
 #' @autoImports
 setMethod("content", "efetch",
           function (x, as = NULL) {
-            as <- as %||% retmode(x)
+            as <- as %|null|% retmode(x)
             if (as == "asn.1") 
               as <- "text"
             as <- match.arg(as, c("text", "xml", "raw"))
@@ -210,10 +210,11 @@ efetch <- function (id, db = NULL, rettype = NULL, retmode = NULL,
                     uid = NULL, db = db)
   } else {
     env_list <- .getId(id)
+    
     ## abort if no db was provided and id did not contain db 
-    if (is.null(db) && is.null(db <- env_list$db)) {
+    db <- db %|null|% env_list$db
+    if (is.null(db))
       stop("No database name provided")
-    }
   }
 
   # set default rettype and retmode for db

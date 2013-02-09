@@ -19,7 +19,6 @@ Collate:
     'all-generics.r'
     'utils.r'
     'rettypes.r'
-    'xpath.r'
     'eutil.r'
     'idlist.r'
     'einfo.r'

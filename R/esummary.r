@@ -133,10 +133,10 @@ esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
                      uid = NULL, db = db)
   } else {
     env_list <-.getId(id)
-    ## abort if no db was provided and id did not contain db 
-    if (is.null(db) && is.null(db <- env_list$db)) {
+    ## abort if no db was provided and id did not contain db
+    db <- db %|null|% env_list$db
+    if (is.null(db))
       stop("No database name provided")
-    }
   }
   
   o <- if (length(env_list$uid) > 100) {

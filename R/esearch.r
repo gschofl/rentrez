@@ -187,11 +187,11 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
   
   response <- content(o, "xml")  
   ids <- new("idList", database = db, 
-             retmax = xvalue(response, '//RetMax', 'numeric'),
-             retstart = xvalue(response, '//RetStart', 'numeric'),
+             retmax = xvalue(response, '//RetMax', as = 'numeric'),
+             retstart = xvalue(response, '//RetStart', as = 'numeric'),
              queryTranslation = xvalue(response, '//QueryTranslation'),
-             count = xvalue(response, '/eSearchResult/Count', 'numeric'),
-             queryKey = xvalue(response, '//QueryKey', 'integer'),
+             count = xvalue(response, '/eSearchResult/Count', as = 'numeric'),
+             queryKey = xvalue(response, '//QueryKey', as = 'integer'),
              webEnv = xvalue(response, '//WebEnv'),
              idList = xvalue(response, '//IdList/Id'))
   

@@ -188,7 +188,7 @@ einfo <- function (db) {
     response <- content(o, "xml")
     # extract FieldList elements
     fnm <- unique(xname(response, '//FieldList/Field/child::node()'))        
-    if (not_empty(fnm)) {
+    if (!all_empty(fnm)) {
       fieldNodes <- getNodeSet(response, '//FieldList/Field/*')
       fieldList <- split(vapply(fieldNodes, xmlValue, character(1)), fnm)
       field_info <- data.frame(stringsAsFactors = FALSE, fieldList)[, fnm]
@@ -197,7 +197,7 @@ einfo <- function (db) {
     }
     # extract LinkList elements
     lnm <- unique(xname(response, '//LinkList/Link/child::node( )'))
-    if (not_empty(lnm)) {
+    if (!all_empty(lnm)) {
       linkNodes <- getNodeSet(response, '//LinkList/Link/*')
       linkList <- split(vapply(linkNodes, xmlValue, character(1)), lnm)
       link_info <- data.frame(stringsAsFactors = FALSE, linkList)[, lnm]
@@ -210,8 +210,8 @@ einfo <- function (db) {
         dbName = xvalue(response, '//DbInfo/DbName'),
         menuName = xvalue(response, '//DbInfo/MenuName'),
         description = xvalue(response, '//DbInfo/Description'),
-        records = xvalue(response, '//DbInfo/Count', 'integer'),
-        lastUpdate = as.POSIXlt(xvalue(response, '//DbInfo/LastUpdate')),
+        records = xvalue(response, '//DbInfo/Count', as='integer'),
+        lastUpdate = xvalue(response, '//DbInfo/LastUpdate', as="POSIXlt"),
         fields = field_info,
         links = link_info)
   }

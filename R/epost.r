@@ -102,10 +102,12 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
   }
   
   env_list <- .getId(id)
+  
   ## abort if no db was provided and id did not contain db 
-  if (is.null(db) && is.null(db <- env_list$db)) {
+  db <- db %|null|% env_list$db
+  if (is.null(db))
     stop("No database name provided")
-  }
+
   
   o <- if (length(env_list$uid) > 100) {
     .httpPOST("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
@@ -116,6 +118,6 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
   response <- content(o, "xml")
   new("epost", url=queryUrl(o), content=content(o, "raw"),
       database=db, count=env_list$count,
-      queryKey = xvalue(response, '//QueryKey', 'integer'),
+      queryKey = xvalue(response, '//QueryKey', as='integer'),
       webEnv = xvalue(response, '//WebEnv'))  
 }
