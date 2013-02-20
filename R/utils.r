@@ -5,8 +5,7 @@
     url <- get_query_url('http://eutils.ncbi.nlm.nih.gov/gquery/', ...,
                          tool="rentrez", email="gschofl@yahoo.de")
   } else {
-    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil, 
-                   '.fcgi')
+    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil,'.fcgi')
     url <- get_query_url(host, ..., tool="rentrez", email="gschofl@yahoo.de")
   }
   
@@ -21,8 +20,7 @@ get_query_url <- function (host, ...) {
     stop("No host url provided")
   }
   args <- compact(list(...))
-  params <- names(args)
-  fields <- sprintf("%s=%s", as.character(params),
+  fields <- sprintf("%s=%s", as.character(names(args)),
                     vapply(args, paste0, collapse=",",
                            FUN.VALUE=character(1), USE.NAMES=FALSE))
   sprintf('%s%s', host, .escape(paste0("?", paste0(fields, collapse="&"))))

@@ -1,13 +1,17 @@
 ## parse docsums (esummary) ####
 #' @autoImports
-.docsum <- function (x, version) {
+.docsum <- function (x) {
   
-  if (identical(version, "default")) {
-    nodes <- getNodeSet(x, '//DocSum')
+  nodes <- getNodeSet(x, '//DocSum')
+  if (!all_empty(nodes)) {
     uids <- xvalue(x, '/eSummaryResult/DocSum/Id')
-  } else if (identical(version, "2.0")) {
+  } else {
     nodes <- getNodeSet(x, '//DocumentSummary')
     uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
+  }
+  
+  if (all_empty(nodes)) {
+    stop("Cannot parse DocumentSummary", call.=FALSE)
   }
   
   docsum <- {

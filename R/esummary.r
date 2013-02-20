@@ -154,6 +154,6 @@ esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
   
   new("esummary", url = queryUrl(o), content = content(o, "raw"),
       error = checkErrors(o), database = db, version = version,
-      docsum = .docsum(content(o, "xml"), version))
+      docsum = .docsum(content(o, "xml")))
 }
 

@@ -60,7 +60,7 @@ setMethod("content", "eutil",
           function (x, as = "text") {
             as <- match.arg(as, c("text", "xml", "raw"))
             switch(as,
-                   text =  rawToChar(x@content),
+                   text = rawToChar(x@content),
                    xml = xmlParse(rawToChar(x@content), useInternalNodes=TRUE),
                    raw = x@content)
           })
