@@ -71,34 +71,32 @@ get_query_url <- function (host, ...) {
 
 
 #' @autoImports
-checkErrors <- function (o) {
-  error <- err_msgs <- wrn_msgs <- NULL
-  response <- content(o, 'xml')
+checkErrors <- function (o, verbose = TRUE) {
   
-  err_node <- getNodeSet(response, '//ERROR')
-  if (any(not_empty(err_node)))
-    error <- lapply(err_node, xmlValue)
+  if (is(o, "eutil")) {
+    response <- content(o, 'xml')
+  } else if (is(o, "XMLInternalDocument")) {
+    response <- o
+  }
   
-  err_list_node <- getNodeSet(response, '//ErrorList')
-  if (any(not_empty(err_list_node)))
-    err_msgs <- lapply(xmlChildren(err_list_node[[1]]), xmlValue)
+  error <- xvalue(response, '//ERROR', NULL) 
+  errmsg_name <- xname(response, '//ErrorList/*', NULL)
+  errmsg <- setNames(xvalue(response, '//ErrorList/*', NULL), nm=errmsg_name)
+  wrnmsg_name <- xname(response, '//WarningList/*', NULL)
+  wrnmsg <- setNames(xvalue(response, '//WarningList/*', NULL), nm=wrnmsg_name) 
+   
+  if (!all_empty(error) && verbose)
+    message('Error:\n\t', error)
   
-  wrn_list_node <- getNodeSet(response, '//WarningList')
-  if (any(not_empty(wrn_list_node)))
-    wrn_msgs <- lapply(xmlChildren(wrn_list_node[[1]]), xmlValue)
-  
-  if (not.null(error))
-    message('Error:\n\t', unlist(error))
-  
-  if (not.null(err_msgs))
+  if (!all_empty(errmsg) && verbose)
     message('Error(s):\n\t', 
-            paste(paste(names(err_msgs), err_msgs, sep="\t"), collapse="\n\t"))
+            paste(paste(names(errmsg), errmsg, sep="\t"), collapse="\n\t"))
   
-  if (not.null(wrn_msgs))
+  if (!all_empty(wrnmsg) && verbose)
     message('Warning(s):\n\t', 
-            paste(paste(names(wrn_msgs), wrn_msgs, sep="\t"), collapse="\n\t"))
+            paste(paste(names(wrnmsg), wrnmsg, sep="\t"), collapse="\n\t"))
   
-  invisible(list(err=error, errmsg=err_msgs, wrnmsg=wrn_msgs))
+  invisible(list(error=error, errmsg=errmsg, wrnmsg=wrnmsg))
 }
 
 

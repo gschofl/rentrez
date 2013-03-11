@@ -45,6 +45,7 @@ setMethod("retmode", "efetch", function(x) x@retmode)
 
 setMethod("rettype", "efetch", function(x) x@rettype)
 
+
 #' @autoImports
 setMethod("content", "efetch",
           function (x, as = NULL) {
@@ -52,10 +53,7 @@ setMethod("content", "efetch",
             if (as == "asn.1") 
               as <- "text"
             as <- match.arg(as, c("text", "xml", "raw"))
-            switch(as,
-                   text = rawToChar(x@content),
-                   xml = xmlParse(rawToChar(x@content), useInternalNodes=TRUE),
-                   raw = x@content)
+            get_content(x, as)
           })
 
 
@@ -237,24 +235,25 @@ efetch <- function (id, db = NULL, rettype = NULL, retmode = NULL,
     retmax <- 500
   }
 
-  o <- if (length(env_list$uid) > 100) {
+  if (length(env_list$uid) > 100) {
     # use HTTP POST if uploading more than 100 user provided UIDs.
-    .httpPOST('efetch', db = db, id = .collapse(env_list$uid),
-              query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-              retmode = r$retmode, rettype = r$rettype,
-              retstart = as.character(retstart), retmax = as.character(retmax),
-              strand = as.character(strand), seq_start = as.character(seq_start),
-              seq_stop = as.character(seq_stop), complexity = as.character(complexity))
+    o <- .httpPOST('efetch', db = db, id = .collapse(env_list$uid),
+                   query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+                   retmode = r$retmode, rettype = r$rettype,
+                   retstart = as.character(retstart), retmax = as.character(retmax),
+                   strand = as.character(strand), seq_start = as.character(seq_start),
+                   seq_stop = as.character(seq_stop), complexity = as.character(complexity))
   } else {
-    .query('efetch', db = db, id = .collapse(env_list$uid),
-           query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-           retmode = r$retmode, rettype = r$rettype, retstart = retstart,
-           retmax = retmax, strand = strand, seq_start = seq_start,
-           seq_stop = seq_stop, complexity = complexity)
+    o <- .query('efetch', db = db, id = .collapse(env_list$uid),
+                query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+                retmode = r$retmode, rettype = r$rettype, retstart = retstart,
+                retmax = retmax, strand = strand, seq_start = seq_start,
+                seq_stop = seq_stop, complexity = complexity)
   }
   
   new("efetch", url = queryUrl(o), content = content(o, "raw"),
-      error = list(), database = db,
+      error = if (r$retmode == "xml") checkErrors(o, FALSE) else list(),
+      database = db,
       retmode = r$retmode %||% NA_character_,
       rettype = r$rettype %||% NA_character_)
 }

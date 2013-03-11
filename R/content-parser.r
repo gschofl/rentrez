@@ -11,7 +11,10 @@
   }
   
   if (all_empty(nodes)) {
-    stop("Cannot parse DocumentSummary", call.=FALSE)
+    if (!all_empty(checkErrors(x, verbose=FALSE))) {
+      warning("Errors parsing DocumentSummary", call.=FALSE)
+    }
+    return( list() )
   }
   
   docsum <- {

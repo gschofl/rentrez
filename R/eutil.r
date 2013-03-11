@@ -55,15 +55,28 @@ setMethod("error", "eutil", function (x) {
 })
 
 
-#' @importFrom XML xmlParse
+#' @importFrom XML xmlTreeParse
+get_content <- function (x, as) {
+  if (as == "raw") {
+    return( x@content )
+  }
+  content <- rawToChar(x@content)
+  if (as == "text") {
+    return( content )
+  } else if (as == "xml") {
+    tryCatch(xmlTreeParse(content, asText=TRUE, useInternalNodes=TRUE,
+                          error=NULL),
+             XMLError = function(e) {
+               error <- paste("XML parse error:", e$message)
+               xmlTreeParse(paste0("<?xml version=\"1.0\"?>\n<ERROR>", error, "</ERROR>"), useInternalNodes=TRUE)
+             })
+  } 
+}
+
+
 setMethod("content", "eutil",
           function (x, as = "text") {
             as <- match.arg(as, c("text", "xml", "raw"))
-            switch(as,
-                   text = rawToChar(x@content),
-                   xml = xmlParse(rawToChar(x@content), useInternalNodes=TRUE),
-                   raw = x@content)
+            get_content(x, as)
           })
-
-
 

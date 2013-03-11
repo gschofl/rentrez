@@ -139,21 +139,21 @@ esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
       stop("No database name provided")
   }
   
-  o <- if (length(env_list$uid) > 100) {
+  if (length(env_list$uid) > 100) {
     # use HTTP POST if dealing with more than 100 user provided UIDs.
-    .httpPOST('esummary', db = db, id = .collapse(env_list$uid),
-              query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-              retstart = as.character(retstart), retmax = as.character(retmax),
-              version = if (identical(version, "2.0")) "2.0" else NULL)
+    o <- .httpPOST('esummary', db = db, id = .collapse(env_list$uid),
+                   query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+                   retstart = as.character(retstart), retmax = as.character(retmax),
+                   version = if (identical(version, "2.0")) "2.0" else NULL)
   } else {
-    .query('esummary', db = db, id = .collapse(env_list$uid),
-           query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
-           retstart = retstart, retmax = retmax,
-           version = if (identical(version, "2.0")) "2.0" else NULL)
+    o <- .query('esummary', db = db, id = .collapse(env_list$uid),
+                query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
+                retstart = retstart, retmax = retmax,
+                version = if (identical(version, "2.0")) "2.0" else NULL)
   }
   
   new("esummary", url = queryUrl(o), content = content(o, "raw"),
       error = checkErrors(o), database = db, version = version,
-      docsum = .docsum(content(o, "xml")))
+      docsum = .docsum(x=content(o, "xml")))
 }
 

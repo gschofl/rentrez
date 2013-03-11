@@ -167,22 +167,22 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
   if (length(term) > 1L)
     term <- paste(term, collapse=" OR ")
   
-  o <- if (nchar(term) > 100) {
+  if (nchar(term) > 100) {
     ## for longer search terms use HTTP POST
-    .httpPOST("esearch", db=db, term=.escape(term, httpPOST=TRUE),
-              usehistory=if (usehistory) "y" else NULL,
-              WebEnv=WebEnv, query_key=as.character(query_key),
-              retstart=as.character(retstart),
-              retmax=if (usehistory) "0" else as.character(retmax),
-              rettype=rettype, field=field, datetype=datetype,
-              reldate=reldate, mindate=mindate, maxdate=maxdate)
+    o <- .httpPOST("esearch", db=db, term=.escape(term, httpPOST=TRUE),
+                   usehistory=if (usehistory) "y" else NULL,
+                   WebEnv=WebEnv, query_key=as.character(query_key),
+                   retstart=as.character(retstart),
+                   retmax=if (usehistory) "0" else as.character(retmax),
+                   rettype=rettype, field=field, datetype=datetype,
+                   reldate=reldate, mindate=mindate, maxdate=maxdate)
   } else {
-    .query("esearch", db=db, term=term,
-           usehistory=if (usehistory) "y" else NULL,
-           WebEnv=WebEnv, query_key=query_key, retstart=retstart,
-           retmax=if (usehistory) 0 else retmax, rettype=rettype,
-           field=field, datetype=datetype, reldate=reldate,
-           mindate=mindate, maxdate=maxdate)
+    o <- .query("esearch", db=db, term=term,
+                usehistory=if (usehistory) "y" else NULL,
+                WebEnv=WebEnv, query_key=query_key, retstart=retstart,
+                retmax=if (usehistory) 0 else retmax, rettype=rettype,
+                field=field, datetype=datetype, reldate=reldate,
+                mindate=mindate, maxdate=maxdate)
   }
   
   response <- content(o, "xml")  
