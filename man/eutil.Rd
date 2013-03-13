@@ -75,7 +75,7 @@ Sub classes:
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+  \item{content}{A character vector holding the unparsed
 contents of a request to Entrez.}
 
 }

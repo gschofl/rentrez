@@ -6,7 +6,7 @@
 \title{esummary}
 \usage{
   esummary(id, db = NULL, retstart = 1, retmax = 10000,
-    query_key = NULL, WebEnv = NULL, version = "default")
+    query_key = NULL, WebEnv = NULL, version = "2.0")
 }
 \arguments{
   \item{id}{(Required)
@@ -111,7 +111,7 @@ prot[,c("Id","Caption","Length","TaxId")]
   \item{error}{Any error or warning messages parsed from
 the output of the call submitted to Entrez.}
 
-  \item{content}{A \code{\linkS4class{raw}} vector holding the unparsed
+  \item{content}{A character vector holding the unparsed
 contents of a request to Entrez.}
 
   \item{database}{The name of the queried database.}

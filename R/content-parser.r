@@ -7,16 +7,16 @@
     uids <- xvalue(x, '/eSummaryResult/DocSum/Id')
   } else {
     nodes <- getNodeSet(x, '//DocumentSummary')
-    uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
-  }
-  
-  if (all_empty(nodes)) {
-    if (!all_empty(checkErrors(x, verbose=FALSE))) {
-      warning("Errors parsing DocumentSummary", call.=FALSE)
+    if (all_empty(nodes)) {
+      if (!all_empty(checkErrors(x, verbose=FALSE))) {
+        warning("Errors parsing DocumentSummary", call.=FALSE)
+      }
+      return( list() )
+    } else {
+      uids <- vapply(nodes, xmlGetAttr, name="uid", FUN.VALUE=character(1))
     }
-    return( list() )
   }
-  
+
   docsum <- {
     docsum_list <- lapply(nodes, .parse_docsum)
     flat_docsum_list <- flatten(docsum_list, start_after=1, delim_path=".")

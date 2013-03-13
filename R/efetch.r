@@ -12,7 +12,7 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot database A character vector giving the name of the queried database.
 #' @slot rettype Retrieval Mode. A character vector specifying the record
@@ -52,7 +52,7 @@ setMethod("content", "efetch",
             as <- as %|null|% retmode(x)
             if (as == "asn.1") 
               as <- "text"
-            as <- match.arg(as, c("text", "xml", "raw"))
+            as <- match.arg(as, c("text", "xml"))
             get_content(x, as)
           })
 
@@ -117,8 +117,8 @@ setMethod("c", "efetch",
               stop("Cannot combine objects with different data modes")
             
             url <- c(queryUrl(x), vapply(list(...), queryUrl, character(1)))
-            content <- c(content(x, "raw"),
-                         unlist(lapply(list(...), content, as="raw")))
+            content <- c(content(x, "text"),
+                         unlist(lapply(list(...), content, as="text")))
             
             new("efetch", url = url, content = content, error = list(),
                 database = db, retmode = rm, rettype = rt)
@@ -235,25 +235,21 @@ efetch <- function (id, db = NULL, rettype = NULL, retmode = NULL,
     retmax <- 500
   }
 
-  if (length(env_list$uid) > 100) {
-    # use HTTP POST if uploading more than 100 user provided UIDs.
-    o <- .httpPOST('efetch', db = db, id = .collapse(env_list$uid),
-                   query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-                   retmode = r$retmode, rettype = r$rettype,
-                   retstart = as.character(retstart), retmax = as.character(retmax),
-                   strand = as.character(strand), seq_start = as.character(seq_start),
-                   seq_stop = as.character(seq_stop), complexity = as.character(complexity))
+  method <- if (length(env_list$uid) < 100) "GET" else "POST"
+  o <- .equery('efetch', method, db = db, id = .collapse(env_list$uid),
+               query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+               retmode = r$retmode, rettype = r$rettype, retstart = retstart,
+               retmax = retmax, strand = strand, seq_start = seq_start,
+               seq_stop = seq_stop, complexity = complexity)
+  
+  if (r$retmode == "xml" && all_empty(error(o))) {
+    error <- checkErrors(o, FALSE)
   } else {
-    o <- .query('efetch', db = db, id = .collapse(env_list$uid),
-                query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-                retmode = r$retmode, rettype = r$rettype, retstart = retstart,
-                retmax = retmax, strand = strand, seq_start = seq_start,
-                seq_stop = seq_stop, complexity = complexity)
+    error <- error(o)
   }
   
-  new("efetch", url = queryUrl(o), content = content(o, "raw"),
-      error = if (r$retmode == "xml") checkErrors(o, FALSE) else list(),
-      database = db,
+  new("efetch", url = queryUrl(o), content = content(o, "text"),
+      error = error, database = db,
       retmode = r$retmode %||% NA_character_,
       rettype = r$rettype %||% NA_character_)
 }

@@ -1,72 +1,56 @@
 #' @autoImports
-.query <- function (eutil, ...) {
+.equery <- function (eutil, method = "GET", ...) {
   
-  if (identical(eutil, "egquery")) {
-    url <- get_query_url('http://eutils.ncbi.nlm.nih.gov/gquery/', ...,
-                         tool="rentrez", email="gschofl@yahoo.de")
+  method <- match.arg(method, c("GET", "POST"))
+  
+  if (eutil == "egquery") {
+    host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/gquery')
   } else {
     host <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/', eutil,'.fcgi')
-    url <- get_query_url(host, ..., tool="rentrez", email="gschofl@yahoo.de")
   }
   
-  eutil(url = curlUnescape(url),
-        content = charToRaw(as.character(getURL(url))))
+  params <- list(...)
+  params <- compact(merge_list(params, list(tool = "rentrez", email = "gschofl@yahoo.de")))
+  opts <- list()
+  hg <- basicHeaderGatherer()
+  opts$headerfunction <- hg$update
+  tg <- basicTextGatherer()
+  opts$writefunction <- tg$update
+  
+  if (method == "POST") {
+    url <- "HTTP_POST"
+    postForm(uri=host, .params=params, .opts=opts)
+  } else if (method == "GET") {
+    url <- get_equery_url(host, params)
+    getURLContent(url, .opts=opts)
+  }
+  
+  content <- as.character(tg$value())
+  error <- structure(list(error = NULL, errmsg = NULL, wrnmsg = NULL),
+                     class="eutil_error")
+  header <- as.list(hg$value())
+  status <- as.numeric(header$status)
+  statusmsg <- header$statusMessage
+  if (status != 200) {
+    error$error <- paste0("HTTP error: Status ", status, "; ", statusmsg)
+    warning(error$error, call.=FALSE, immediate.=TRUE)
+  }
+  
+  new("eutil", url = url, error = error, content = content)
 }
 
 
 #' @autoImports
-get_query_url <- function (host, ...) {
-  if (missing(host)) {
-    stop("No host url provided")
-  }
-  args <- compact(list(...))
-  fields <- sprintf("%s=%s", as.character(names(args)),
-                    vapply(args, paste0, collapse=",",
-                           FUN.VALUE=character(1), USE.NAMES=FALSE))
-  sprintf('%s%s', host, .escape(paste0("?", paste0(fields, collapse="&"))))
+get_equery_url <- function (host, params) {
+  fields <- paste(curlEscape(names(params)), curlEscape(params), sep="=", collapse="&")
+  paste0(host, "?", fields)
 }
 
 
 #' @autoImports
-.escape <- function (s, httpPOST=FALSE) {
-  if (httpPOST) {
-    s <- gsub("\\s+", " ", s)
-    s <- gsub("+", " ", s, fixed=TRUE)
-  } else {
-    s <- gsub("\\s+", "\\+", s)
-  }
-  s <- paste(strsplit(s, '\"', fixed=TRUE)[[1L]], collapse="%22")
-  s <- gsub(">", "%3E", s)
-  s <- gsub("\\n", "%0D%0A", s)
-  s <- gsub("\\|", "%7C", s)
-  s <- gsub("\\#", "%23", s)
-  s <- gsub("\\+(and)\\+|\\+(or)\\+|\\+(not)\\+","\\+\\U\\1\\U\\2\\U\\3\\+", s, perl=TRUE)
-  s
-}
-
-
-#' @autoImports
-.httpPOST <- function (eutil, ...) {
-  
-  user_agent <- switch(eutil,
-                       elink='elink/1.0',
-                       esearch='esearch/1.0',
-                       epost='epost/1.0',
-                       esummary='esummary/1.0',
-                       efetch='efetch/1.0')
-  
-  http_post_url <- switch(eutil,
-                          elink='elink.fcgi?',
-                          esearch='esearch.fcgi?',
-                          epost='epost.fcgi?',
-                          esummary='esummary.fcgi?',
-                          efetch='efetch.fcgi?')
-  
-  doc <- postForm(paste('http://eutils.ncbi.nlm.nih.gov/entrez/eutils',
-                        http_post_url, sep="/"),
-                  ..., type='POST', .opts=curlOptions(useragent=user_agent))
-  
-  eutil(url = 'HTTP_POST', content = charToRaw(as.character(doc)))
+.escape <- function (x) {
+  x <- gsub("\\s+", " ", x)
+  gsub(" (and) | (or) | (not) "," \\U\\1\\U\\2\\U\\3 ", x, perl=TRUE)
 }
 
 
@@ -96,7 +80,8 @@ checkErrors <- function (o, verbose = TRUE) {
     message('Warning(s):\n\t', 
             paste(paste(names(wrnmsg), wrnmsg, sep="\t"), collapse="\n\t"))
   
-  invisible(list(error=error, errmsg=errmsg, wrnmsg=wrnmsg))
+  e <- structure(list(error=error, errmsg=errmsg, wrnmsg=wrnmsg), class="eutil_error")
+  invisible(e)
 }
 
 

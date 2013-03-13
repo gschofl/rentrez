@@ -14,7 +14,7 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot idList
 #' @slot databaseTo 
@@ -252,8 +252,7 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
     # abort if no dbFrom was provided and id did not contain dbFrom 
     dbFrom <- dbFrom %|null|% env_list$db
     if (is.null(dbFrom))
-      stop("Provide the database containing the input UIDs (dbFrom)")
-    
+      stop("Provide the database containing the input UIDs (dbFrom)")  
   }
   
   # set dbTo = dbFrom if no dbTo is provided
@@ -269,52 +268,44 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
     id <- .collapse(env_list$uid)
   }
 
-  o <-if (length(env_list$uid) > 100) {
-    # use HTTP POST if dealing with more than 100 user provided UIDs.
-    .httpPOST('elink', id = id, db = dbTo, dbFrom = dbFrom, cmd = cmd,
-              query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-              linkname = linkname, term = term, holding = holding,
-              datetype = datetype, reldate = reldate, mindate = mindate,
-              maxdate = maxdate)
+  method <- if (length(env_list$uid) < 100) "GET" else "POST"
+  o <- .equery('elink', method, id = id, db = dbTo, dbFrom = dbFrom,
+               cmd = cmd, query_key = env_list$query_key,
+               WebEnv = env_list$WebEnv, linkname = linkname, term = term,
+               holding = holding, datetype = datetype, reldate = reldate, 
+               mindate = mindate, maxdate = maxdate)
+  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
+  
+  if (all_empty(error)) {
+    response <- content(o, "xml")
+    queryKey <- xvalue(response, '//QueryKey', as='integer')
+    webEnv <- xvalue(response, '//WebEnv')
+    
+    if (cmd == "acheck") {
+      uid <- xvalue(response, "//Id")
+      linkSet <- .parseIdLinkSet(response)
+    } else if (cmd %in% c("ncheck","lcheck")) {
+      uid <- NA_character_
+      linkSet <- .parseIdCheckList(response)
+    } else if (cmd %in% c("llinks","llinkslib","prlinks")) {
+      uid <- xvalue(response, "//IdUrlSet/Id")
+      linkSet <- .parseIdUrlList(response)
+    } else {
+      uid <- xvalue(response, "//IdList/Id")
+      linkSet <- .parseLinkSet(response)
+    }
+    
+    id <- new("idList", database = dbFrom, count = length(uid),
+              queryKey = env_list$query_key %|null|% NA_integer_,
+              webEnv = env_list$WebEnv %|null|% NA_character_,
+              idList = uid)
+    
+    new("elink", url = queryUrl(o), content = content(o), error = error,
+        idList = id, databaseTo = if (is.null(dbTo)) "any" else dbTo,
+        command = cmd, queryKey = queryKey, webEnv = webEnv,
+        linkSet = linkSet)
   } else {
-   .query('elink', id = id, db = dbTo, dbFrom = dbFrom, cmd = cmd,
-           query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-           linkname = linkname, term = term, holding = holding,
-           datetype = datetype, reldate = reldate, mindate = mindate,
-           maxdate = maxdate)
+    new("elink", url = queryUrl(o), content = content(o), error = error)
   }
-  
-  response <- content(o, "xml")
-  queryKey <- xvalue(response, '//QueryKey', as='integer')
-  webEnv <- xvalue(response, '//WebEnv')
-      
-  if (cmd == "acheck") {
-    uid <- xvalue(response, "//Id")
-    linkSet <- .parseIdLinkSet(response)
-  } else if (cmd %in% c("ncheck","lcheck")) {
-    uid <- NA_character_
-    linkSet <- .parseIdCheckList(response)
-  } else if (cmd %in% c("llinks","llinkslib","prlinks")) {
-    uid <- xvalue(response, "//IdUrlSet/Id")
-    linkSet <- .parseIdUrlList(response)
-  } else {
-    uid <- xvalue(response, "//IdList/Id")
-    linkSet <- .parseLinkSet(response)
-  }
-  
-  
-  id <- new("idList", database = dbFrom, count = length(uid),
-             queryKey = env_list$query_key %|null|% NA_integer_,
-             webEnv = env_list$WebEnv %|null|% NA_character_,
-             idList = uid)
-  
-  new("elink", url = queryUrl(o), content = content(o, "raw"),
-      error = checkErrors(o), idList = id,
-      databaseTo = if (is.null(dbTo)) "any" else dbTo,
-      command = cmd, queryKey = queryKey, webEnv = webEnv,
-      linkSet = linkSet)
 }
-
-
-
 

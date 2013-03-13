@@ -14,11 +14,6 @@
   \item{file}{A connection, or a character string naming the file to write to.}
 
   \item{append}{Append the data \code{x} to the connection.}
-
-  \item{ncolumns}{the number of columns to write the data in.}
-
-  \item{sep}{a string used to separate columns.  Using \code{sep = "\t"}
-    gives tab delimited output; default is \code{" "}.}
 }
 
 \description{

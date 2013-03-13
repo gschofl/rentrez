@@ -15,7 +15,7 @@ setClassUnion("listOrDataFrame", c("list", "data.frame"))
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot database The name of the queried database.
 #' @slot version The version of the document summary requested.
@@ -110,7 +110,7 @@ setMethod("[[", "esummary",
 #' @example inst/examples/esummary.r
 #' @autoImports
 esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
-                      query_key = NULL, WebEnv = NULL, version = "default") {
+                      query_key = NULL, WebEnv = NULL, version = "2.0") {
   
   ## id may be missing if WebEnv and query_key are provided
   if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
@@ -139,21 +139,19 @@ esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
       stop("No database name provided")
   }
   
-  if (length(env_list$uid) > 100) {
-    # use HTTP POST if dealing with more than 100 user provided UIDs.
-    o <- .httpPOST('esummary', db = db, id = .collapse(env_list$uid),
-                   query_key = env_list$query_key, WebEnv = env_list$WebEnv,
-                   retstart = as.character(retstart), retmax = as.character(retmax),
-                   version = if (identical(version, "2.0")) "2.0" else NULL)
-  } else {
-    o <- .query('esummary', db = db, id = .collapse(env_list$uid),
-                query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
-                retstart = retstart, retmax = retmax,
-                version = if (identical(version, "2.0")) "2.0" else NULL)
-  }
+  method <- if (length(env_list$uid) < 100) "GET" else "POST"
+  o <- .equery('esummary', method, db = db, id = .collapse(env_list$uid),
+               query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
+               retstart = retstart, retmax = retmax,
+               version = if (version == "2.0") "2.0" else NULL)
+  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
   
-  new("esummary", url = queryUrl(o), content = content(o, "raw"),
-      error = checkErrors(o), database = db, version = version,
-      docsum = .docsum(x=content(o, "xml")))
+  if (all_empty(error)) {
+    new("esummary", url = queryUrl(o), content = content(o),
+        error = error, database = db, version = version,
+        docsum = .docsum(content(o, "xml")))
+  } else {
+    new("esummary", url = queryUrl(o), content = content(o), error = error) 
+  }
 }
 

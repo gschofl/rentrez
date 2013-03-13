@@ -33,7 +33,7 @@ setClass("einfo",
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot dbName A list of the names of all valid Entrez databases.
 #'
@@ -60,7 +60,7 @@ setClass("einfoDbList",
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot dbName Name of the target database.
 #' @slot menuName Name of the target database.
@@ -175,44 +175,54 @@ setMethod("show", "einfo",
 #' @autoImports
 einfo <- function (db) {
   if (missing(db)) {
-    o <- .query('einfo')
-    new("einfoDbList", url = queryUrl(o), content = content(o, "raw"),
-        error = checkErrors(o),
-        dbName = xvalue(content(o, "xml"), '//DbList/DbName'))
+    o <- .equery('einfo')
+    error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
+    
+    if (all_empty(error)) {
+      new("einfoDbList", url = queryUrl(o), content = content(o), error = error,
+          dbName =  xvalue(content(o, "xml"), '//DbList/DbName'))
+    } else {
+      new("einfoDbList", url = queryUrl(o), content = content(o), error = error)
+    }
+   
   } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
-    o <- .query('einfo', db=db)
-    response <- content(o, "xml")
-    # extract FieldList elements
-    fnm <- unique(xname(response, '//FieldList/Field/child::node()'))        
-    if (!all_empty(fnm)) {
-      fieldNodes <- getNodeSet(response, '//FieldList/Field/*')
-      fieldList <- split(vapply(fieldNodes, xmlValue, character(1)), fnm)
-      field_info <- data.frame(stringsAsFactors = FALSE, fieldList)[, fnm]
-    } else  {
-      field_info <- data.frame()
-    }
-    # extract LinkList elements
-    lnm <- unique(xname(response, '//LinkList/Link/child::node( )'))
-    if (!all_empty(lnm)) {
-      linkNodes <- getNodeSet(response, '//LinkList/Link/*')
-      linkList <- split(vapply(linkNodes, xmlValue, character(1)), lnm)
-      link_info <- data.frame(stringsAsFactors = FALSE, linkList)[, lnm]
-    } else {
-      link_info <- data.frame()
-    }
+    o <- .equery('einfo', 'GET', db=db)
+    error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
     
-    new("einfoDb", url = queryUrl(o), content = content(o, "raw"),
-        error = checkErrors(o),
-        dbName = xvalue(response, '//DbInfo/DbName'),
-        menuName = xvalue(response, '//DbInfo/MenuName'),
-        description = xvalue(response, '//DbInfo/Description'),
-        records = xvalue(response, '//DbInfo/Count', as='integer'),
-        lastUpdate = xvalue(response, '//DbInfo/LastUpdate', as="POSIXlt"),
-        fields = field_info,
-        links = link_info)
+    if (all_empty(error)) {
+      response <- content(o, "xml")
+      # extract FieldList elements
+      fnm <- unique(xname(response, '//FieldList/Field/child::node()'))        
+      if (!all_empty(fnm)) {
+        fieldNodes <- getNodeSet(response, '//FieldList/Field/*')
+        fieldList <- split(vapply(fieldNodes, xmlValue, character(1)), fnm)
+        field_info <- data.frame(stringsAsFactors = FALSE, fieldList)[, fnm]
+      } else  {
+        field_info <- data.frame()
+      }
+      # extract LinkList elements
+      lnm <- unique(xname(response, '//LinkList/Link/child::node( )'))
+      if (!all_empty(lnm)) {
+        linkNodes <- getNodeSet(response, '//LinkList/Link/*')
+        linkList <- split(vapply(linkNodes, xmlValue, character(1)), lnm)
+        link_info <- data.frame(stringsAsFactors = FALSE, linkList)[, lnm]
+      } else {
+        link_info <- data.frame()
+      }
+      new("einfoDb", url = queryUrl(o), content = content(o), error = error,
+          dbName = xvalue(response, '//DbInfo/DbName'),
+          menuName = xvalue(response, '//DbInfo/MenuName'),
+          description = xvalue(response, '//DbInfo/Description'),
+          records = xvalue(response, '//DbInfo/Count', as='integer'),
+          lastUpdate = xvalue(response, '//DbInfo/LastUpdate', as="POSIXlt"),
+          fields = field_info,
+          links = link_info)
+    } else {
+      new("einfoDb", url = queryUrl(o), content = content(o), error = error)
+    }
   }
 }

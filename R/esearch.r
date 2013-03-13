@@ -15,7 +15,7 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot idList
 #' 
@@ -167,34 +167,28 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
   if (length(term) > 1L)
     term <- paste(term, collapse=" OR ")
   
-  if (nchar(term) > 100) {
-    ## for longer search terms use HTTP POST
-    o <- .httpPOST("esearch", db=db, term=.escape(term, httpPOST=TRUE),
-                   usehistory=if (usehistory) "y" else NULL,
-                   WebEnv=WebEnv, query_key=as.character(query_key),
-                   retstart=as.character(retstart),
-                   retmax=if (usehistory) "0" else as.character(retmax),
-                   rettype=rettype, field=field, datetype=datetype,
-                   reldate=reldate, mindate=mindate, maxdate=maxdate)
+  method <- if (nchar(term) < 100) "GET" else "POST"
+  o <- .equery('esearch', method, db = db, term=.escape(term),
+               usehistory=if (usehistory) "y" else NULL,
+               WebEnv=WebEnv, query_key=query_key, retstart=retstart,
+               retmax=if (usehistory) 0 else retmax, rettype=rettype,
+               field=field, datetype=datetype, reldate=reldate,
+               mindate=mindate, maxdate=maxdate)
+  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
+  
+  if (all_empty(error)) {
+    response <- content(o, "xml")  
+    ids <- new("idList", database = db, 
+               retmax = xvalue(response, '//RetMax', as = 'numeric'),
+               retstart = xvalue(response, '//RetStart', as = 'numeric'),
+               queryTranslation = xvalue(response, '//QueryTranslation'),
+               count = xvalue(response, '/eSearchResult/Count', as = 'numeric'),
+               queryKey = xvalue(response, '//QueryKey', as = 'integer'),
+               webEnv = xvalue(response, '//WebEnv'),
+               idList = xvalue(response, '//IdList/Id'))
+    new("esearch", url = queryUrl(o), content = content(o), error = error,
+        idList = ids)
   } else {
-    o <- .query("esearch", db=db, term=term,
-                usehistory=if (usehistory) "y" else NULL,
-                WebEnv=WebEnv, query_key=query_key, retstart=retstart,
-                retmax=if (usehistory) 0 else retmax, rettype=rettype,
-                field=field, datetype=datetype, reldate=reldate,
-                mindate=mindate, maxdate=maxdate)
+    new("esearch", url = queryUrl(o), content = content(o), error = error)
   }
-  
-  response <- content(o, "xml")  
-  ids <- new("idList", database = db, 
-             retmax = xvalue(response, '//RetMax', as = 'numeric'),
-             retstart = xvalue(response, '//RetStart', as = 'numeric'),
-             queryTranslation = xvalue(response, '//QueryTranslation'),
-             count = xvalue(response, '/eSearchResult/Count', as = 'numeric'),
-             queryKey = xvalue(response, '//QueryKey', as = 'integer'),
-             webEnv = xvalue(response, '//WebEnv'),
-             idList = xvalue(response, '//IdList/Id'))
-  
-  new("esearch", url = queryUrl(o), content = content(o, "raw"),
-      error = checkErrors(o), idList = ids)
 }

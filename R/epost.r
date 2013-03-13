@@ -14,7 +14,7 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot database The number of items posted.
 #' @slot count The index of the first hit retrieved.
@@ -109,15 +109,19 @@ epost <- function (id, db = NULL, WebEnv = NULL) {
     stop("No database name provided")
 
   
-  o <- if (length(env_list$uid) > 100) {
-    .httpPOST("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
+  method <- if (length(env_list$uid) < 100) "GET" else "POST"
+  o <- .equery('epost', method, id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
+  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
+  
+  if (all_empty(error)) {
+    response <- content(o, "xml")
+    new("epost", url=queryUrl(o), content=content(o), error = error,
+        database=db, count=env_list$count,
+        queryKey = xvalue(response, '//QueryKey', as='integer'),
+        webEnv = xvalue(response, '//WebEnv'))  
   } else {
-    .query("epost", id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
+    new("epost", url=queryUrl(o), content=content(o), error = error)
   }
   
-  response <- content(o, "xml")
-  new("epost", url=queryUrl(o), content=content(o, "raw"),
-      database=db, count=env_list$count,
-      queryKey = xvalue(response, '//QueryKey', as='integer'),
-      webEnv = xvalue(response, '//WebEnv'))  
+
 }

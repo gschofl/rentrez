@@ -4,6 +4,7 @@ NULL
 
 #### Old Classes ####
 setOldClass("list")
+setOldClass("eutil_error")
 setOldClass("data.frame")
 
 
@@ -26,57 +27,60 @@ setOldClass("data.frame")
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #'  
 #' @rdname eutil
 #' @export
 #' @classHierarchy
 #' @classMethods
-eutil <- setClass("eutil",
-                  representation(url = "character",
-                                 error = "list",
-                                 content = "raw"),
-                  prototype(url = NA_character_,
-                            error = list(),
-                            content = raw()))
+setClass("eutil",
+         representation(url = "character",
+                        error = "eutil_error",
+                        content = "character"),
+         prototype(url = NA_character_,
+                   error = list(),
+                   content = NA_character_))
 
 
-setMethod("queryUrl", "eutil", function (x) x@url)
+setMethod("queryUrl", "eutil", function (x) {
+  x@url
+})
 
 
 setMethod("error", "eutil", function (x) {
-  e <- x@error
-  if (all(is_null(e))) {
-    message("No errors")
-  } else {
-    print(e[not_null(e)])
-  }
+  x@error
 })
+
+
+#' @S3method
+print.eutil_error <- function(x) {
+  if (all(is_null(x))) {
+    message("No error")
+  } else {
+    print(x[not_null(x)])
+  }
+}
 
 
 #' @importFrom XML xmlTreeParse
 get_content <- function (x, as) {
-  if (as == "raw") {
-    return( x@content )
-  }
-  content <- rawToChar(x@content)
   if (as == "text") {
-    return( content )
-  } else if (as == "xml") {
-    tryCatch(xmlTreeParse(content, asText=TRUE, useInternalNodes=TRUE,
+    return( x@content )
+  } else {
+    tryCatch(xmlTreeParse(x@content, asText=TRUE, useInternalNodes=TRUE,
                           error=NULL),
              XMLError = function(e) {
                error <- paste("XML parse error:", e$message)
                xmlTreeParse(paste0("<?xml version=\"1.0\"?>\n<ERROR>", error, "</ERROR>"), useInternalNodes=TRUE)
              })
-  } 
+  }
 }
 
 
 setMethod("content", "eutil",
           function (x, as = "text") {
-            as <- match.arg(as, c("text", "xml", "raw"))
+            as <- match.arg(as, c("text", "xml"))
             get_content(x, as)
           })
 

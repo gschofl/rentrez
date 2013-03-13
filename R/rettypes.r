@@ -40,7 +40,7 @@ set_rettype <- function (db, rt = NULL) {
                                        "chr", "genxml", "docset", "uilist")),
          sra = match.arg(rt, "full"),
          taxonomy = rt %nn% match.arg(rt, "uilist"),
-         'Database not supported')
+         stop('Database ', sQuote(db), ' not supported', call.=FALSE))
 }
 
 

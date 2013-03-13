@@ -13,7 +13,7 @@ NULL
 #' @slot url A character vector containing the query URL.
 #' @slot error Any error or warning messages parsed from
 #' the output of the call submitted to Entrez.
-#' @slot content A \code{\linkS4class{raw}} vector holding the unparsed
+#' @slot content A character vector holding the unparsed
 #' contents of a request to Entrez.
 #' @slot term The search term passed on to the EGQuery Utility.
 #' @slot count A data frame with the following columns:
@@ -65,16 +65,21 @@ egquery <- function (term) {
   if (length(term) > 1L)
     term <- paste(term, collapse=" OR ")
   
-  o <- .query(eutil="egquery", term=term, retmode="xml")
-  response <- content(o, "xml")
-  term <- xvalue(response, '/Result/Term')
-  count <- data.frame(stringsAsFactors=FALSE,
-                      dbName = xvalue(response, '//ResultItem/DbName'),
-                      menuName = xvalue(response, '//ResultItem/MenuName'),
-                      count = xvalue(response, '//ResultItem/Count', as='integer'),
-                      status = xvalue(response, '//ResultItem/Status'))
+  o <- .equery(eutil="egquery", term=term, retmode="xml")
+  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
   
-  new("egquery", url=queryUrl(o), content=content(o, "raw"),
-      error=checkErrors(o), term = term, count = count)
+  if (all_empty(error)) {
+    response <- content(o, "xml")
+    term <- xvalue(response, '/Result/Term')
+    count <- data.frame(stringsAsFactors=FALSE,
+                        dbName = xvalue(response, '//ResultItem/DbName'),
+                        menuName = xvalue(response, '//ResultItem/MenuName'),
+                        count = xvalue(response, '//ResultItem/Count', as='integer'),
+                        status = xvalue(response, '//ResultItem/Status'))
+    new("egquery", url = queryUrl(o), content = content(o), error = error,
+        term = term, count = count)
+  } else {
+    new("egquery", url = queryUrl(o), content = content(o), error = error)
+  }
 }
 
