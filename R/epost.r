@@ -96,29 +96,19 @@ setMethod("show", "epost",
 #' @export
 #' @autoImports
 epost <- function (id, db = NULL, WebEnv = NULL) {
+  params <- get_params(id, db)
+  method <- if (length(params$uid) < 100) "GET" else "POST"
+  o <- .equery('epost', method, id=.collapse(params$uid), db=params$db,
+               WebEnv=WebEnv)
   
-  if (missing(id)) {
-    stop("No UIDs provided")
-  }
-  
-  env_list <- .getId(id)
-  
-  ## abort if no db was provided and id did not contain db 
-  db <- db %|null|% env_list$db
-  if (is.null(db))
-    stop("No database name provided")
-
-  
-  method <- if (length(env_list$uid) < 100) "GET" else "POST"
-  o <- .equery('epost', method, id=.collapse(env_list$uid), db=db, WebEnv=WebEnv)
-  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
-  
+  error <- error(o)
+  error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
     response <- content(o, "xml")
     new("epost", url=queryUrl(o), content=content(o), error = error,
-        database=db, count=env_list$count,
+        database=params$db, count=params$count,
         queryKey = xvalue(response, '//QueryKey', as='integer'),
-        webEnv = xvalue(response, '//WebEnv'))  
+        webEnv = xvalue(response, '//WebEnv', as='character'))  
   } else {
     new("epost", url=queryUrl(o), content=content(o), error = error)
   }

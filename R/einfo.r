@@ -176,23 +176,22 @@ setMethod("show", "einfo",
 einfo <- function (db) {
   if (missing(db)) {
     o <- .equery('einfo')
-    error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
-    
+    error <- error(o)
+    error <- if (all_empty(error)) checkErrors(o, FALSE) else error
     if (all_empty(error)) {
       new("einfoDbList", url = queryUrl(o), content = content(o), error = error,
           dbName =  xvalue(content(o, "xml"), '//DbList/DbName'))
     } else {
       new("einfoDbList", url = queryUrl(o), content = content(o), error = error)
     }
-   
   } else {
     if (length(db) > 1L) {
       warning("Only the first database will be queried")
       db <- db[1L]
     }
     o <- .equery('einfo', 'GET', db=db)
-    error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
-    
+    error <- error(o)
+    error <- if (all_empty(error)) checkErrors(o, FALSE) else error
     if (all_empty(error)) {
       response <- content(o, "xml")
       # extract FieldList elements

@@ -186,70 +186,44 @@ setMethod("c", "efetch",
 #' @export
 #' @autoImports
 efetch <- function (id, db = NULL, rettype = NULL, retmode = NULL,
-                    retstart = NULL, retmax = 500, query_key = NULL,
+                    retstart = NULL, retmax = NULL, query_key = NULL,
                     WebEnv = NULL, strand = NULL, seq_start = NULL,
                     seq_stop = NULL, complexity = NULL) {
   
-  ## id may be missing if WebEnv and query_key are provided
-  if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
-    stop("No UIDs provided")
-  }
+  ## extract query parameters
+  params <- get_params(id, db, WebEnv, query_key)
   
-  ## if WebEnv and query_key are provided, db must also be provided
-  if (not.null(query_key) && not.null(WebEnv) && is.null(db)) {
-    stop("No database name provided")
-  }
-  
-  ## construct list of environment variables
-  if (missing(id)) {
-    ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
-    ## retmax stays restricted to 500.
-    env_list <-list(WebEnv = WebEnv, query_key = query_key, count = 0,
-                    uid = NULL, db = db)
-  } else {
-    env_list <- .getId(id)
-    
-    ## abort if no db was provided and id did not contain db 
-    db <- db %|null|% env_list$db
-    if (is.null(db))
-      stop("No database name provided")
-  }
-
-  # set default rettype and retmode for db
-  r <- set_record_type(db, rettype, retmode)
+  # set default rettype and retmode for a given db
+  r <- set_record_type(params$db, rettype, retmode)
   
   if (is.null(retmax))
     retmax <- Inf
   
-  if (retmax > 500 && (is.finite(env_list$count) && (env_list$count > 500))) {
+  if (retmax > 500 && (is.finite(params$count) && (params$count > 500))) {
     # if record_count exceeds 500 issue a warning and recommend
     # efetch.batch()
     message(gettextf("You are attempting to download %s records.\nOnly the first 500 are downloaded. Use efetch.batch() instead.",
-                     max(c(env_list$count, retmax))))
+                     min(c(params$count, retmax))))
     retmax <- 500
-    env_list$uid <- env_list$uid[seq_len(500)]
-  } else if (is.na(env_list$count)) {
+    params$uid <- params$uid[seq_len(500)]
+  } else if (is.na(params$count)) {
     # this takes care of the cases where we don't actually know how many UIDs
     # are stored on the history server
     # message("A single download request is restricted to 500 records.\nUse efetch.batch() to download more records.")
     retmax <- 500
   }
 
-  method <- if (length(env_list$uid) < 100) "GET" else "POST"
-  o <- .equery('efetch', method, db = db, id = .collapse(env_list$uid),
-               query_key = env_list$query_key, WebEnv = env_list$WebEnv,
+  method <- if (length(params$uid) < 100) "GET" else "POST"
+  o <- .equery('efetch', method, db = params$db, id = .collapse(params$uid),
+               query_key = params$query_key, WebEnv = params$WebEnv,
                retmode = r$retmode, rettype = r$rettype, retstart = retstart,
                retmax = retmax, strand = strand, seq_start = seq_start,
                seq_stop = seq_stop, complexity = complexity)
   
-  if (r$retmode == "xml" && all_empty(error(o))) {
-    error <- checkErrors(o, FALSE)
-  } else {
-    error <- error(o)
-  }
-  
+  error <- error(o)
+  error <- if (r$retmode == "xml" && all_empty(error)) checkErrors(o, FALSE) else error
   new("efetch", url = queryUrl(o), content = content(o, "text"),
-      error = error, database = db,
+      error = error, database = params$db,
       retmode = r$retmode %||% NA_character_,
       rettype = r$rettype %||% NA_character_)
 }

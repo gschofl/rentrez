@@ -112,46 +112,26 @@ setMethod("[[", "esummary",
 esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
                       query_key = NULL, WebEnv = NULL, version = "2.0") {
   
-  ## id may be missing if WebEnv and query_key are provided
-  if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
-    stop("No UIDs provided")
-  }
-  
-  ## if WebEnv and query_key are provided, db must also be provided
-  if (not.null(query_key) && not.null(WebEnv) && is.null(db)) {
-    stop("No database name provided")
-  }
+  ## extract query parameters
+  params <- get_params(id, db, WebEnv, query_key)
   
   if (retmax > 10000)
     stop("Number of DocSums to be downloaded must not exceed 10,000.")
   
-  ## construct list of environment variables
-  if (missing(id)) {
-    ## if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
-    ## retmax stays restricted to 500.
-    env_list <- list(WebEnv = WebEnv, query_key = query_key, count = 0,
-                     uid = NULL, db = db)
-  } else {
-    env_list <-.getId(id)
-    ## abort if no db was provided and id did not contain db
-    db <- db %|null|% env_list$db
-    if (is.null(db))
-      stop("No database name provided")
-  }
-  
-  method <- if (length(env_list$uid) < 100) "GET" else "POST"
-  o <- .equery('esummary', method, db = db, id = .collapse(env_list$uid),
-               query_key = env_list$query_key, WebEnv = env_list$WebEnv, 
+  method <- if (length(params$uid) < 100) "GET" else "POST"
+  o <- .equery('esummary', method, db = params$db, id = .collapse(params$uid),
+               query_key = params$query_key, WebEnv = params$WebEnv, 
                retstart = retstart, retmax = retmax,
                version = if (version == "2.0") "2.0" else NULL)
-  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
   
+  error <- error(o)
+  error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
-    new("esummary", url = queryUrl(o), content = content(o),
-        error = error, database = db, version = version,
-        docsum = .docsum(content(o, "xml")))
+    new("esummary", url = queryUrl(o), content = content(o), error = error,
+        database = params$db, version = version, docsum = .docsum(content(o, "xml")))
   } else {
-    new("esummary", url = queryUrl(o), content = content(o), error = error) 
+    new("esummary", url = queryUrl(o), content = content(o), error = error,
+        database = params$db, version = version) 
   }
 }
 

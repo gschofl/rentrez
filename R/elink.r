@@ -227,59 +227,34 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
                    term = NULL, holding = NULL, datetype = NULL,
                    reldate = NULL, mindate = NULL, maxdate = NULL) {
   
-  if (missing(id))
-    stop("No UIDs provided")
-  
-  # id may be missing if WebEnv and query_key are provided
-  if ((is.null(query_key) || is.null(WebEnv)) && missing(id)) {
-    stop("No UIDs provided")
-  }
-  
-  # if WebEnv and query_key are provided, dbFrom must also be provided
-  if (not.null(query_key) && not.null(WebEnv) && is.null(dbFrom)) {
-    stop("No database name provided")
-  }
-  
-  # construct list of environment variables
-  if (missing(id)) {
-    # if WebEnv and query_key is provided by the user set uid=NULL, count=0, 
-    # retmax stays restricted to 500.
-    env_list <- list(WebEnv = WebEnv, query_key = query_key, count = 0,
-                     uid = NULL, db = dbFrom)
-  } else {
-    env_list <- .getId(id)
-    
-    # abort if no dbFrom was provided and id did not contain dbFrom 
-    dbFrom <- dbFrom %|null|% env_list$db
-    if (is.null(dbFrom))
-      stop("Provide the database containing the input UIDs (dbFrom)")  
-  }
+  params <- get_params(id, dbFrom, WebEnv, query_key)
   
   # set dbTo = dbFrom if no dbTo is provided
   if (is.null(dbTo) && !grepl(pattern="check$|links", cmd))
-    dbTo <- dbFrom
+    dbTo <- params$db
   
   if (usehistory)
     cmd <- "neighbor_history"
   
-  if  (correspondence && not.null(env_list$uid)) {
-    id  <- paste0(env_list$uid, collapse="&id=")
+  if  (correspondence && !is.null(params$uid)) {
+    id  <- paste0(params$uid, collapse="&id=")
   } else {
-    id <- .collapse(env_list$uid)
+    id <- .collapse(params$uid)
   }
 
-  method <- if (length(env_list$uid) < 100) "GET" else "POST"
-  o <- .equery('elink', method, id = id, db = dbTo, dbFrom = dbFrom,
-               cmd = cmd, query_key = env_list$query_key,
-               WebEnv = env_list$WebEnv, linkname = linkname, term = term,
+  method <- if (length(params$uid) < 100) "GET" else "POST"
+  o <- .equery('elink', method, id = id, db = dbTo, dbFrom = params$db,
+               cmd = cmd, query_key = params$query_key,
+               WebEnv = params$WebEnv, linkname = linkname, term = term,
                holding = holding, datetype = datetype, reldate = reldate, 
                mindate = mindate, maxdate = maxdate)
-  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
   
+  error <- error(o)
+  error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
     response <- content(o, "xml")
     queryKey <- xvalue(response, '//QueryKey', as='integer')
-    webEnv <- xvalue(response, '//WebEnv')
+    webEnv <- xvalue(response, '//WebEnv', as='character')
     
     if (cmd == "acheck") {
       uid <- xvalue(response, "//Id")
@@ -295,9 +270,9 @@ elink <- function (id, dbFrom = NULL, dbTo = NULL, linkname = NULL,
       linkSet <- .parseLinkSet(response)
     }
     
-    id <- new("idList", database = dbFrom, count = length(uid),
-              queryKey = env_list$query_key %|null|% NA_integer_,
-              webEnv = env_list$WebEnv %|null|% NA_character_,
+    id <- new("idList", database = params$db, count = length(uid),
+              queryKey = params$query_key %|null|% NA_integer_,
+              webEnv = params$WebEnv %|null|% NA_character_,
               idList = uid)
     
     new("elink", url = queryUrl(o), content = content(o), error = error,

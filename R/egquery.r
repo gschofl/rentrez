@@ -66,8 +66,8 @@ egquery <- function (term) {
     term <- paste(term, collapse=" OR ")
   
   o <- .equery(eutil="egquery", term=term, retmode="xml")
-  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
-  
+  error <- error(o)
+  error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
     response <- content(o, "xml")
     term <- xvalue(response, '/Result/Term')

@@ -162,7 +162,7 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
                      datetype = NULL, reldate = NULL, mindate = NULL,
                      maxdate = NULL) {
   if (missing(term))
-    stop("No query provided")
+    stop("No query term provided")
 
   if (length(term) > 1L)
     term <- paste(term, collapse=" OR ")
@@ -174,20 +174,20 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
                retmax=if (usehistory) 0 else retmax, rettype=rettype,
                field=field, datetype=datetype, reldate=reldate,
                mindate=mindate, maxdate=maxdate)
-  error <- if (all_empty(error(o))) checkErrors(o, FALSE) else error(o)
   
+  error <- error(o)
+  error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
     response <- content(o, "xml")  
-    ids <- new("idList", database = db, 
-               retmax = xvalue(response, '//RetMax', as = 'numeric'),
-               retstart = xvalue(response, '//RetStart', as = 'numeric'),
-               queryTranslation = xvalue(response, '//QueryTranslation'),
-               count = xvalue(response, '/eSearchResult/Count', as = 'numeric'),
-               queryKey = xvalue(response, '//QueryKey', as = 'integer'),
-               webEnv = xvalue(response, '//WebEnv'),
-               idList = xvalue(response, '//IdList/Id'))
     new("esearch", url = queryUrl(o), content = content(o), error = error,
-        idList = ids)
+        idList = new("idList", database = db, 
+                     retmax = xvalue(response, '//RetMax', as = 'numeric'),
+                     retstart = xvalue(response, '//RetStart', as = 'numeric'),
+                     queryTranslation = xvalue(response, '//QueryTranslation'),
+                     count = xvalue(response, '/eSearchResult/Count', as = 'numeric'),
+                     queryKey = xvalue(response, '//QueryKey', as = 'integer'),
+                     webEnv = xvalue(response, '//WebEnv'),
+                     idList = xvalue(response, '//IdList/Id')))
   } else {
     new("esearch", url = queryUrl(o), content = content(o), error = error)
   }
