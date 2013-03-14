@@ -19,23 +19,31 @@
   
   if (method == "POST") {
     url <- "HTTP_POST"
-    postForm(uri=host, .params=params, .opts=opts)
+    e <- tryCatch(postForm(uri=host, .params=params, .opts=opts), error = function(e) {
+      e$message
+    })
   } else if (method == "GET") {
     url <- get_equery_url(host, params)
-    getURLContent(url, .opts=opts)
+    e <- tryCatch(getURLContent(url, .opts=opts), error = function(e) {
+      e$message
+    })
   }
   
   content <- as.character(tg$value())
-  error <- structure(list(error = NULL, errmsg = NULL, wrnmsg = NULL),
-                     class="eutil_error")
-  header <- as.list(hg$value())
-  status <- as.numeric(header$status)
-  statusmsg <- header$statusMessage
-  if (status != 200) {
-    error$error <- paste0("HTTP error: Status ", status, "; ", statusmsg)
+  error <- structure(list(error=NULL, errmsg=NULL, wrnmsg=NULL), class="eutil_error")
+  if (all_empty(e)) {
+    header <- as.list(hg$value())
+    status <- as.numeric(header$status)
+    statusmsg <- header$statusMessage
+    if (status != 200) {
+      error$error <- paste0("HTTP error: Status ", status, "; ", statusmsg)
+      warning(error$error, call.=FALSE, immediate.=TRUE)
+    }
+  } else {
+    error$error <- paste0("CurlError: ", e)
     warning(error$error, call.=FALSE, immediate.=TRUE)
   }
-  
+
   new("eutil", url = url, error = error, content = content)
 }
 
