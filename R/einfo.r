@@ -109,6 +109,9 @@ setMethod("fields", "einfoDb", function(x) x@fields)
 
 setMethod("links", "einfoDb", function(x) x@links)
 
+setMethod("content", "einfo", function(x, as = "xml") {
+  callNextMethod(x = x, as = as)
+})
 
 # subsetting-methods -----------------------------------------------------
 

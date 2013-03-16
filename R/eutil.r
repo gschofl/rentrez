@@ -54,7 +54,7 @@ setMethod("error", "eutil", function (x) {
 
 
 #' @S3method
-print.eutil_error <- function(x) {
+print.eutil_error <- function (x) {
   if (all(is_null(x))) {
     message("No error")
   } else {
@@ -63,17 +63,11 @@ print.eutil_error <- function(x) {
 }
 
 
-#' @importFrom XML xmlTreeParse
 get_content <- function (x, as) {
   if (as == "text") {
-    return( x@content )
+    x@content
   } else {
-    tryCatch(xmlTreeParse(x@content, asText=TRUE, useInternalNodes=TRUE,
-                          error=NULL),
-             XMLError = function(e) {
-               error <- paste("XML parse error:", e$message)
-               xmlTreeParse(paste0("<?xml version=\"1.0\"?>\n<ERROR>", error, "</ERROR>"), useInternalNodes=TRUE)
-             })
+    savelyParseXml(x@content)
   }
 }
 

@@ -41,6 +41,9 @@ setMethod("database", "esummary", function(x) x@database)
 
 setMethod("docsum", "esummary", function(x) x@docsum)
 
+setMethod("content", "esummary", function(x, as = "xml") {
+  callNextMethod(x = x, as = as)
+})
 
 # show-method ------------------------------------------------------------
 

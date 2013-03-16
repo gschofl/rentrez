@@ -88,16 +88,28 @@ checkErrors <- function (o, verbose = TRUE) {
     message('Warning(s):\n\t', 
             paste(paste(names(wrnmsg), wrnmsg, sep="\t"), collapse="\n\t"))
   
-  e <- structure(list(error=error, errmsg=errmsg, wrnmsg=wrnmsg), class="eutil_error")
-  invisible(e)
+  invisible(structure(list(error=error, errmsg=errmsg, wrnmsg=wrnmsg),
+                      class="eutil_error"))
 }
 
 
 #' @autoImports
-get_params <- function(id,
-                       db = NULL,
-                       WebEnv = NULL,
-                       query_key = NULL) {
+savelyParseXml <- function(x, ...) {
+  tryCatch(xmlTreeParse(x, asText=TRUE, useInternalNodes=TRUE,
+                        error=NULL, ...),
+           "XMLError" = function (e) {
+             errmsg <- paste("XML parse error:", e$message)
+             xmlParseString(paste0("<ERROR>", errmsg, "</ERROR>"))
+           },
+           "error" = function (e) {
+             errmsg <- paste("Simple error:", e$message)
+             xmlParseString(paste0("<ERROR>", errmsg, "</ERROR>"))
+           })
+}
+
+
+#' @autoImports
+get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
   
   ## id may be missing only if WebEnv and query_key are provided
   if ( missing(id) && (is.null(query_key) || is.null(WebEnv)) ) {

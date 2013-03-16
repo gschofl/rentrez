@@ -53,7 +53,7 @@ setMethod("content", "efetch",
             if (as == "asn.1") 
               as <- "text"
             as <- match.arg(as, c("text", "xml"))
-            get_content(x, as)
+            callNextMethod(x = x, as = as)
           })
 
 
