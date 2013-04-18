@@ -8,6 +8,10 @@
 }
 \arguments{
   \item{...}{objects to be combined.}
+
+  \item{recursive}{logical.  If \code{recursive = TRUE}, the function
+    recursively descends through lists (and pairlists) combining all
+    their elements into a vector.}
 }
 
 \description{

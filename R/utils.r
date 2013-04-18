@@ -10,7 +10,7 @@
   }
   
   params <- list(...)
-  params <- compact(merge_list(params, list(tool = "rentrez", email = "gschofl@yahoo.de")))
+  params <- compact(merge_list(params, list(tool = "Rentrez", email = "gschofl@yahoo.de")))
   opts <- list()
   hg <- basicHeaderGatherer()
   opts$headerfunction <- hg$update

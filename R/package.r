@@ -1,4 +1,4 @@
-#' The rentrez package provides an interface to NCBI's
+#' The Rentrez package provides an interface to NCBI's
 #' Entrez utilities.
 #'
 #' @section description:
@@ -46,7 +46,7 @@
 #'   
 #'     Typical usage is: 
 #'     \preformatted{
-#'         require(rentrez)
+#'         require(Rentrez)
 #'         pub <- efetch(id=c("19304878","14630660"), db="pubmed")
 #'         records <- content(pub)
 #'     }
@@ -54,6 +54,6 @@
 #'   
 #' @example inst/examples/package.r
 #'
-#' @name rentrez-package
+#' @name Rentrez-package
 #' @author Gerhard Schöfl \email{gschofl@@yahoo.de}
 NULL

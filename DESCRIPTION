@@ -1,5 +1,5 @@
-Package: rentrez
-Version: 0.1-5
+Package: Rentrez
+Version: 0.1-6
 Date: 2012-11-15
 Title: An R interface to the NCBI EUtilities
 Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),

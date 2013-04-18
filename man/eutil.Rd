@@ -37,7 +37,7 @@ Sub classes:
   \item \code{\link{[}}* (4 methods defined for subclasses)
   \item \code{\link{[[}}* (1 methods defined for subclasses)
   \item \code{\link{c}}* (1 methods defined for subclasses)
-  \item \code{\link{content}} (4 methods defined for subclasses)
+  \item \code{\link{content}} (6 methods defined for subclasses)
   \item \code{\link{count}}* (3 methods defined for subclasses)
   \item \code{\link{database}}* (5 methods defined for subclasses)
   \item \code{\link{dbName}}* (1 methods defined for subclasses)

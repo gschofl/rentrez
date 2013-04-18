@@ -162,9 +162,11 @@ Access the various slots of \linkS4class{eutil} instances.
 \section{Method signatures for generic content}{
 \itemize{
   \item \linkS4class{efetch}
+  \item \linkS4class{einfo}
   \item \linkS4class{elink}
   \item \linkS4class{epost}
   \item \linkS4class{esearch}
+  \item \linkS4class{esummary}
   \item \linkS4class{eutil}
 }
 

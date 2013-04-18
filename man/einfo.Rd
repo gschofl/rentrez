@@ -48,6 +48,7 @@ Super classes:
 \section{Generics with methods for einfo}{
 \itemize{
   \item \code{\link{[}}* (1 methods defined for subclasses)
+  \item \code{\link{content}}
   \item \code{\link{dbName}}
   \item \code{\link{description}}* (1 methods defined for subclasses)
   \item \code{\link{fields}}* (1 methods defined for subclasses)

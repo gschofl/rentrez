@@ -1,10 +1,10 @@
 % Built by roxygen3 0.1
-\name{rentrez-package}
-\alias{rentrez-package}
-\title{The rentrez package provides an interface to NCBI's
+\name{Rentrez-package}
+\alias{Rentrez-package}
+\title{The Rentrez package provides an interface to NCBI's
 Entrez utilities.}
 \description{
-The rentrez package provides an interface to NCBI's
+The Rentrez package provides an interface to NCBI's
 Entrez utilities.
 }
 \section{description}{
@@ -53,7 +53,7 @@ Entrez utilities.
   
     Typical usage is: 
     \preformatted{
-        require(rentrez)
+        require(Rentrez)
         pub <- efetch(id=c("19304878","14630660"), db="pubmed")
         records <- content(pub)
     }

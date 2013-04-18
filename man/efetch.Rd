@@ -6,7 +6,7 @@
 \title{efetch}
 \usage{
   efetch(id, db = NULL, rettype = NULL, retmode = NULL,
-    retstart = NULL, retmax = 500, query_key = NULL,
+    retstart = NULL, retmax = NULL, query_key = NULL,
     WebEnv = NULL, strand = NULL, seq_start = NULL,
     seq_stop = NULL, complexity = NULL)
 }

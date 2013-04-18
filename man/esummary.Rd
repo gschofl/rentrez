@@ -70,6 +70,7 @@ Super classes:
 \itemize{
   \item \code{\link{[}}
   \item \code{\link{[[}}
+  \item \code{\link{content}}
   \item \code{\link{database}}
   \item \code{\link{docsum}}
   \item \code{\link{show}}
