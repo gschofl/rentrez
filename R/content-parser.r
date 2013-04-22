@@ -115,10 +115,10 @@
   has_neighbor <- xattr(content, "//Id", "HasNeighbor")
   has_linkout <- xattr(content, "//Id", "HasLinkOut")
 
-  chklst <- if (not.na(has_neighbor)) {
+  chklst <- if (!is.na(has_neighbor)) {
     data.frame(stringsAsFactors=FALSE, Id=id,
                HasNeighbor=ifelse(has_neighbor == "Y", TRUE, FALSE))
-  } else if  (not.na(has_linkout)) {
+  } else if  (!is.na(has_linkout)) {
     data.frame(stringsAsFactors=FALSE, Id=id,
                HasLinkOut=ifelse(has_linkout == "Y", TRUE, FALSE))
   }

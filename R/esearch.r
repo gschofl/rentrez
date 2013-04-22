@@ -63,7 +63,7 @@ setMethod("show", "esearch",
           function (object) {
             response <- content(object, "xml")
             # has 'IdList', hence rettype = "uilist"
-            if (not.na(xname(response, '//IdList'))) { 
+            if (!is.na(xname(response, '//IdList'))) { 
               cat(sprintf("ESearch query using the %s database.\nQuery term: %s\n",
                           sQuote(database(object)),
                           sQuote(queryTranslation(object))))

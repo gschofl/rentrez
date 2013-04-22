@@ -223,8 +223,6 @@ get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
 
 #' @autoImports
 has_webenv <- function (x) {
-  if (not.na(webEnv(x)) && not.na(queryKey(x)))
-    TRUE
-  else
-    FALSE
+  !is.na(webEnv(x)) && !is.na(queryKey(x))
 }
+
