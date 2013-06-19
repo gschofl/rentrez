@@ -10,7 +10,7 @@
   }
   
   params <- list(...)
-  params <- compact(merge_list(params, list(tool = "Rentrez", email = "gschofl@yahoo.de")))
+  params <- rmisc::compact(merge_list(params, list(tool = "Rentrez", email = "gschofl@yahoo.de")))
   opts <- list()
   hg <- basicHeaderGatherer()
   opts$headerfunction <- hg$update
@@ -109,6 +109,63 @@ savelyParseXml <- function(x, ...) {
 
 
 #' @autoImports
+.get_params <- function (id) {
+  if (isS4(id)) {
+    if (class(id) %in% c("epost", "esearch", "idList")) {
+      if (has_webenv(id)) {
+        db <- database(id)
+        WebEnv <- webEnv(id)
+        query_key <- queryKey(id)
+        count <- count(id) # the total number of UIDs stored on the history server
+        uid <- NULL 
+      } else {
+        db <- database(id)
+        WebEnv <- NULL
+        query_key <- NULL
+        count <- retmax(id) # retmax is the number of UIDs included in the XML output
+        uid <- idList(id, db = FALSE)
+      }
+      return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
+    }   
+    if (is(id, "elink")) {
+      if (!has_webenv(id)) {
+        db <- database(id)[["to"]]
+        WebEnv <- NULL
+        query_key <- NULL
+        count <- length(unlist(linkSet(id), use.names=FALSE))
+        uid <- unlist(linkSet(id), use.names=FALSE)
+      } else {
+        db <- database(id)[["to"]]
+        WebEnv <- webEnv(id)
+        query_key <- queryKey(id)
+        count <- NA # we don't have any clue how many UIDs are stored at the
+        # history server if we use elink with usehistory=TRUE. 
+        uid <- NULL
+      }
+    } else {
+      stop("UIDs must be provided as 'esearch', 'epost', or 'elink' objects.")
+    }
+    return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
+  }
+  if (!isS4(id)) {
+    # a vector of UIDS as returned by content(esearch_object) 
+    if (inherits(id, "character") || inherits(id, "numeric")) {
+      db <- attr(id, "database")
+      WebEnv <- NULL 
+      query_key <- NULL
+      count <- length(id)
+      uid <- as.character(unname(id))
+    } else if (!is.null(names(id))) {
+      db <- .convertDbXref(dbx_name=names(id))
+    } else {
+      stop("UIDs must be provided as a vector of UIDs")
+    } 
+    return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
+  } 
+}
+
+
+#' @autoImports
 get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
   
   ## id may be missing only if WebEnv and query_key are provided
@@ -140,63 +197,6 @@ get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
 
 
 #' @autoImports
-.get_params <- function (id) {
-  if (isS4(id)) {
-    if (class(id) %in% c("epost", "esearch", "idList")) {
-      if (has_webenv(id)) {
-        db <- database(id)
-        WebEnv <- webEnv(id)
-        query_key <- queryKey(id)
-        count <- count(id) # the total number of UIDs stored on the history server
-        uid <- NULL 
-      } else {
-        db <- database(id)
-        WebEnv <- NULL
-        query_key <- NULL
-        count <- retmax(id) # retmax is the number of UIDs included in the XML output
-        uid <- idList(id, db = FALSE)
-      }
-      return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
-    }   
-    if (is(id, "elink")) {
-      if (!has_webenv(id)) {
-        db <- database(id)[["to"]]
-        WebEnv <- NULL
-        query_key <- NULL
-        count <- length(unlist(linkSet(id), use.names=FALSE))
-        uid <- unlist(linkSet(id), use.names=FALSE)
-      } else {
-        db <- database(id)[["to"]]
-        WebEnv <- webEnv(id)
-        query_key <- queryKey(id)
-        count <- NA # we don't have any clue how many UIDs are stored at the
-                    # history server if we use elink with usehistory=TRUE. 
-        uid <- NULL
-      }
-    } else {
-      stop("UIDs must be provided as 'esearch', 'epost', or 'elink' objects.")
-    }
-    return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
-  }
-  if (!isS4(id)) {
-    # a vector of UIDS as returned by content(esearch_object) 
-    if (inherits(id, "character") || inherits(id, "numeric")) {
-      db <- attr(id, "database")
-      WebEnv <- NULL 
-      query_key <- NULL
-      count <- length(id)
-      uid <- as.character(unname(id))
-    } else if (!is.null(names(id))) {
-      db <- .convertDbXref(dbx_name=names(id))
-    } else {
-      stop("UIDs must be provided as a vector of UIDs")
-    } 
-    return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
-  } 
-}
-
-
-#' @autoImports
 .convertDbXref <- function (dbx_name) {
   if (length(dbx_name) > 1L) {
     stop("Multiple database names. Provide only one.")
@@ -216,6 +216,7 @@ get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
 }
 
 
+#' @autoImports
 .collapse <- function (id) {
   if (is.null(id)) NULL else paste0(id, collapse = ",")
 }

@@ -12,13 +12,15 @@ Depends:
     R (>= 2.15),
 Imports:
     methods,
+    RCurl,
     rmisc,
+    stats,
     XML,
-    RCurl
 Collate:
     'all-generics.r'
     'utils.r'
     'rettypes.r'
+    'content-parser.r'
     'eutil.r'
     'idlist.r'
     'einfo.r'
@@ -29,4 +31,3 @@ Collate:
     'epost.r'
     'elink.r'
     'egquery.r'
-    'content-parser.r'

@@ -1,12 +1,12 @@
 ## parse docsums (esummary) ####
+#' @importFrom XML xmlGetAttr
 #' @autoImports
 .docsum <- function (x) {
-  
-  nodes <- getNodeSet(x, '//DocSum')
+  nodes <- xset(x, '/eSummaryResult/DocSum')
   if (!all_empty(nodes)) {
     uids <- xvalue(x, '/eSummaryResult/DocSum/Id')
   } else {
-    nodes <- getNodeSet(x, '//DocumentSummary')
+    nodes <- xset(x, '/eSummaryResult//DocumentSummary')
     if (all_empty(nodes)) {
       if (!all_empty(checkErrors(x, verbose=FALSE))) {
         warning("Errors parsing DocumentSummary", call.=FALSE)
@@ -35,6 +35,7 @@
 }
 
 # Parse a DocSum recursively and return it as a named list
+# ds = nodes[[1]]
 #' @importFrom XML xmlSize
 #' @autoImports
 .parse_docsum <- function (ds) {
@@ -44,7 +45,7 @@
         xmlChildren(ds, addNames=FALSE)[names(xmlChildren(ds)) == "Item"]      
       value <- 
         lapply(items, function (item) {
-          if (all(xmlSApply(item, xmlSize) == 0L))
+          if (all(unlist(xmlApply(item, xmlSize), use.names=FALSE) == 0L))
             xmlValue(item)
           else
             .docsum(item)
@@ -60,7 +61,7 @@
         xmlChildren(ds, addNames=TRUE)
       value <- 
         lapply(items, function (item) {
-          if (all(xmlSApply(item, xmlSize) == 0L))
+          if (all(unlist(xmlApply(item, xmlSize), use.names=FALSE) == 0L))
             xmlValue(item)
           else
             .docsum(item)
@@ -78,11 +79,11 @@
 #' @autoImports
 .parseIdUrlList <- function (content) {
   content <- xmlRoot(content)
-  idUrlSet <- getNodeSet(content, "//IdUrlSet")
+  idUrlSet <- xset(content, "//IdUrlSet")
   idurls <- lapply(idUrlSet, function (idUrl) {
     idUrl <- xmlDoc(idUrl)
     id <- xvalue(idUrl, "/IdUrlSet/Id") 
-    objUrlSet <- getNodeSet(idUrl, "//ObjUrl")
+    objUrlSet <- xset(idUrl, "//ObjUrl")
     urlset <- lapply(objUrlSet, function (objUrl) {
       objUrl <- xmlDoc(objUrl)
       l <- list(
@@ -131,7 +132,7 @@
 .parseIdLinkSet <- function (content) {
   content <- xmlRoot(content)
   dbFrom <- xvalue(content, "//DbFrom")
-  idLinkSet <- getNodeSet(xmlRoot(content), "//IdLinkSet")
+  idLinkSet <- xset(xmlRoot(content), "//IdLinkSet")
   
   if (length(idLinkSet) < 1L)
     return(list())
@@ -140,7 +141,7 @@
     ls <- xmlDoc(ls)
     Id <- xvalue(ls, "(//Id)[1]")
     link_info <- 
-      lapply(getNodeSet(ls, "//LinkInfo"), function (li) {
+      lapply(xset(ls, "//LinkInfo"), function (li) {
         li <- xmlDoc(li)
         li <- list(DbTo = xvalue(li, "//DbTo"), 
                    LinkName = xvalue(li, "//LinkName"),
@@ -159,7 +160,7 @@
 # Parse a LinkSet and return it as a named list
 #' @autoImports
 .parseLinkSet <- function (response) {
-  linkSetDb <- getNodeSet(xmlRoot(response), "//LinkSetDb")
+  linkSetDb <- xset(xmlRoot(response), "//LinkSetDb")
   
   if (length(linkSetDb) < 1L)
     return(list())

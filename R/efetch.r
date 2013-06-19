@@ -279,7 +279,7 @@ efetch.batch <- function (id, chunk_size=200, rettype=NULL, retmode=NULL,
   }
   
   count <- count(id)
-  if (not.null(retmax) && retmax < count) {
+  if (!is.null(retmax) && retmax < count) {
     count <- retmax
   }
   

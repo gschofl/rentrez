@@ -54,11 +54,12 @@ setMethod("error", "eutil", function (x) {
 
 
 #' @S3method
+#' @autoImports
 print.eutil_error <- function (x) {
-  if (all(is_null(x))) {
+  if (all(are_null(x))) {
     message("No error")
   } else {
-    print(x[not_null(x)])
+    print(x[!are_null(x)])
   }
 }
 

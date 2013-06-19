@@ -200,7 +200,7 @@ einfo <- function (db) {
       # extract FieldList elements
       fnm <- unique(xname(response, '//FieldList/Field/child::node()'))        
       if (!all_empty(fnm)) {
-        fieldNodes <- getNodeSet(response, '//FieldList/Field/*')
+        fieldNodes <- xset(response, '//FieldList/Field/*')
         fieldList <- split(vapply(fieldNodes, xmlValue, character(1)), fnm)
         field_info <- data.frame(stringsAsFactors = FALSE, fieldList)[, fnm]
       } else  {
@@ -209,7 +209,7 @@ einfo <- function (db) {
       # extract LinkList elements
       lnm <- unique(xname(response, '//LinkList/Link/child::node( )'))
       if (!all_empty(lnm)) {
-        linkNodes <- getNodeSet(response, '//LinkList/Link/*')
+        linkNodes <- xset(response, '//LinkList/Link/*')
         linkList <- split(vapply(linkNodes, xmlValue, character(1)), lnm)
         link_info <- data.frame(stringsAsFactors = FALSE, linkList)[, lnm]
       } else {

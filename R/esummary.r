@@ -1,5 +1,6 @@
 #' @include utils.r
 #' @include eutil.r
+#' @include content-parser.r
 NULL
 
 setOldClass("list")
@@ -131,7 +132,7 @@ esummary <- function (id, db = NULL, retstart = 1, retmax = 10000,
   error <- if (all_empty(error)) checkErrors(o, FALSE) else error
   if (all_empty(error)) {
     new("esummary", url = queryUrl(o), content = content(o), error = error,
-        database = params$db, version = version, docsum = .docsum(content(o, "xml")))
+        database = params$db, version = version, docsum = .docsum(x=content(o, "xml")))
   } else {
     new("esummary", url = queryUrl(o), content = content(o), error = error,
         database = params$db, version = version) 
