@@ -192,3 +192,5 @@ esearch <- function (term, db = "nuccore", rettype = "uilist",
     new("esearch", url = queryUrl(o), content = content(o), error = error)
   }
 }
+
+

@@ -31,7 +31,7 @@
   
   content <- as.character(tg$value())
   error <- structure(list(error=NULL, errmsg=NULL, wrnmsg=NULL), class="eutil_error")
-  if (all_empty(e)) {
+  if (is.empty(e)) {
     header <- as.list(hg$value())
     status <- as.numeric(header$status)
     statusmsg <- header$statusMessage

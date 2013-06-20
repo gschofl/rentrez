@@ -52,6 +52,8 @@ setMethod("content", "efetch",
             as <- as %|null|% retmode(x)
             if (as == "asn.1") 
               as <- "text"
+            if (as == "xml" && retmode(x) != "xml")
+              stop("Document does not contain XML", call.=FALSE)
             as <- match.arg(as, c("text", "xml"))
             callNextMethod(x = x, as = as)
           })
