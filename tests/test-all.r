@@ -1,3 +1,4 @@
 library(testthat)
-library(rentrez)
-test_package("rentrez")
+library(Rentrez)
+
+test_package("Rentrez")

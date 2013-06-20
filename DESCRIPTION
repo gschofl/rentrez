@@ -1,5 +1,5 @@
 Package: Rentrez
-Version: 0.1-6
+Version: 0.2
 Date: 2012-11-15
 Title: An R interface to the NCBI EUtilities
 Authors@R: person("Gerhard", "Schöfl", role=c("aut","cre"),
@@ -9,13 +9,15 @@ Description: A set of classes and functions to manage
 License: MIT
 Encoding: latin1
 Depends:
-    R (>= 2.15),
+    R (>= 2.15)
 Imports:
     methods,
     RCurl,
     rmisc,
     stats,
-    XML,
+    XML
+Suggests:
+    testthat
 Collate:
     'all-generics.r'
     'utils.r'
