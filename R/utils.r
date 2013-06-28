@@ -118,7 +118,8 @@ savelyParseXml <- function(x, ...) {
         query_key <- queryKey(id)
         count <- count(id) # the total number of UIDs stored on the history server
         uid <- NULL 
-      } else {
+      }
+      else {
         db <- database(id)
         WebEnv <- NULL
         query_key <- NULL
@@ -134,7 +135,8 @@ savelyParseXml <- function(x, ...) {
         query_key <- NULL
         count <- length(unlist(linkSet(id), use.names=FALSE))
         uid <- unlist(linkSet(id), use.names=FALSE)
-      } else {
+      }
+      else {
         db <- database(id)[["to"]]
         WebEnv <- webEnv(id)
         query_key <- queryKey(id)
@@ -149,15 +151,25 @@ savelyParseXml <- function(x, ...) {
   }
   if (!isS4(id)) {
     # a vector of UIDS as returned by content(esearch_object) 
-    if (inherits(id, "character") || inherits(id, "numeric")) {
+    if (class(id) %in% c("character", "numeric")) {
       db <- attr(id, "database")
       WebEnv <- NULL 
       query_key <- NULL
       count <- length(id)
       uid <- as.character(unname(id))
-    } else if (!is.null(names(id))) {
-      db <- .convertDbXref(dbx_name=names(id))
-    } else {
+    }
+    else if (is.list(id)) {
+      # a list of UIDs with a database attribute
+      db <- unique(unlist(lapply(id, attr, 'database')))
+      WebEnv <- NULL 
+      query_key <- NULL
+      count <- length(id)
+      uid <- as.character(unlist(id))
+    }
+    else if (!is.null(names(id))) {
+      db <- .convertDbXref(unique(names(id)))
+    }
+    else {
       stop("UIDs must be provided as a vector of UIDs")
     } 
     return( list(db=db, WebEnv=WebEnv, query_key=query_key, count=count, uid=uid) )
@@ -199,7 +211,7 @@ get_params <- function (id, db = NULL, WebEnv = NULL, query_key = NULL) {
 #' @autoImports
 .convertDbXref <- function (dbx_name) {
   if (length(dbx_name) > 1L) {
-    stop("Multiple database names. Provide only one.")
+    stop("Multiple database names provided with UIDs.", call.=FALSE)
   }
   match <- regexpr("[^\\.][[:alpha:]]+$", dbx_name)
   if (match > 0L) {

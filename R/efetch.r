@@ -108,15 +108,14 @@ setMethod("write", "efetch",
 #' @autoImports
 setMethod("c", "efetch",
           function (x, ..., recursive = FALSE) {
-            db <- compactNA(unique(c(database(x), vapply(list(...), database, character(1)))))
-            if (length(db) > 1L)
-              stop("Cannot combine objects from different databases")
-            rt <- compactNA(unique(c(rettype(x), vapply(list(...), rettype, character(1)))))
-            if (length(rt) > 1L)
-              stop("Cannot combine objects with different data types")
-            rm <- compactNA(unique(c(retmode(x), vapply(list(...), retmode, character(1)))))
-            if (length(rm) > 1L)
-              stop("Cannot combine objects with different data modes")
+            database <- compactNA(unique(c(database(x), vapply(list(...), database, character(1)))))
+            assert_that(length(database) == 1L)
+
+            rettype <- compactNA(unique(c(rettype(x), vapply(list(...), rettype, character(1)))))
+            assert_that(length(rettype) == 1L)
+            
+            retmode <- compactNA(unique(c(retmode(x), vapply(list(...), retmode, character(1)))))
+            assert_that(length(retmode) == 1L)
             
             url <- c(queryUrl(x), vapply(list(...), queryUrl, character(1)))
             content <- c(content(x, "text"),
