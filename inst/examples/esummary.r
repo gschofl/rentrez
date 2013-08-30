@@ -17,7 +17,7 @@ ds[["Title"]]
 ds_xml <- content(doc, "xml")
 
 # Get accession numbers for a list of GIs
-id <- c(313848131,313847824,313847819,313847818,313847817)
+id <- c(313848131, 313847824, 313847819, 313847818, 313847817)
 prot <- docsum(esummary(id, "protein"))
 names(prot)
-prot[,c("Id","Caption","Length","TaxId")]
+prot[, c("Id","Caption","Slen","TaxId")]
