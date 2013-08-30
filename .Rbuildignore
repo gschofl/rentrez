@@ -1,6 +1,8 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
+cache/
 data/
-dev/
 doc/
-MIT-licence
+playground/
+scratch\.[rR]
+^README\.*
